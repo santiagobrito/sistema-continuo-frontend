@@ -6,7 +6,13 @@ import { VariationSelector } from "./VariationSelector";
 import { formatPrice } from "@/lib/utils/format";
 import type { Product, ProductVariation } from "@/lib/wordpress/types";
 
-export function ProductActions({ product }: { product: Product }) {
+export function ProductActions({
+  product,
+  onVariationChange,
+}: {
+  product: Product;
+  onVariationChange?: (variation: ProductVariation | null) => void;
+}) {
   const { addToCart, loading } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
@@ -139,7 +145,10 @@ export function ProductActions({ product }: { product: Product }) {
       {isVariable && product.variations && product.variations.length > 0 && (
         <VariationSelector
           variations={product.variations}
-          onSelect={setSelectedVariation}
+          onSelect={(v) => {
+            setSelectedVariation(v);
+            onVariationChange?.(v);
+          }}
         />
       )}
 
