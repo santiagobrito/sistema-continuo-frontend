@@ -57,7 +57,13 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     notFound();
   }
 
-  const products = category.products?.data ?? [];
+  const rawProducts = category.products?.data ?? [];
+  // Out of stock always last
+  const products = [...rawProducts].sort((a, b) => {
+    if (a.stock_status === "outofstock" && b.stock_status !== "outofstock") return 1;
+    if (a.stock_status !== "outofstock" && b.stock_status === "outofstock") return -1;
+    return 0;
+  });
   const totalPages = category.products?.pages ?? 1;
   const currentPage = parseInt(page);
 

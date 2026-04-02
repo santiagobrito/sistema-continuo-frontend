@@ -18,7 +18,7 @@ const COLOR_MAP: Record<string, string> = {
   verde: "#16a34a", green: "#16a34a",
   amarillo: "#eab308", yellow: "#eab308",
   naranja: "#ea580c", orange: "#ea580c",
-  rosa: "#ec4899", pink: "#ec4899",
+  rosa: "#ffc0cb", pink: "#ffc0cb",
   gris: "#6b7280", gray: "#6b7280", grey: "#6b7280",
   marron: "#92400e", brown: "#92400e",
   violeta: "#7c3aed", purple: "#7c3aed",
@@ -30,9 +30,54 @@ const COLOR_MAP: Record<string, string> = {
   "magenta-light": "#f472b6",
   "cian-light": "#67e8f9", "cyan-light": "#67e8f9",
   "verde-fluo": "#84cc16", "verde-militar": "#4d7c0f",
+  "verde-agua": "#00cccc",
   coral: "#f97316",
   natural: "#f5f0e8",
 };
+
+/**
+ * Resolve a color value to CSS background.
+ * Supports single colors ("negro") and mixed ("rosa-con-blanco", "blancoconnegro").
+ * Returns { background, isMixed } or null if not a recognized color.
+ */
+function resolveColor(value: string): { background: string; isMixed: boolean } | null {
+  const lower = value.toLowerCase().trim();
+
+  // Direct match
+  if (COLOR_MAP[lower]) {
+    return { background: COLOR_MAP[lower], isMixed: false };
+  }
+
+  // Mixed colors: "rosa-con-blanco", "blancoconnegro", "verde-agua-con-negro"
+  // Split by "con", "-con-", or camelCase "Con"
+  const parts = lower
+    .replace(/-con-/g, "|")
+    .replace(/con(?=[a-z])/g, "|")
+    .replace(/(?<=[a-z])con$/g, "|")
+    .split("|")
+    .map((p) => p.replace(/-/g, "").trim())
+    .filter(Boolean);
+
+  if (parts.length === 2) {
+    // Try to match each part
+    const findColor = (part: string): string | null => {
+      if (COLOR_MAP[part]) return COLOR_MAP[part];
+      // Try with hyphens
+      for (const [key, hex] of Object.entries(COLOR_MAP)) {
+        if (key.replace(/-/g, "") === part) return hex;
+      }
+      return null;
+    };
+
+    const c1 = findColor(parts[0]);
+    const c2 = findColor(parts[1]);
+    if (c1 && c2) {
+      return { background: `linear-gradient(to right, ${c1} 50%, ${c2} 50%)`, isMixed: true };
+    }
+  }
+
+  return null;
+}
 
 function slugToLabel(slug: string): string {
   return slug
@@ -41,8 +86,8 @@ function slugToLabel(slug: string): string {
 }
 
 function isColorAttribute(values: string[]): boolean {
-  const colorKeys = Object.keys(COLOR_MAP);
-  return values.filter((v) => colorKeys.includes(v.toLowerCase())).length > values.length * 0.4;
+  const matched = values.filter((v) => resolveColor(v) !== null).length;
+  return matched > values.length * 0.4;
 }
 
 /**
@@ -147,6 +192,9 @@ export function VariationSelector({ variations, onSelect }: Props) {
                   v.attributes[attr.key] === value && v.stock_status !== "outofstock"
                 );
 
+                const colorInfo = resolveColor(value);
+                const hasWhite = value.toLowerCase().includes("blanco") || value.toLowerCase().includes("white");
+
                 return (
                   <button
                     key={value}
@@ -163,9 +211,9 @@ export function VariationSelector({ variations, onSelect }: Props) {
                   >
                     <span
                       className="absolute inset-1 rounded-full"
-                      style={{ backgroundColor: hex || "#ccc" }}
+                      style={{ background: colorInfo?.background || "#ccc" }}
                     />
-                    {value.toLowerCase() === "blanco" || value.toLowerCase() === "white" ? (
+                    {hasWhite && !colorInfo?.isMixed ? (
                       <span className="absolute inset-1 rounded-full border border-gray-200" />
                     ) : null}
                     {!isAvailable && (

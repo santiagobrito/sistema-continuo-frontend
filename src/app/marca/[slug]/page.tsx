@@ -56,7 +56,12 @@ export default async function BrandPage({ params, searchParams }: Props) {
     order,
   });
 
-  const products = result.data;
+  // Out of stock always last
+  const products = [...result.data].sort((a, b) => {
+    if (a.stock_status === "outofstock" && b.stock_status !== "outofstock") return 1;
+    if (a.stock_status !== "outofstock" && b.stock_status === "outofstock") return -1;
+    return 0;
+  });
   const totalPages = result.pages;
 
   return (

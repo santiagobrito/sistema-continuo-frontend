@@ -104,7 +104,12 @@ export default async function CatchAllPage({ params }: Props) {
 // === Subcategory ===
 
 function SubcategoryView({ category, parentSlug }: { category: Category; parentSlug: string }) {
-  const products = category.products?.data ?? [];
+  const rawProducts = category.products?.data ?? [];
+  const products = [...rawProducts].sort((a, b) => {
+    if (a.stock_status === "outofstock" && b.stock_status !== "outofstock") return 1;
+    if (a.stock_status !== "outofstock" && b.stock_status === "outofstock") return -1;
+    return 0;
+  });
   return (
     <main className="bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-6">
