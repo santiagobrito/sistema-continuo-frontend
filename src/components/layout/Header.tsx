@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { SearchBar } from "./SearchBar";
 
 const NAV_LINKS = [
@@ -21,6 +22,7 @@ const NAV_LINKS = [
 
 export function Header() {
   const { itemCount, openDrawer } = useCart();
+  const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -79,10 +81,11 @@ export function Header() {
             </svg>
           </button>
 
-          <Link href="/mi-cuenta" className="p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors" aria-label="Mi cuenta">
+          <Link href={user ? "/mi-cuenta" : "/iniciar-sesion"} className="flex items-center gap-1.5 p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors cursor-pointer" aria-label="Mi cuenta">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
+            {user && <span className="hidden lg:inline text-xs font-medium text-gray-700 max-w-20 truncate">{user.name.split(" ")[0]}</span>}
           </Link>
 
           <button onClick={openDrawer} className="relative p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors cursor-pointer" aria-label="Carrito">
