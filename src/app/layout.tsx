@@ -4,6 +4,7 @@ import "./globals.css";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { GTMHead, GTMBody } from "@/components/analytics/GTMProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -38,7 +39,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${inter.variable} h-full antialiased`}>
+      <head>
+        <GTMHead />
+      </head>
       <body className="min-h-full flex flex-col font-sans">
+        <GTMBody />
         <CartProvider>
           <Header />
           {children}
