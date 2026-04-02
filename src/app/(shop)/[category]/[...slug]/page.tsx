@@ -9,6 +9,7 @@ import Link from "next/link";
 import { ProductActions } from "@/components/product/ProductActions";
 import { ProductTabs } from "@/components/product/ProductTabs";
 import { ProductGallery } from "@/components/product/ProductGallery";
+import { ShortDescription } from "@/components/product/ShortDescription";
 
 interface Props {
   params: Promise<{ category: string; slug: string[] }>;
@@ -209,7 +210,7 @@ function ProductView({ product, parentSlug }: { product: Product; parentSlug: st
               <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight mb-3">{product.name}</h1>
 
               {product.short_description && (
-                <div className="text-sm text-gray-500 leading-relaxed mb-4 line-clamp-3" dangerouslySetInnerHTML={{ __html: product.short_description }} />
+                <ShortDescription html={product.short_description} />
               )}
 
               {product.review_count > 0 && (

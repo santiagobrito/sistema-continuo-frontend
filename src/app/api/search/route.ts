@@ -55,21 +55,34 @@ export async function GET(request: NextRequest) {
     let products: SearchProduct[] = [];
     if (productsRes.status === "fulfilled" && productsRes.value.ok) {
       const data = await productsRes.value.json();
+      const qLower = q.toLowerCase();
+
       products = (data.data || []).map((p: Record<string, unknown>) => {
         const cats = (p.categories as { name: string; slug: string; path: string }[]) || [];
         const deepest = cats.reduce((best: { path: string } | null, c: { path: string }) => {
           return !best || c.path.split("/").length > best.path.split("/").length ? c : best;
         }, null);
 
+        const name = String(p.name || "");
+        const marca = String(p.marca || "");
+
+        // Relevance score: title match > brand match > category match > description match
+        let relevance = 0;
+        if (name.toLowerCase().includes(qLower)) relevance += 100;
+        if (name.toLowerCase().startsWith(qLower)) relevance += 50;
+        if (marca.toLowerCase().includes(qLower)) relevance += 30;
+        const catMatch = cats.some((c: { name: string }) => c.name.toLowerCase().includes(qLower));
+        if (catMatch) relevance += 20;
+
         return {
           id: p.id,
-          name: p.name,
+          name,
           slug: p.slug,
           price: p.price || "",
           regular_price: p.regular_price || "",
           on_sale: p.on_sale,
           image: (p.images as { url: string }[])?.[0]?.url || null,
-          marca: p.marca || "",
+          marca,
           categories: cats.map((c: { name: string; slug: string; path: string }) => ({
             name: c.name,
             slug: c.slug,
@@ -77,7 +90,17 @@ export async function GET(request: NextRequest) {
           })),
           is_catalog: !p.price && !p.purchasable,
           url: deepest ? `/${deepest.path}/${p.slug}` : `/${p.slug}`,
+          _relevance: relevance,
         };
+      });
+
+      // Sort by relevance (title matches first)
+      products.sort((a, b) => (b as SearchProduct & { _relevance: number })._relevance - (a as SearchProduct & { _relevance: number })._relevance);
+
+      // Remove internal field
+      products = products.map(({ ...p }) => {
+        delete (p as Record<string, unknown>)._relevance;
+        return p;
       });
     }
 
