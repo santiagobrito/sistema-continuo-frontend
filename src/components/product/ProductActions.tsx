@@ -28,8 +28,8 @@ export function ProductActions({ product }: { product: Product }) {
     return tier?.discount_percent || 0;
   }, [product.quantity_discounts, quantity]);
 
-  const unitPrice = activeDiscount > 0 ? activePrice * (1 - activeDiscount / 100) : activePrice;
-  const totalPrice = Math.round(unitPrice * quantity);
+  const unitPrice = activeDiscount > 0 ? Math.round(activePrice * (1 - activeDiscount / 100)) : activePrice;
+  const totalPrice = unitPrice * quantity;
 
   async function handleAddToCart() {
     const productId = product.id;
