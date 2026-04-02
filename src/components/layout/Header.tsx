@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
+import { SearchBar } from "./SearchBar";
 
 const NAV_LINKS = [
   { label: "Estampadoras", href: "/estampadoras" },
@@ -66,19 +67,8 @@ export function Header() {
         </Link>
 
         {/* Search */}
-        <div className="flex-1 max-w-xl mx-4 hidden md:block">
-          <div className="relative">
-            <input
-              type="search"
-              placeholder="Buscar productos..."
-              className="w-full bg-gray-50 border border-gray-200 rounded-full px-5 py-2.5 pr-11 text-sm placeholder:text-gray-400 focus:outline-none focus:bg-white focus:border-[#013d5a] focus:ring-2 focus:ring-[#013d5a]/10 transition-all"
-            />
-            <button className="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-[#013d5a] transition-colors">
-              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </button>
-          </div>
+        <div className="hidden md:block flex-1 max-w-xl mx-4">
+          <SearchBar />
         </div>
 
         {/* Right actions */}
@@ -131,12 +121,7 @@ export function Header() {
         <nav className="lg:hidden border-t bg-white absolute left-0 right-0 shadow-lg z-50 max-h-[70vh] overflow-y-auto">
           {/* Mobile search */}
           <div className="p-3 border-b">
-            <input
-              type="search"
-              placeholder="Buscar productos..."
-              className="w-full bg-gray-50 border border-gray-200 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:border-[#013d5a]"
-              autoFocus
-            />
+            <SearchBar mobile />
           </div>
           <ul>
             {NAV_LINKS.map((link) => (
