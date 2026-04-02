@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getCategory, getCategories, getCategoryUrl } from "@/lib/wordpress/api";
+import { getCategory, getCategories, getCategoryUrl, getProductUrl } from "@/lib/wordpress/api";
 import { formatPrice } from "@/lib/utils/format";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -16,10 +16,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const category = await getCategory(slug);
     return {
       title: category.seo_title || category.name,
-      description: category.seo_description || category.description || `Productos de ${category.name} en Sistema Continuo`,
+      description: category.seo_description || `Productos de ${category.name} en Sistema Continuo. Envios a todo el pais.`,
     };
   } catch {
-    return { title: "Categoría no encontrada" };
+    return { title: "Categoria no encontrada" };
   }
 }
 
@@ -55,157 +55,156 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const currentPage = parseInt(page);
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-8">
-      {/* Banner */}
-      {category.banner_image && (
-        <div className="relative w-full h-48 md:h-64 rounded-lg overflow-hidden mb-8">
-          <Image
-            src={category.banner_image.url}
-            alt={category.name}
-            fill
-            className="object-cover"
-            preload
-          />
-          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-white">{category.name}</h1>
-          </div>
-        </div>
-      )}
+    <main className="bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Breadcrumbs */}
+        <nav className="text-sm text-gray-500 mb-5">
+          <Link href="/" className="hover:text-[#013d5a]">Inicio</Link>
+          <span className="mx-2 text-gray-300">/</span>
+          <span className="text-gray-900 font-medium">{category.name}</span>
+        </nav>
 
-      {!category.banner_image && (
-        <h1 className="text-3xl font-bold mb-4">{category.name}</h1>
-      )}
-
-      {/* SEO Content (above grid) */}
-      {category.seo_content && (
-        <div
-          className="prose max-w-none mb-8"
-          dangerouslySetInnerHTML={{ __html: category.seo_content }}
-        />
-      )}
-
-      {/* Subcategories */}
-      {category.children && category.children.length > 0 && (
+        {/* Category header */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Subcategorías</h2>
-          <div className="flex flex-wrap gap-3">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{category.name}</h1>
+          <p className="text-gray-500">{category.products?.total || 0} productos</p>
+        </div>
+
+        {/* Subcategories */}
+        {category.children && category.children.length > 0 && (
+          <div className="mb-8 flex flex-wrap gap-2">
             {category.children.map((sub) => (
               <Link
                 key={sub.id}
                 href={getCategoryUrl(sub)}
-                className="px-4 py-2 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 rounded-lg text-sm transition-colors"
+                className="px-4 py-2 bg-white border border-gray-200 hover:border-[#013d5a] hover:text-[#013d5a] rounded-full text-sm font-medium transition-all"
               >
-                {sub.name} ({sub.count})
+                {sub.name}
+                <span className="ml-1.5 text-gray-400 text-xs">{sub.count}</span>
               </Link>
             ))}
+          </div>
+        )}
+
+        {/* SEO Content */}
+        {category.seo_content && (
+          <div className="prose prose-sm max-w-none mb-8 bg-white rounded-xl p-6 border border-gray-100" dangerouslySetInnerHTML={{ __html: category.seo_content }} />
+        )}
+
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar filters */}
+          <aside className="lg:w-56 flex-shrink-0">
+            <div className="bg-white rounded-xl border border-gray-100 p-5 sticky top-28">
+              <h3 className="font-semibold text-gray-900 text-sm mb-4">Ordenar por</h3>
+              <div className="space-y-1.5">
+                {[
+                  { label: "Mas recientes", val: "date", ord: "DESC" },
+                  { label: "Menor precio", val: "price", ord: "ASC" },
+                  { label: "Mayor precio", val: "price", ord: "DESC" },
+                  { label: "Mas vendidos", val: "popularity", ord: "DESC" },
+                ].map((opt) => (
+                  <Link
+                    key={opt.val + opt.ord}
+                    href={`/${slug}?orderby=${opt.val}&order=${opt.ord}`}
+                    className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
+                      orderby === opt.val && order === opt.ord
+                        ? "bg-[#013d5a] text-white font-medium"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {opt.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </aside>
+
+          {/* Product grid */}
+          <div className="flex-1">
+            {products.length > 0 ? (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {products.map((product) => (
+                    <Link
+                      key={product.id}
+                      href={getProductUrl(product)}
+                      className="group bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all overflow-hidden"
+                    >
+                      <div className="aspect-square relative bg-gray-50/50 p-3">
+                        {product.images[0] ? (
+                          <Image
+                            src={product.images[0].url}
+                            alt={product.images[0].alt || product.name}
+                            fill
+                            className="object-contain p-1 group-hover:scale-105 transition-transform duration-300"
+                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <svg className="w-12 h-12 text-gray-200" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        )}
+                        {product.on_sale && (
+                          <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">OFERTA</span>
+                        )}
+                        {product.is_catalog_only && (
+                          <span className="absolute top-2 right-2 bg-[#013d5a] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">CONSULTAR</span>
+                        )}
+                        {product.stock_status === "outofstock" && (
+                          <span className="absolute top-2 right-2 bg-gray-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">SIN STOCK</span>
+                        )}
+                      </div>
+                      <div className="p-3.5 pt-2">
+                        {product.marca && (
+                          <p className="text-[10px] font-semibold text-[#013d5a]/50 uppercase tracking-widest mb-0.5">{product.marca}</p>
+                        )}
+                        <h3 className="text-sm font-medium text-gray-900 line-clamp-2 leading-snug mb-2 group-hover:text-[#013d5a] transition-colors">
+                          {product.name}
+                        </h3>
+                        {product.is_catalog_only ? (
+                          <span className="text-sm text-[#013d5a] font-semibold">Consultar precio</span>
+                        ) : product.price ? (
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-base font-bold text-gray-900">{formatPrice(product.price)}</span>
+                            {product.on_sale && product.regular_price && (
+                              <span className="text-xs text-gray-400 line-through">{formatPrice(product.regular_price)}</span>
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center gap-2 mt-10">
+                    {currentPage > 1 && (
+                      <Link href={`/${slug}?page=${currentPage - 1}&orderby=${orderby}&order=${order}`} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:border-[#013d5a] hover:text-[#013d5a] transition-colors">
+                        Anterior
+                      </Link>
+                    )}
+                    <span className="px-4 py-2 text-sm text-gray-500">
+                      {currentPage} / {totalPages}
+                    </span>
+                    {currentPage < totalPages && (
+                      <Link href={`/${slug}?page=${currentPage + 1}&orderby=${orderby}&order=${order}`} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:border-[#013d5a] hover:text-[#013d5a] transition-colors">
+                        Siguiente
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-20">
+                <p className="text-gray-400 text-lg">No hay productos en esta categoria.</p>
+              </div>
+            )}
           </div>
         </div>
-      )}
-
-      {/* Products grid */}
-      {products.length > 0 ? (
-        <>
-          <div className="flex items-center justify-between mb-6">
-            <p className="text-gray-600">
-              {category.products?.total} productos
-            </p>
-            {/* Sort selector would go here */}
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {products.map((product) => (
-              <Link
-                key={product.id}
-                href={`/${category.slug}/${product.slug}`}
-                className="group block bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow overflow-hidden"
-              >
-                {/* Image */}
-                <div className="aspect-square relative bg-gray-50">
-                  {product.images[0] ? (
-                    <Image
-                      src={product.images[0].url}
-                      alt={product.images[0].alt || product.name}
-                      fill
-                      className="object-contain p-2 group-hover:scale-105 transition-transform"
-                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300">
-                      Sin imagen
-                    </div>
-                  )}
-                  {product.on_sale && (
-                    <span className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                      Oferta
-                    </span>
-                  )}
-                  {product.is_catalog_only && (
-                    <span className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
-                      Consultar
-                    </span>
-                  )}
-                </div>
-
-                {/* Info */}
-                <div className="p-3">
-                  {product.marca && (
-                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-                      {product.marca}
-                    </p>
-                  )}
-                  <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2">
-                    {product.name}
-                  </h3>
-                  {product.is_catalog_only ? (
-                    <p className="text-sm text-blue-600 font-medium">Consultar precio</p>
-                  ) : product.price ? (
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-lg font-bold text-gray-900">
-                        {formatPrice(product.price)}
-                      </span>
-                      {product.on_sale && product.regular_price && (
-                        <span className="text-sm text-gray-400 line-through">
-                          {formatPrice(product.regular_price)}
-                        </span>
-                      )}
-                    </div>
-                  ) : null}
-                  {product.stock_status === "outofstock" && (
-                    <p className="text-xs text-red-500 mt-1">Sin stock</p>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-8">
-              {currentPage > 1 && (
-                <Link
-                  href={`/${slug}?page=${currentPage - 1}`}
-                  className="px-4 py-2 border rounded hover:bg-gray-50"
-                >
-                  ← Anterior
-                </Link>
-              )}
-              <span className="px-4 py-2 text-gray-600">
-                Página {currentPage} de {totalPages}
-              </span>
-              {currentPage < totalPages && (
-                <Link
-                  href={`/${slug}?page=${currentPage + 1}`}
-                  className="px-4 py-2 border rounded hover:bg-gray-50"
-                >
-                  Siguiente →
-                </Link>
-              )}
-            </div>
-          )}
-        </>
-      ) : (
-        <p className="text-gray-500">No hay productos en esta categoría.</p>
-      )}
+      </div>
     </main>
   );
 }
