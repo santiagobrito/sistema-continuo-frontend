@@ -9,11 +9,18 @@ function getYouTubeId(url: string): string | null {
   return m ? m[1] : null;
 }
 
+function isDirectVideo(url: string): boolean {
+  return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+}
+
+type VideoKind = "youtube" | "direct";
+
 interface GalleryItem {
   type: "image" | "video";
   image?: SCImage;
   videoUrl?: string;
   videoId?: string;
+  videoKind?: VideoKind;
 }
 
 export function ProductGallery({
@@ -29,9 +36,13 @@ export function ProductGallery({
 
   // Build gallery items: images first, video last
   const items: GalleryItem[] = images.map((img) => ({ type: "image" as const, image: img }));
-  const videoId = videoUrl ? getYouTubeId(videoUrl) : null;
-  if (videoUrl && videoId) {
-    items.push({ type: "video", videoUrl, videoId });
+  if (videoUrl) {
+    const videoId = getYouTubeId(videoUrl);
+    if (videoId) {
+      items.push({ type: "video", videoUrl, videoId, videoKind: "youtube" });
+    } else if (isDirectVideo(videoUrl)) {
+      items.push({ type: "video", videoUrl, videoKind: "direct" });
+    }
   }
 
   if (items.length === 0) {
@@ -60,12 +71,21 @@ export function ProductGallery({
             preload={activeIndex === 0}
             sizes="(max-width: 1024px) 100vw, 50vw"
           />
-        ) : active.type === "video" ? (
+        ) : active.type === "video" && active.videoKind === "youtube" ? (
           <iframe
             src={`https://www.youtube.com/embed/${active.videoId}?rel=0`}
             className="w-full h-full"
             allowFullScreen
             loading="lazy"
+            title={`Video de ${productName}`}
+          />
+        ) : active.type === "video" && active.videoKind === "direct" ? (
+          <video
+            src={active.videoUrl}
+            className="w-full h-full object-contain"
+            controls
+            playsInline
+            preload="metadata"
             title={`Video de ${productName}`}
           />
         ) : null}
@@ -123,16 +143,20 @@ export function ProductGallery({
                   sizes="80px"
                   loading="lazy"
                 />
-              ) : item.type === "video" && item.videoId ? (
+              ) : item.type === "video" ? (
                 <>
-                  <Image
-                    src={`https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg`}
-                    alt={`Video de ${productName}`}
-                    fill
-                    className="object-cover"
-                    sizes="80px"
-                    loading="lazy"
-                  />
+                  {item.videoKind === "youtube" && item.videoId ? (
+                    <Image
+                      src={`https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg`}
+                      alt={`Video de ${productName}`}
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gray-800" />
+                  )}
                   {/* Play overlay */}
                   <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                     <svg className="w-6 h-6 text-white drop-shadow" fill="currentColor" viewBox="0 0 24 24">
