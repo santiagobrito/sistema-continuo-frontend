@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="profile" href="https://gmpg.org/xfn/11">
+	<title>Página no encontrada &#8211; SENKO</title>
+<meta name='robots' content='noindex, nofollow' />
+<link rel='dns-prefetch' href='//www.googletagmanager.com' />
+<link rel="alternate" type="application/rss+xml" title="SENKO &raquo; Feed" href="https://senko.com.ar/feed/" />
+<link rel="alternate" type="application/rss+xml" title="SENKO &raquo; Feed de los comentarios" href="https://senko.com.ar/comments/feed/" />
+<style id='wp-img-auto-sizes-contain-inline-css'>
+img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+</style>
+<style id='wp-emoji-styles-inline-css'>
+
+	img.wp-smiley, img.emoji {
+		display: inline !important;
+		border: none !important;
+		box-shadow: none !important;
+		height: 1em !important;
+		width: 1em !important;
+		margin: 0 0.07em !important;
+		vertical-align: -0.1em !important;
+		background: none !important;
+		padding: 0 !important;
+	}
+/*# sourceURL=wp-emoji-styles-inline-css */
+</style>
+<link rel='stylesheet' id='wp-block-library-css' href='https://senko.com.ar/wp-includes/css/dist/block-library/style.min.css?ver=6.9.4' media='all' />
+<style id='global-styles-inline-css'>
+:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgb(6,147,227) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgb(252,185,0) 0%,rgb(255,105,0) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgb(255,105,0) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgb(255, 255, 255), 6px 6px rgb(0, 0, 0);--wp--preset--shadow--crisp: 6px 6px 0px rgb(0, 0, 0);}:root { --wp--style--global--content-size: 800px;--wp--style--global--wide-size: 1200px; }:where(body) { margin: 0; }.wp-site-blocks > .alignleft { float: left; margin-right: 2em; }.wp-site-blocks > .alignright { float: right; margin-left: 2em; }.wp-site-blocks > .aligncenter { justify-content: center; margin-left: auto; margin-right: auto; }:where(.wp-site-blocks) > * { margin-block-start: 24px; margin-block-end: 0; }:where(.wp-site-blocks) > :first-child { margin-block-start: 0; }:where(.wp-site-blocks) > :last-child { margin-block-end: 0; }:root { --wp--style--block-gap: 24px; }:root :where(.is-layout-flow) > :first-child{margin-block-start: 0;}:root :where(.is-layout-flow) > :last-child{margin-block-end: 0;}:root :where(.is-layout-flow) > *{margin-block-start: 24px;margin-block-end: 0;}:root :where(.is-layout-constrained) > :first-child{margin-block-start: 0;}:root :where(.is-layout-constrained) > :last-child{margin-block-end: 0;}:root :where(.is-layout-constrained) > *{margin-block-start: 24px;margin-block-end: 0;}:root :where(.is-layout-flex){gap: 24px;}:root :where(.is-layout-grid){gap: 24px;}.is-layout-flow > .alignleft{float: left;margin-inline-start: 0;margin-inline-end: 2em;}.is-layout-flow > .alignright{float: right;margin-inline-start: 2em;margin-inline-end: 0;}.is-layout-flow > .aligncenter{margin-left: auto !important;margin-right: auto !important;}.is-layout-constrained > .alignleft{float: left;margin-inline-start: 0;margin-inline-end: 2em;}.is-layout-constrained > .alignright{float: right;margin-inline-start: 2em;margin-inline-end: 0;}.is-layout-constrained > .aligncenter{margin-left: auto !important;margin-right: auto !important;}.is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)){max-width: var(--wp--style--global--content-size);margin-left: auto !important;margin-right: auto !important;}.is-layout-constrained > .alignwide{max-width: var(--wp--style--global--wide-size);}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}body{padding-top: 0px;padding-right: 0px;padding-bottom: 0px;padding-left: 0px;}a:where(:not(.wp-element-button)){text-decoration: underline;}:root :where(.wp-element-button, .wp-block-button__link){background-color: #32373c;border-width: 0;color: #fff;font-family: inherit;font-size: inherit;font-style: inherit;font-weight: inherit;letter-spacing: inherit;line-height: inherit;padding-top: calc(0.667em + 2px);padding-right: calc(1.333em + 2px);padding-bottom: calc(0.667em + 2px);padding-left: calc(1.333em + 2px);text-decoration: none;text-transform: inherit;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+:root :where(.wp-block-pullquote){font-size: 1.5em;line-height: 1.6;}
+/*# sourceURL=global-styles-inline-css */
+</style>
+<link rel='stylesheet' id='wpa-css-css' href='https://senko.com.ar/wp-content/plugins/honeypot/includes/css/wpa.css?ver=2.3.04' media='all' />
+<link rel='stylesheet' id='woocommerce-layout-css' href='https://senko.com.ar/wp-content/plugins/woocommerce/assets/css/woocommerce-layout.css?ver=10.4.3' media='all' />
+<link rel='stylesheet' id='woocommerce-smallscreen-css' href='https://senko.com.ar/wp-content/plugins/woocommerce/assets/css/woocommerce-smallscreen.css?ver=10.4.3' media='only screen and (max-width: 768px)' />
+<link rel='stylesheet' id='woocommerce-general-css' href='https://senko.com.ar/wp-content/plugins/woocommerce/assets/css/woocommerce.css?ver=10.4.3' media='all' />
+<style id='woocommerce-inline-inline-css'>
+.woocommerce form .form-row .required { visibility: visible; }
+/*# sourceURL=woocommerce-inline-inline-css */
+</style>
+<link rel='stylesheet' id='wa_order_style-css' href='https://senko.com.ar/wp-content/plugins/oneclick-whatsapp-order/assets/css/main-style.css?ver=1.1.0' media='all' />
+<link rel='stylesheet' id='hello-elementor-css' href='https://senko.com.ar/wp-content/themes/hello-elementor/assets/css/reset.css?ver=3.4.5' media='all' />
+<link rel='stylesheet' id='hello-elementor-theme-style-css' href='https://senko.com.ar/wp-content/themes/hello-elementor/assets/css/theme.css?ver=3.4.5' media='all' />
+<link rel='stylesheet' id='hello-elementor-header-footer-css' href='https://senko.com.ar/wp-content/themes/hello-elementor/assets/css/header-footer.css?ver=3.4.5' media='all' />
+<link rel='stylesheet' id='elementor-frontend-css' href='https://senko.com.ar/wp-content/plugins/elementor/assets/css/frontend.min.css?ver=3.35.0' media='all' />
+<link rel='stylesheet' id='widget-image-css' href='https://senko.com.ar/wp-content/plugins/elementor/assets/css/widget-image.min.css?ver=3.35.0' media='all' />
+<link rel='stylesheet' id='widget-nav-menu-css' href='https://senko.com.ar/wp-content/plugins/pro-elements/assets/css/widget-nav-menu.min.css?ver=3.34.0' media='all' />
+<link rel='stylesheet' id='e-animation-pulse-grow-css' href='https://senko.com.ar/wp-content/plugins/elementor/assets/lib/animations/styles/e-animation-pulse-grow.min.css?ver=3.35.0' media='all' />
+<link rel='stylesheet' id='widget-social-icons-css' href='https://senko.com.ar/wp-content/plugins/elementor/assets/css/widget-social-icons.min.css?ver=3.35.0' media='all' />
+<link rel='stylesheet' id='e-apple-webkit-css' href='https://senko.com.ar/wp-content/plugins/elementor/assets/css/conditionals/apple-webkit.min.css?ver=3.35.0' media='all' />
+<link rel='stylesheet' id='widget-heading-css' href='https://senko.com.ar/wp-content/plugins/elementor/assets/css/widget-heading.min.css?ver=3.35.0' media='all' />
+<link rel='stylesheet' id='widget-mega-menu-css' href='https://senko.com.ar/wp-content/plugins/pro-elements/assets/css/widget-mega-menu.min.css?ver=3.34.0' media='all' />
+<link rel='stylesheet' id='e-sticky-css' href='https://senko.com.ar/wp-content/plugins/pro-elements/assets/css/modules/sticky.min.css?ver=3.34.0' media='all' />
+<link rel='stylesheet' id='widget-form-css' href='https://senko.com.ar/wp-content/plugins/pro-elements/assets/css/widget-form.min.css?ver=3.34.0' media='all' />
+<link rel='stylesheet' id='e-popup-css' href='https://senko.com.ar/wp-content/plugins/pro-elements/assets/css/conditionals/popup.min.css?ver=3.34.0' media='all' />
+<link rel='stylesheet' id='elementor-icons-css' href='https://senko.com.ar/wp-content/plugins/elementor/assets/lib/eicons/css/elementor-icons.min.css?ver=5.47.0' media='all' />
+<link rel='stylesheet' id='elementor-post-4403-css' href='https://senko.com.ar/wp-content/uploads/elementor/css/post-4403.css?ver=1770147784' media='all' />
+<link rel='stylesheet' id='elementor-post-6019-css' href='https://senko.com.ar/wp-content/uploads/elementor/css/post-6019.css?ver=1770147784' media='all' />
+<link rel='stylesheet' id='elementor-post-6104-css' href='https://senko.com.ar/wp-content/uploads/elementor/css/post-6104.css?ver=1770147784' media='all' />
+<link rel='stylesheet' id='elementor-post-6948-css' href='https://senko.com.ar/wp-content/uploads/elementor/css/post-6948.css?ver=1770147784' media='all' />
+<link rel='stylesheet' id='heateor_sss_frontend_css-css' href='https://senko.com.ar/wp-content/plugins/sassy-social-share/public/css/sassy-social-share-public.css?ver=3.3.79' media='all' />
+<style id='heateor_sss_frontend_css-inline-css'>
+.heateor_sss_button_instagram span.heateor_sss_svg,a.heateor_sss_instagram span.heateor_sss_svg{background:radial-gradient(circle at 30% 107%,#fdf497 0,#fdf497 5%,#fd5949 45%,#d6249f 60%,#285aeb 90%)}.heateor_sss_horizontal_sharing .heateor_sss_svg,.heateor_sss_standard_follow_icons_container .heateor_sss_svg{color:#fff;border-width:0px;border-style:solid;border-color:transparent}.heateor_sss_horizontal_sharing .heateorSssTCBackground{color:#666}.heateor_sss_horizontal_sharing span.heateor_sss_svg:hover,.heateor_sss_standard_follow_icons_container span.heateor_sss_svg:hover{border-color:transparent;}.heateor_sss_vertical_sharing span.heateor_sss_svg,.heateor_sss_floating_follow_icons_container span.heateor_sss_svg{color:#fff;border-width:0px;border-style:solid;border-color:transparent;}.heateor_sss_vertical_sharing .heateorSssTCBackground{color:#666;}.heateor_sss_vertical_sharing span.heateor_sss_svg:hover,.heateor_sss_floating_follow_icons_container span.heateor_sss_svg:hover{border-color:transparent;}@media screen and (max-width:783px) {.heateor_sss_vertical_sharing{display:none!important}}
+/*# sourceURL=heateor_sss_frontend_css-inline-css */
+</style>
+<link rel='stylesheet' id='elementor-gf-local-roboto-css' href='https://senko.com.ar/wp-content/uploads/elementor/google-fonts/css/roboto.css?ver=1742912268' media='all' />
+<link rel='stylesheet' id='elementor-gf-local-robotoslab-css' href='https://senko.com.ar/wp-content/uploads/elementor/google-fonts/css/robotoslab.css?ver=1742912270' media='all' />
+<link rel='stylesheet' id='elementor-icons-shared-0-css' href='https://senko.com.ar/wp-content/plugins/elementor/assets/lib/font-awesome/css/fontawesome.min.css?ver=5.15.3' media='all' />
+<link rel='stylesheet' id='elementor-icons-fa-solid-css' href='https://senko.com.ar/wp-content/plugins/elementor/assets/lib/font-awesome/css/solid.min.css?ver=5.15.3' media='all' />
+<link rel='stylesheet' id='elementor-icons-fa-brands-css' href='https://senko.com.ar/wp-content/plugins/elementor/assets/lib/font-awesome/css/brands.min.css?ver=5.15.3' media='all' />
+<script src="https://senko.com.ar/wp-includes/js/jquery/jquery.min.js?ver=3.7.1" id="jquery-core-js"></script>
+<script src="https://senko.com.ar/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1" id="jquery-migrate-js"></script>
+<script src="https://senko.com.ar/wp-content/plugins/woocommerce/assets/js/jquery-blockui/jquery.blockUI.min.js?ver=2.7.0-wc.10.4.3" id="wc-jquery-blockui-js" data-wp-strategy="defer"></script>
+<script id="wc-add-to-cart-js-extra">
+var wc_add_to_cart_params = {"ajax_url":"/wp-admin/admin-ajax.php","wc_ajax_url":"/?wc-ajax=%%endpoint%%","i18n_view_cart":"Ver carrito","cart_url":"https://senko.com.ar","is_cart":"","cart_redirect_after_add":"no"};
+//# sourceURL=wc-add-to-cart-js-extra
+</script>
+<script src="https://senko.com.ar/wp-content/plugins/woocommerce/assets/js/frontend/add-to-cart.min.js?ver=10.4.3" id="wc-add-to-cart-js" defer data-wp-strategy="defer"></script>
+<script src="https://senko.com.ar/wp-content/plugins/woocommerce/assets/js/js-cookie/js.cookie.min.js?ver=2.1.4-wc.10.4.3" id="wc-js-cookie-js" data-wp-strategy="defer"></script>
+
+<!-- Fragmento de código de la etiqueta de Google (gtag.js) añadida por Site Kit -->
+<!-- Fragmento de código de Google Analytics añadido por Site Kit -->
+<script src="https://www.googletagmanager.com/gtag/js?id=GT-MJWCTTKD" id="google_gtagjs-js" async></script>
+<script id="google_gtagjs-js-after">
+window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}
+gtag("set","linker",{"domains":["senko.com.ar"]});
+gtag("js", new Date());
+gtag("set", "developer_id.dZTNiMT", true);
+gtag("config", "GT-MJWCTTKD");
+ window._googlesitekit = window._googlesitekit || {}; window._googlesitekit.throttledEvents = []; window._googlesitekit.gtagEvent = (name, data) => { var key = JSON.stringify( { name, data } ); if ( !! window._googlesitekit.throttledEvents[ key ] ) { return; } window._googlesitekit.throttledEvents[ key ] = true; setTimeout( () => { delete window._googlesitekit.throttledEvents[ key ]; }, 5 ); gtag( "event", name, { ...data, event_source: "site-kit" } ); }; 
+//# sourceURL=google_gtagjs-js-after
+</script>
+<link rel="https://api.w.org/" href="https://senko.com.ar/wp-json/" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://senko.com.ar/xmlrpc.php?rsd" />
+<meta name="generator" content="WordPress 6.9.4" />
+<meta name="generator" content="WooCommerce 10.4.3" />
+<meta name="generator" content="Site Kit by Google 1.171.0" /><!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '2206905493120363');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=2206905493120363&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->		<style>
+			#sendbtn,
+			#sendbtn2,
+			.wa-order-button,
+			.gdpr_wa_button_input {
+				background-color: rgba(37, 211, 102, 1) !important;
+				color: rgba(255, 255, 255, 1) !important;
+			}
+
+			#sendbtn:hover,
+			#sendbtn2:hover,
+			.wa-order-button:hover,
+			.gdpr_wa_button_input:hover {
+				background-color: rgba(37, 211, 102, 1) !important;
+				color: rgba(255, 255, 255, 1) !important;
+			}
+		</style>
+		<style>
+		#sendbtn,
+		#sendbtn2,
+		.wa-order-button,
+		.gdpr_wa_button_input,
+		a.wa-order-checkout,
+		a.wa-order-thankyou,
+		.shortcode_wa_button,
+		.shortcode_wa_button_nt,
+		.floating_button {
+			-webkit-box-shadow: inset 0px 4px 7px 0px rgba(0,0,0,0.25) !important;
+			-moz-box-shadow: inset 0px 4px 7px 0px rgba(0,0,0,0.25) !important;
+			box-shadow: inset 0px 4px 7px 0px rgba(0,0,0,0.25) !important;
+		}
+
+		#sendbtn:hover,
+		#sendbtn2:hover,
+		.wa-order-button:hover,
+		.gdpr_wa_button_input:hover,
+		a.wa-order-checkout:hover,
+		a.wa-order-thankyou:hover,
+		.shortcode_wa_button:hover,
+		.shortcode_wa_button_nt:hover,
+		.floating_button:hover {
+			-webkit-box-shadow: inset 0px 4px 7px 0px rgba(0,0,0,0.25) !important;
+			-moz-box-shadow: inset 0px 4px 7px 0px rgba(0,0,0,0.25) !important;
+			box-shadow: inset 0px 4px 7px 0px rgba(0,0,0,0.25) !important;
+		}
+	</style>
+<style>
+            .wa-order-button-under-atc,
+            .wa-order-button-shortdesc,
+            .wa-order-button-after-atc {
+                margin: px px px px !important;
+            }
+        </style><style>
+            .wa-order-button-under-atc,
+            .wa-order-button-shortdesc,
+            .wa-order-button {
+                padding: px px px px !important;
+            }
+        </style>		<style>
+			.add_to_cart_button,
+			.ajax_add_to_cart {
+				display: none !important;
+			}
+
+			.wa-shop-button {
+				display: inline-block !important;
+			}
+		</style>
+	<noscript><style>.woocommerce-product-gallery{ opacity: 1 !important; }</style></noscript>
+	<meta name="generator" content="Elementor 3.35.0; features: additional_custom_breakpoints; settings: css_print_method-external, google_font-enabled, font_display-auto">
+			<style>
+				.e-con.e-parent:nth-of-type(n+4):not(.e-lazyloaded):not(.e-no-lazyload),
+				.e-con.e-parent:nth-of-type(n+4):not(.e-lazyloaded):not(.e-no-lazyload) * {
+					background-image: none !important;
+				}
+				@media screen and (max-height: 1024px) {
+					.e-con.e-parent:nth-of-type(n+3):not(.e-lazyloaded):not(.e-no-lazyload),
+					.e-con.e-parent:nth-of-type(n+3):not(.e-lazyloaded):not(.e-no-lazyload) * {
+						background-image: none !important;
+					}
+				}
+				@media screen and (max-height: 640px) {
+					.e-con.e-parent:nth-of-type(n+2):not(.e-lazyloaded):not(.e-no-lazyload),
+					.e-con.e-parent:nth-of-type(n+2):not(.e-lazyloaded):not(.e-no-lazyload) * {
+						background-image: none !important;
+					}
+				}
+			</style>
+			
+<!-- Fragmento de código de Google Tag Manager añadido por Site Kit -->
+<script>
+			( function( w, d, s, l, i ) {
+				w[l] = w[l] || [];
+				w[l].push( {'gtm.start': new Date().getTime(), event: 'gtm.js'} );
+				var f = d.getElementsByTagName( s )[0],
+					j = d.createElement( s ), dl = l != 'dataLayer' ? '&l=' + l : '';
+				j.async = true;
+				j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+				f.parentNode.insertBefore( j, f );
+			} )( window, document, 'script', 'dataLayer', 'GTM-MVJT63FW' );
+			
+</script>
+
+<!-- Final del fragmento de código de Google Tag Manager añadido por Site Kit -->
+<link rel="icon" href="https://senko.com.ar/wp-content/uploads/2020/11/Logo-Senko-fat-icon.jpg" sizes="32x32" />
+<link rel="icon" href="https://senko.com.ar/wp-content/uploads/2020/11/Logo-Senko-fat-icon.jpg" sizes="192x192" />
+<link rel="apple-touch-icon" href="https://senko.com.ar/wp-content/uploads/2020/11/Logo-Senko-fat-icon.jpg" />
+<meta name="msapplication-TileImage" content="https://senko.com.ar/wp-content/uploads/2020/11/Logo-Senko-fat-icon.jpg" />
+</head>
+<body class="error404 wp-custom-logo wp-embed-responsive wp-theme-hello-elementor theme-hello-elementor woocommerce-no-js hello-elementor-default elementor-default elementor-kit-4403">
+
+		<!-- Fragmento de código de Google Tag Manager (noscript) añadido por Site Kit -->
+		<noscript>
+			<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MVJT63FW" height="0" width="0" style="display:none;visibility:hidden"></iframe>
+		</noscript>
+		<!-- Final del fragmento de código de Google Tag Manager (noscript) añadido por Site Kit -->
+		
+<a class="skip-link screen-reader-text" href="#content">Ir al contenido</a>
+
+		<header data-elementor-type="header" data-elementor-id="6019" class="elementor elementor-6019 elementor-location-header" data-elementor-post-type="elementor_library">
+			<div class="elementor-element elementor-element-04373e5 elementor-hidden-tablet elementor-hidden-mobile e-flex e-con-boxed e-con e-parent" data-id="04373e5" data-element_type="container" data-e-type="container">
+					<div class="e-con-inner">
+				<div class="elementor-element elementor-element-5c07032 elementor-widget elementor-widget-theme-site-logo elementor-widget-image" data-id="5c07032" data-element_type="widget" data-e-type="widget" data-widget_type="theme-site-logo.default">
+				<div class="elementor-widget-container">
+											<a href="https://senko.com.ar">
+			<img src="https://senko.com.ar/wp-content/uploads/elementor/thumbs/Logo-Senko-oydfj55gomy0oesdyaoeehg48coy50qzh4gtf2495c.png" title="Logo-Senko" alt="Logo-Senko" loading="lazy" />				</a>
+											</div>
+				</div>
+				<div class="elementor-element elementor-element-f5961eb elementor-nav-menu--dropdown-tablet elementor-nav-menu__text-align-aside elementor-nav-menu--toggle elementor-nav-menu--burger elementor-widget elementor-widget-nav-menu" data-id="f5961eb" data-element_type="widget" data-e-type="widget" data-settings="{&quot;layout&quot;:&quot;horizontal&quot;,&quot;submenu_icon&quot;:{&quot;value&quot;:&quot;&lt;i class=\&quot;fas fa-caret-down\&quot; aria-hidden=\&quot;true\&quot;&gt;&lt;\/i&gt;&quot;,&quot;library&quot;:&quot;fa-solid&quot;},&quot;toggle&quot;:&quot;burger&quot;}" data-widget_type="nav-menu.default">
+				<div class="elementor-widget-container">
+								<nav aria-label="Menu" class="elementor-nav-menu--main elementor-nav-menu__container elementor-nav-menu--layout-horizontal e--pointer-underline e--animation-fade">
+				<ul id="menu-1-f5961eb" class="elementor-nav-menu"><li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-5607"><a href="https://senko.com.ar/" class="elementor-item">Inicio</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-home menu-item-has-children menu-item-5610"><a href="https://senko.com.ar/#Equipos" class="elementor-item elementor-item-anchor">Equipos</a>
+<ul class="sub-menu elementor-nav-menu--dropdown">
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5613"><a href="https://senko.com.ar/estampadoras-de-tazas/" class="elementor-sub-item">Tazas</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5615"><a href="https://senko.com.ar/estampadoras-planas/" class="elementor-sub-item">Planas</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6687"><a href="https://senko.com.ar/estampadoras-independientes/" class="elementor-sub-item">Independientes</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6689"><a href="https://senko.com.ar/estampadoras-multifuncion/" class="elementor-sub-item">Multifuncion</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6688"><a href="https://senko.com.ar/estampadoras-gran-formato/" class="elementor-sub-item">Estampadoras</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5617"><a href="https://senko.com.ar/gran-formato-senko/" class="elementor-sub-item">Calandras</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5618"><a href="https://senko.com.ar/plotters/" class="elementor-sub-item">Plotters</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6691"><a href="https://senko.com.ar/dtf-textil/" class="elementor-sub-item">DTF (Textil)</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6690"><a href="https://senko.com.ar/dtf-uv/" class="elementor-sub-item">DTF (UV)</a></li>
+</ul>
+</li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5616"><a href="https://senko.com.ar/ser-distribuidor/" class="elementor-item">Ser Distribuidor</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page current_page_parent menu-item-6259"><a href="https://senko.com.ar/blog-senko/" class="elementor-item">Blog</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5609"><a href="https://senko.com.ar/contacto-senko/" class="elementor-item">Contacto</a></li>
+</ul>			</nav>
+					<div class="elementor-menu-toggle" role="button" tabindex="0" aria-label="Menu Toggle" aria-expanded="false">
+			<i aria-hidden="true" role="presentation" class="elementor-menu-toggle__icon--open eicon-menu-bar"></i><i aria-hidden="true" role="presentation" class="elementor-menu-toggle__icon--close eicon-close"></i>		</div>
+					<nav class="elementor-nav-menu--dropdown elementor-nav-menu__container" aria-hidden="true">
+				<ul id="menu-2-f5961eb" class="elementor-nav-menu"><li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-5607"><a href="https://senko.com.ar/" class="elementor-item" tabindex="-1">Inicio</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-home menu-item-has-children menu-item-5610"><a href="https://senko.com.ar/#Equipos" class="elementor-item elementor-item-anchor" tabindex="-1">Equipos</a>
+<ul class="sub-menu elementor-nav-menu--dropdown">
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5613"><a href="https://senko.com.ar/estampadoras-de-tazas/" class="elementor-sub-item" tabindex="-1">Tazas</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5615"><a href="https://senko.com.ar/estampadoras-planas/" class="elementor-sub-item" tabindex="-1">Planas</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6687"><a href="https://senko.com.ar/estampadoras-independientes/" class="elementor-sub-item" tabindex="-1">Independientes</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6689"><a href="https://senko.com.ar/estampadoras-multifuncion/" class="elementor-sub-item" tabindex="-1">Multifuncion</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6688"><a href="https://senko.com.ar/estampadoras-gran-formato/" class="elementor-sub-item" tabindex="-1">Estampadoras</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5617"><a href="https://senko.com.ar/gran-formato-senko/" class="elementor-sub-item" tabindex="-1">Calandras</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5618"><a href="https://senko.com.ar/plotters/" class="elementor-sub-item" tabindex="-1">Plotters</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6691"><a href="https://senko.com.ar/dtf-textil/" class="elementor-sub-item" tabindex="-1">DTF (Textil)</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6690"><a href="https://senko.com.ar/dtf-uv/" class="elementor-sub-item" tabindex="-1">DTF (UV)</a></li>
+</ul>
+</li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5616"><a href="https://senko.com.ar/ser-distribuidor/" class="elementor-item" tabindex="-1">Ser Distribuidor</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page current_page_parent menu-item-6259"><a href="https://senko.com.ar/blog-senko/" class="elementor-item" tabindex="-1">Blog</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5609"><a href="https://senko.com.ar/contacto-senko/" class="elementor-item" tabindex="-1">Contacto</a></li>
+</ul>			</nav>
+						</div>
+				</div>
+				<div class="elementor-element elementor-element-841fc7e elementor-shape-rounded elementor-grid-0 e-grid-align-center elementor-widget elementor-widget-social-icons" data-id="841fc7e" data-element_type="widget" data-e-type="widget" data-widget_type="social-icons.default">
+				<div class="elementor-widget-container">
+							<div class="elementor-social-icons-wrapper elementor-grid" role="list">
+							<span class="elementor-grid-item" role="listitem">
+					<a class="elementor-icon elementor-social-icon elementor-social-icon-facebook elementor-animation-pulse-grow elementor-repeater-item-ebe8ac1" href="https://www.facebook.com/senko.ar">
+						<span class="elementor-screen-only">Facebook</span>
+						<i aria-hidden="true" class="fab fa-facebook"></i>					</a>
+				</span>
+							<span class="elementor-grid-item" role="listitem">
+					<a class="elementor-icon elementor-social-icon elementor-social-icon-instagram elementor-animation-pulse-grow elementor-repeater-item-3a22a0a" href="https://www.instagram.com/senko.ar/" target="_blank">
+						<span class="elementor-screen-only">Instagram</span>
+						<i aria-hidden="true" class="fab fa-instagram"></i>					</a>
+				</span>
+							<span class="elementor-grid-item" role="listitem">
+					<a class="elementor-icon elementor-social-icon elementor-social-icon-youtube elementor-animation-pulse-grow elementor-repeater-item-9ba7a29" href="https://www.youtube.com/channel/UCeiA67scnz3Bcc04MUxdb4A" target="_blank">
+						<span class="elementor-screen-only">Youtube</span>
+						<i aria-hidden="true" class="fab fa-youtube"></i>					</a>
+				</span>
+					</div>
+						</div>
+				</div>
+					</div>
+				</div>
+		<div class="elementor-element elementor-element-bdee87c elementor-hidden-tablet elementor-hidden-mobile e-flex e-con-boxed e-con e-parent" data-id="bdee87c" data-element_type="container" data-e-type="container" id="menuhopin" data-settings="{&quot;background_background&quot;:&quot;classic&quot;,&quot;position&quot;:&quot;fixed&quot;}">
+					<div class="e-con-inner">
+				<div class="elementor-element elementor-element-03d43c9 elementor-widget elementor-widget-theme-site-logo elementor-widget-image" data-id="03d43c9" data-element_type="widget" data-e-type="widget" data-widget_type="theme-site-logo.default">
+				<div class="elementor-widget-container">
+											<a href="https://senko.com.ar">
+			<img src="https://senko.com.ar/wp-content/uploads/elementor/thumbs/Logo-Senko-oydfj55euus7yak7u1ec10xl941t27w6jntt8e6vc2.png" title="Logo-Senko" alt="Logo-Senko" loading="lazy" />				</a>
+											</div>
+				</div>
+				<div class="elementor-element elementor-element-2e2578a elementor-widget elementor-widget-html" data-id="2e2578a" data-element_type="widget" data-e-type="widget" data-widget_type="html.default">
+				<div class="elementor-widget-container">
+					<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('scroll', function() {
+        let y = window.scrollY;
+        let menuhopin = document.getElementById('menuhopin');
+        if (y > 150) { /* change this value here to make it show up at your desired scroll location. */
+            menuhopin.classList.add('headershow');
+        } else {
+            menuhopin.classList.remove('headershow');
+        }
+    });
+});
+</script>
+<style>
+.elementor-nav-menu__container{
+top:0px!important;
+}
+#menuhopin.headershow{
+transform: translateY(0);
+}
+#menuhopin{
+position: fixed;
+top:0;
+width: 100%;
+-webkit-transition: transform 0.34s ease;
+transition : transform 0.34s ease;
+transform: translateY(-200px); /*adjust this value to the height of your header*/
+}
+</style>				</div>
+				</div>
+				<div class="elementor-element elementor-element-6d1c03a elementor-nav-menu--dropdown-tablet elementor-nav-menu__text-align-aside elementor-nav-menu--toggle elementor-nav-menu--burger elementor-widget elementor-widget-nav-menu" data-id="6d1c03a" data-element_type="widget" data-e-type="widget" data-settings="{&quot;layout&quot;:&quot;horizontal&quot;,&quot;submenu_icon&quot;:{&quot;value&quot;:&quot;&lt;i class=\&quot;fas fa-caret-down\&quot; aria-hidden=\&quot;true\&quot;&gt;&lt;\/i&gt;&quot;,&quot;library&quot;:&quot;fa-solid&quot;},&quot;toggle&quot;:&quot;burger&quot;}" data-widget_type="nav-menu.default">
+				<div class="elementor-widget-container">
+								<nav aria-label="Menu" class="elementor-nav-menu--main elementor-nav-menu__container elementor-nav-menu--layout-horizontal e--pointer-underline e--animation-fade">
+				<ul id="menu-1-6d1c03a" class="elementor-nav-menu"><li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-5607"><a href="https://senko.com.ar/" class="elementor-item">Inicio</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-home menu-item-has-children menu-item-5610"><a href="https://senko.com.ar/#Equipos" class="elementor-item elementor-item-anchor">Equipos</a>
+<ul class="sub-menu elementor-nav-menu--dropdown">
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5613"><a href="https://senko.com.ar/estampadoras-de-tazas/" class="elementor-sub-item">Tazas</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5615"><a href="https://senko.com.ar/estampadoras-planas/" class="elementor-sub-item">Planas</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6687"><a href="https://senko.com.ar/estampadoras-independientes/" class="elementor-sub-item">Independientes</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6689"><a href="https://senko.com.ar/estampadoras-multifuncion/" class="elementor-sub-item">Multifuncion</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6688"><a href="https://senko.com.ar/estampadoras-gran-formato/" class="elementor-sub-item">Estampadoras</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5617"><a href="https://senko.com.ar/gran-formato-senko/" class="elementor-sub-item">Calandras</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5618"><a href="https://senko.com.ar/plotters/" class="elementor-sub-item">Plotters</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6691"><a href="https://senko.com.ar/dtf-textil/" class="elementor-sub-item">DTF (Textil)</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6690"><a href="https://senko.com.ar/dtf-uv/" class="elementor-sub-item">DTF (UV)</a></li>
+</ul>
+</li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5616"><a href="https://senko.com.ar/ser-distribuidor/" class="elementor-item">Ser Distribuidor</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page current_page_parent menu-item-6259"><a href="https://senko.com.ar/blog-senko/" class="elementor-item">Blog</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5609"><a href="https://senko.com.ar/contacto-senko/" class="elementor-item">Contacto</a></li>
+</ul>			</nav>
+					<div class="elementor-menu-toggle" role="button" tabindex="0" aria-label="Menu Toggle" aria-expanded="false">
+			<i aria-hidden="true" role="presentation" class="elementor-menu-toggle__icon--open eicon-menu-bar"></i><i aria-hidden="true" role="presentation" class="elementor-menu-toggle__icon--close eicon-close"></i>		</div>
+					<nav class="elementor-nav-menu--dropdown elementor-nav-menu__container" aria-hidden="true">
+				<ul id="menu-2-6d1c03a" class="elementor-nav-menu"><li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-5607"><a href="https://senko.com.ar/" class="elementor-item" tabindex="-1">Inicio</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-home menu-item-has-children menu-item-5610"><a href="https://senko.com.ar/#Equipos" class="elementor-item elementor-item-anchor" tabindex="-1">Equipos</a>
+<ul class="sub-menu elementor-nav-menu--dropdown">
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5613"><a href="https://senko.com.ar/estampadoras-de-tazas/" class="elementor-sub-item" tabindex="-1">Tazas</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5615"><a href="https://senko.com.ar/estampadoras-planas/" class="elementor-sub-item" tabindex="-1">Planas</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6687"><a href="https://senko.com.ar/estampadoras-independientes/" class="elementor-sub-item" tabindex="-1">Independientes</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6689"><a href="https://senko.com.ar/estampadoras-multifuncion/" class="elementor-sub-item" tabindex="-1">Multifuncion</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6688"><a href="https://senko.com.ar/estampadoras-gran-formato/" class="elementor-sub-item" tabindex="-1">Estampadoras</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5617"><a href="https://senko.com.ar/gran-formato-senko/" class="elementor-sub-item" tabindex="-1">Calandras</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5618"><a href="https://senko.com.ar/plotters/" class="elementor-sub-item" tabindex="-1">Plotters</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6691"><a href="https://senko.com.ar/dtf-textil/" class="elementor-sub-item" tabindex="-1">DTF (Textil)</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6690"><a href="https://senko.com.ar/dtf-uv/" class="elementor-sub-item" tabindex="-1">DTF (UV)</a></li>
+</ul>
+</li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5616"><a href="https://senko.com.ar/ser-distribuidor/" class="elementor-item" tabindex="-1">Ser Distribuidor</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page current_page_parent menu-item-6259"><a href="https://senko.com.ar/blog-senko/" class="elementor-item" tabindex="-1">Blog</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5609"><a href="https://senko.com.ar/contacto-senko/" class="elementor-item" tabindex="-1">Contacto</a></li>
+</ul>			</nav>
+						</div>
+				</div>
+				<div class="elementor-element elementor-element-698bc96 elementor-shape-rounded elementor-grid-0 e-grid-align-center elementor-widget elementor-widget-social-icons" data-id="698bc96" data-element_type="widget" data-e-type="widget" data-widget_type="social-icons.default">
+				<div class="elementor-widget-container">
+							<div class="elementor-social-icons-wrapper elementor-grid" role="list">
+							<span class="elementor-grid-item" role="listitem">
+					<a class="elementor-icon elementor-social-icon elementor-social-icon-facebook elementor-animation-pulse-grow elementor-repeater-item-ebe8ac1" href="https://www.facebook.com/senko.ar">
+						<span class="elementor-screen-only">Facebook</span>
+						<i aria-hidden="true" class="fab fa-facebook"></i>					</a>
+				</span>
+							<span class="elementor-grid-item" role="listitem">
+					<a class="elementor-icon elementor-social-icon elementor-social-icon-instagram elementor-animation-pulse-grow elementor-repeater-item-3a22a0a" href="https://www.instagram.com/senko.ar/" target="_blank">
+						<span class="elementor-screen-only">Instagram</span>
+						<i aria-hidden="true" class="fab fa-instagram"></i>					</a>
+				</span>
+							<span class="elementor-grid-item" role="listitem">
+					<a class="elementor-icon elementor-social-icon elementor-social-icon-youtube elementor-animation-pulse-grow elementor-repeater-item-9ba7a29" href="https://www.youtube.com/channel/UCeiA67scnz3Bcc04MUxdb4A" target="_blank">
+						<span class="elementor-screen-only">Youtube</span>
+						<i aria-hidden="true" class="fab fa-youtube"></i>					</a>
+				</span>
+					</div>
+						</div>
+				</div>
+					</div>
+				</div>
+		<div class="elementor-element elementor-element-53e63bb elementor-hidden-desktop e-flex e-con-boxed e-con e-parent" data-id="53e63bb" data-element_type="container" data-e-type="container" data-settings="{&quot;background_background&quot;:&quot;classic&quot;,&quot;sticky&quot;:&quot;top&quot;,&quot;sticky_on&quot;:[&quot;desktop&quot;,&quot;tablet&quot;,&quot;mobile&quot;],&quot;sticky_offset&quot;:0,&quot;sticky_effects_offset&quot;:0,&quot;sticky_anchor_link_offset&quot;:0}">
+					<div class="e-con-inner">
+		<div class="elementor-element elementor-element-5fc742c e-con-full e-flex e-con e-child" data-id="5fc742c" data-element_type="container" data-e-type="container">
+				<div class="elementor-element elementor-element-8c8c2b0 elementor-widget elementor-widget-theme-site-logo elementor-widget-image" data-id="8c8c2b0" data-element_type="widget" data-e-type="widget" data-widget_type="theme-site-logo.default">
+				<div class="elementor-widget-container">
+											<a href="https://senko.com.ar">
+			<img src="https://senko.com.ar/wp-content/uploads/elementor/thumbs/Logo-Senko-oydfj55fgs65izyxvghotifrkuxir5ig6tdham5zxq.png" title="Logo-Senko" alt="Logo-Senko" loading="lazy" />				</a>
+											</div>
+				</div>
+				<div class="elementor-element elementor-element-03d82c6 elementor-shape-rounded elementor-grid-0 e-grid-align-center elementor-widget elementor-widget-social-icons" data-id="03d82c6" data-element_type="widget" data-e-type="widget" data-widget_type="social-icons.default">
+				<div class="elementor-widget-container">
+							<div class="elementor-social-icons-wrapper elementor-grid" role="list">
+							<span class="elementor-grid-item" role="listitem">
+					<a class="elementor-icon elementor-social-icon elementor-social-icon-facebook elementor-animation-pulse-grow elementor-repeater-item-ebe8ac1" href="https://www.facebook.com/senko.ar">
+						<span class="elementor-screen-only">Facebook</span>
+						<i aria-hidden="true" class="fab fa-facebook"></i>					</a>
+				</span>
+							<span class="elementor-grid-item" role="listitem">
+					<a class="elementor-icon elementor-social-icon elementor-social-icon-instagram elementor-animation-pulse-grow elementor-repeater-item-3a22a0a" href="https://www.instagram.com/senko.ar/" target="_blank">
+						<span class="elementor-screen-only">Instagram</span>
+						<i aria-hidden="true" class="fab fa-instagram"></i>					</a>
+				</span>
+							<span class="elementor-grid-item" role="listitem">
+					<a class="elementor-icon elementor-social-icon elementor-social-icon-youtube elementor-animation-pulse-grow elementor-repeater-item-9ba7a29" href="https://www.youtube.com/channel/UCeiA67scnz3Bcc04MUxdb4A" target="_blank">
+						<span class="elementor-screen-only">Youtube</span>
+						<i aria-hidden="true" class="fab fa-youtube"></i>					</a>
+				</span>
+					</div>
+						</div>
+				</div>
+				</div>
+				<div class="elementor-element elementor-element-daf566c e-full_width e-n-menu-layout-horizontal e-n-menu-tablet elementor-widget elementor-widget-n-menu" data-id="daf566c" data-element_type="widget" data-e-type="widget" data-settings="{&quot;menu_items&quot;:[{&quot;item_title&quot;:&quot;Inicio&quot;,&quot;_id&quot;:&quot;c96d033&quot;,&quot;item_link&quot;:{&quot;url&quot;:&quot;https:\/\/senko.com.ar\/&quot;,&quot;is_external&quot;:&quot;&quot;,&quot;nofollow&quot;:&quot;&quot;,&quot;custom_attributes&quot;:&quot;&quot;},&quot;item_dropdown_content&quot;:&quot;no&quot;,&quot;item_icon&quot;:{&quot;value&quot;:&quot;&quot;,&quot;library&quot;:&quot;&quot;},&quot;item_icon_active&quot;:null,&quot;element_id&quot;:&quot;&quot;},{&quot;item_title&quot;:&quot;Equipos&quot;,&quot;_id&quot;:&quot;a3988f4&quot;,&quot;item_link&quot;:{&quot;url&quot;:&quot;https:\/\/senko.com.ar\/#Equipos&quot;,&quot;is_external&quot;:&quot;&quot;,&quot;nofollow&quot;:&quot;&quot;,&quot;custom_attributes&quot;:&quot;&quot;},&quot;item_dropdown_content&quot;:&quot;yes&quot;,&quot;item_icon&quot;:{&quot;value&quot;:&quot;&quot;,&quot;library&quot;:&quot;&quot;},&quot;item_icon_active&quot;:null,&quot;element_id&quot;:&quot;&quot;},{&quot;item_title&quot;:&quot;Ser Distribuidor&quot;,&quot;_id&quot;:&quot;15c7baf&quot;,&quot;item_link&quot;:{&quot;url&quot;:&quot;https:\/\/senko.com.ar\/ser-distribuidor\/&quot;,&quot;is_external&quot;:&quot;&quot;,&quot;nofollow&quot;:&quot;&quot;,&quot;custom_attributes&quot;:&quot;&quot;},&quot;item_dropdown_content&quot;:&quot;no&quot;,&quot;item_icon&quot;:{&quot;value&quot;:&quot;&quot;,&quot;library&quot;:&quot;&quot;},&quot;item_icon_active&quot;:null,&quot;element_id&quot;:&quot;&quot;},{&quot;_id&quot;:&quot;597e20c&quot;,&quot;item_title&quot;:&quot;Blog&quot;,&quot;item_link&quot;:{&quot;url&quot;:&quot;https:\/\/senko.com.ar\/blog-senko\/&quot;,&quot;is_external&quot;:&quot;&quot;,&quot;nofollow&quot;:&quot;&quot;,&quot;custom_attributes&quot;:&quot;&quot;},&quot;item_dropdown_content&quot;:&quot;no&quot;,&quot;item_icon&quot;:{&quot;value&quot;:&quot;&quot;,&quot;library&quot;:&quot;&quot;},&quot;item_icon_active&quot;:null,&quot;element_id&quot;:&quot;&quot;},{&quot;_id&quot;:&quot;fda305f&quot;,&quot;item_title&quot;:&quot;Contacto&quot;,&quot;item_link&quot;:{&quot;url&quot;:&quot;https:\/\/senko.com.ar\/contacto-senko\/&quot;,&quot;is_external&quot;:&quot;&quot;,&quot;nofollow&quot;:&quot;&quot;,&quot;custom_attributes&quot;:&quot;&quot;},&quot;item_dropdown_content&quot;:&quot;no&quot;,&quot;item_icon&quot;:{&quot;value&quot;:&quot;&quot;,&quot;library&quot;:&quot;&quot;},&quot;item_icon_active&quot;:null,&quot;element_id&quot;:&quot;&quot;}],&quot;item_position_horizontal_mobile&quot;:&quot;center&quot;,&quot;open_on&quot;:&quot;click&quot;,&quot;horizontal_scroll_tablet&quot;:&quot;disable&quot;,&quot;content_width&quot;:&quot;full_width&quot;,&quot;item_layout&quot;:&quot;horizontal&quot;,&quot;horizontal_scroll&quot;:&quot;disable&quot;,&quot;breakpoint_selector&quot;:&quot;tablet&quot;,&quot;menu_item_title_distance_from_content&quot;:{&quot;unit&quot;:&quot;px&quot;,&quot;size&quot;:0,&quot;sizes&quot;:[]},&quot;menu_item_title_distance_from_content_tablet&quot;:{&quot;unit&quot;:&quot;px&quot;,&quot;size&quot;:&quot;&quot;,&quot;sizes&quot;:[]},&quot;menu_item_title_distance_from_content_mobile&quot;:{&quot;unit&quot;:&quot;px&quot;,&quot;size&quot;:&quot;&quot;,&quot;sizes&quot;:[]}}" data-widget_type="mega-menu.default">
+				<div class="elementor-widget-container">
+							<nav class="e-n-menu" data-widget-number="229" aria-label="Menu">
+					<button class="e-n-menu-toggle" id="menu-toggle-229" aria-haspopup="true" aria-expanded="false" aria-controls="menubar-229" aria-label="Menu Toggle">
+			<span class="e-n-menu-toggle-icon e-open">
+				<i class="eicon-menu-bar"></i>			</span>
+			<span class="e-n-menu-toggle-icon e-close">
+				<i class="eicon-close"></i>			</span>
+		</button>
+					<div class="e-n-menu-wrapper" id="menubar-229" aria-labelledby="menu-toggle-229">
+				<ul class="e-n-menu-heading">
+								<li class="e-n-menu-item">
+				<div id="e-n-menu-title-2291" class="e-n-menu-title">
+					<a class="e-n-menu-title-container e-focus e-link" href="https://senko.com.ar/">												<span class="e-n-menu-title-text">
+							Inicio						</span>
+					</a>									</div>
+							</li>
+					<li class="e-n-menu-item">
+				<div id="e-n-menu-title-2292" class="e-n-menu-title e-anchor e-click">
+					<a class="e-n-menu-title-container e-focus e-link" href="https://senko.com.ar/#Equipos" aria-current="page">												<span class="e-n-menu-title-text">
+							Equipos						</span>
+					</a>											<button id="e-n-menu-dropdown-icon-2292" class="e-n-menu-dropdown-icon e-focus" data-tab-index="2" aria-haspopup="true" aria-expanded="false" aria-controls="e-n-menu-content-2292" >
+							<span class="e-n-menu-dropdown-icon-opened">
+								<i aria-hidden="true" class="fas fa-caret-up"></i>								<span class="elementor-screen-only">Close Equipos</span>
+							</span>
+							<span class="e-n-menu-dropdown-icon-closed">
+								<i aria-hidden="true" class="fas fa-caret-down"></i>								<span class="elementor-screen-only">Open Equipos</span>
+							</span>
+						</button>
+									</div>
+									<div class="e-n-menu-content">
+						<div id="e-n-menu-content-2292" data-tab-index="2" aria-labelledby="e-n-menu-dropdown-icon-2292" class="elementor-element elementor-element-9ed7bc8 e-flex e-con-boxed e-con e-child" data-id="9ed7bc8" data-element_type="container" data-e-type="container">
+					<div class="e-con-inner">
+				<div class="elementor-element elementor-element-1d74934 elementor-widget elementor-widget-heading" data-id="1d74934" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h2 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/estampadoras-de-tazas/">Tazas</a></h2>				</div>
+				</div>
+				<div class="elementor-element elementor-element-99b8fd7 elementor-widget elementor-widget-heading" data-id="99b8fd7" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h2 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/estampadoras-planas/">Planas</a></h2>				</div>
+				</div>
+				<div class="elementor-element elementor-element-e22380f elementor-widget elementor-widget-heading" data-id="e22380f" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h2 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/estampadoras-independientes/">Independientes</a></h2>				</div>
+				</div>
+				<div class="elementor-element elementor-element-74dcc2d elementor-widget elementor-widget-heading" data-id="74dcc2d" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h2 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/estampadoras-multifuncion/">Multifunción</a></h2>				</div>
+				</div>
+				<div class="elementor-element elementor-element-462e966 elementor-widget elementor-widget-heading" data-id="462e966" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h2 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/estampadoras-gran-formato/">Estampadoras</a></h2>				</div>
+				</div>
+				<div class="elementor-element elementor-element-53fcd02 elementor-widget elementor-widget-heading" data-id="53fcd02" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h2 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/gran-formato-senko/">Calandras</a></h2>				</div>
+				</div>
+				<div class="elementor-element elementor-element-1dc2fd2 elementor-widget elementor-widget-heading" data-id="1dc2fd2" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h2 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/plotters/">Plotters</a></h2>				</div>
+				</div>
+				<div class="elementor-element elementor-element-08d21bb elementor-widget elementor-widget-heading" data-id="08d21bb" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h2 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/dtf-textil/">DTF (Textil)</a></h2>				</div>
+				</div>
+				<div class="elementor-element elementor-element-f0cf36a elementor-widget elementor-widget-heading" data-id="f0cf36a" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h2 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/dtf-uv/">DTF (UV)</a></h2>				</div>
+				</div>
+					</div>
+				</div>
+							</div>
+							</li>
+					<li class="e-n-menu-item">
+				<div id="e-n-menu-title-2293" class="e-n-menu-title e-current">
+					<a class="e-n-menu-title-container e-focus e-link" href="https://senko.com.ar/ser-distribuidor/" aria-current="page">												<span class="e-n-menu-title-text">
+							Ser Distribuidor						</span>
+					</a>									</div>
+							</li>
+					<li class="e-n-menu-item">
+				<div id="e-n-menu-title-2294" class="e-n-menu-title">
+					<a class="e-n-menu-title-container e-focus e-link" href="https://senko.com.ar/blog-senko/">												<span class="e-n-menu-title-text">
+							Blog						</span>
+					</a>									</div>
+							</li>
+					<li class="e-n-menu-item">
+				<div id="e-n-menu-title-2295" class="e-n-menu-title">
+					<a class="e-n-menu-title-container e-focus e-link" href="https://senko.com.ar/contacto-senko/">												<span class="e-n-menu-title-text">
+							Contacto						</span>
+					</a>									</div>
+							</li>
+						</ul>
+			</div>
+		</nav>
+						</div>
+				</div>
+					</div>
+				</div>
+				</header>
+		<main id="content" class="site-main">
+
+			<div class="page-header">
+			<h1 class="entry-title">No se ha podido encontrar la página.</h1>
+		</div>
+	
+	<div class="page-content">
+		<p>Parece que no se ha encontrado nada en esta ubicación.</p>
+	</div>
+
+</main>
+		<footer data-elementor-type="footer" data-elementor-id="6104" class="elementor elementor-6104 elementor-location-footer" data-elementor-post-type="elementor_library">
+			<div class="elementor-element elementor-element-8222ad9 e-con-full e-flex e-con e-parent" data-id="8222ad9" data-element_type="container" data-e-type="container" data-settings="{&quot;background_background&quot;:&quot;classic&quot;}">
+		<div class="elementor-element elementor-element-47883ec e-con-full e-flex e-con e-child" data-id="47883ec" data-element_type="container" data-e-type="container">
+				<div class="elementor-element elementor-element-6972a1d elementor-widget elementor-widget-image" data-id="6972a1d" data-element_type="widget" data-e-type="widget" data-widget_type="image.default">
+				<div class="elementor-widget-container">
+															<img width="244" height="59" src="https://senko.com.ar/wp-content/uploads/2024/05/Capa_x0020_1.png" class="attachment-large size-large wp-image-4642" alt="" />															</div>
+				</div>
+				<div class="elementor-element elementor-element-1b35f3c elementor-widget elementor-widget-heading" data-id="1b35f3c" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-heading-title elementor-size-default">Calidad en sublimación que hace la diferencia
+
+</div>				</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-2ada8b7 e-con-full elementor-hidden-tablet elementor-hidden-mobile e-flex e-con e-child" data-id="2ada8b7" data-element_type="container" data-e-type="container">
+		<div class="elementor-element elementor-element-239122c e-con-full e-flex e-con e-child" data-id="239122c" data-element_type="container" data-e-type="container">
+				<div class="elementor-element elementor-element-68b7cf9 elementor-widget elementor-widget-heading" data-id="68b7cf9" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h4 class="elementor-heading-title elementor-size-default">Gran Formato</h4>				</div>
+				</div>
+				<div class="elementor-element elementor-element-7fed06f elementor-widget elementor-widget-heading" data-id="7fed06f" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/plotters/">Plotters</a></h5>				</div>
+				</div>
+				<div class="elementor-element elementor-element-aba4619 elementor-widget elementor-widget-heading" data-id="aba4619" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/gran-formato-senko/">Calandras</a></h5>				</div>
+				</div>
+				<div class="elementor-element elementor-element-d02823f elementor-widget elementor-widget-heading" data-id="d02823f" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/dtf-textil/">DTF (Textil)</a></h5>				</div>
+				</div>
+				<div class="elementor-element elementor-element-ca8ab1f elementor-widget elementor-widget-heading" data-id="ca8ab1f" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/dtf-uv/">DTF (UV)</a></h5>				</div>
+				</div>
+				<div class="elementor-element elementor-element-6ae58dc elementor-widget elementor-widget-heading" data-id="6ae58dc" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/estampadoras-gran-formato/">Estampadoras</a></h5>				</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-48d374b e-con-full e-flex e-con e-child" data-id="48d374b" data-element_type="container" data-e-type="container">
+				<div class="elementor-element elementor-element-5743454 elementor-widget elementor-widget-heading" data-id="5743454" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h4 class="elementor-heading-title elementor-size-default">Pequeño Formato</h4>				</div>
+				</div>
+				<div class="elementor-element elementor-element-3386785 elementor-widget elementor-widget-heading" data-id="3386785" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/estampadoras-de-tazas/">Tazas</a></h5>				</div>
+				</div>
+				<div class="elementor-element elementor-element-402eea4 elementor-widget elementor-widget-heading" data-id="402eea4" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/estampadoras-planas/">Planas</a></h5>				</div>
+				</div>
+				<div class="elementor-element elementor-element-2f5b20b elementor-widget elementor-widget-heading" data-id="2f5b20b" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/estampadoras-independientes/">Independientes</a></h5>				</div>
+				</div>
+				<div class="elementor-element elementor-element-cabbe74 elementor-widget elementor-widget-heading" data-id="cabbe74" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/estampadoras-multifuncion/">Multifunción</a></h5>				</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-b0238ef e-con-full e-flex e-con e-child" data-id="b0238ef" data-element_type="container" data-e-type="container">
+				<div class="elementor-element elementor-element-9c41af0 elementor-widget elementor-widget-heading" data-id="9c41af0" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h4 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/#Nosotros">Nosotros</a></h4>				</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-4e7c158 e-con-full e-flex e-con e-child" data-id="4e7c158" data-element_type="container" data-e-type="container">
+				<div class="elementor-element elementor-element-649a8bc elementor-widget elementor-widget-heading" data-id="649a8bc" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h4 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/ser-distribuidor/">Ser Distribuidor</a></h4>				</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-1e51632 e-con-full e-flex e-con e-child" data-id="1e51632" data-element_type="container" data-e-type="container">
+				<div class="elementor-element elementor-element-711daea elementor-widget elementor-widget-heading" data-id="711daea" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h4 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/blog-senko/">Blog</a></h4>				</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-28c46ca e-con-full e-flex e-con e-child" data-id="28c46ca" data-element_type="container" data-e-type="container">
+				<div class="elementor-element elementor-element-2c832bd elementor-widget elementor-widget-heading" data-id="2c832bd" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h4 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/contacto-senko/">Contacto</a></h4>				</div>
+				</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-0efc11a e-con-full elementor-hidden-desktop e-flex e-con e-child" data-id="0efc11a" data-element_type="container" data-e-type="container">
+		<div class="elementor-element elementor-element-337522e e-con-full e-flex e-con e-child" data-id="337522e" data-element_type="container" data-e-type="container">
+		<div class="elementor-element elementor-element-345032c e-con-full e-flex e-con e-child" data-id="345032c" data-element_type="container" data-e-type="container">
+				<div class="elementor-element elementor-element-7a53d45 elementor-widget elementor-widget-heading" data-id="7a53d45" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h4 class="elementor-heading-title elementor-size-default">Gran Formato</h4>				</div>
+				</div>
+				<div class="elementor-element elementor-element-5383a43 elementor-widget elementor-widget-heading" data-id="5383a43" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/plotters/">Plotters</a></h5>				</div>
+				</div>
+				<div class="elementor-element elementor-element-9013a57 elementor-widget elementor-widget-heading" data-id="9013a57" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/gran-formato-senko/">Calandras</a></h5>				</div>
+				</div>
+				<div class="elementor-element elementor-element-7ea4d97 elementor-widget elementor-widget-heading" data-id="7ea4d97" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/dtf-textil/">DTF (Textil)</a></h5>				</div>
+				</div>
+				<div class="elementor-element elementor-element-79c63b2 elementor-widget elementor-widget-heading" data-id="79c63b2" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/dtf-uv/">DTF (UV)</a></h5>				</div>
+				</div>
+				<div class="elementor-element elementor-element-e7f891c elementor-widget elementor-widget-heading" data-id="e7f891c" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/estampadoras-gran-formato/">Estampadoras</a></h5>				</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-8eeaaa5 e-con-full e-flex e-con e-child" data-id="8eeaaa5" data-element_type="container" data-e-type="container">
+				<div class="elementor-element elementor-element-9dc5e9a elementor-widget elementor-widget-heading" data-id="9dc5e9a" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h4 class="elementor-heading-title elementor-size-default">Pequeño Formato</h4>				</div>
+				</div>
+				<div class="elementor-element elementor-element-31ddb44 elementor-widget elementor-widget-heading" data-id="31ddb44" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/estampadoras-de-tazas/">Tazas</a></h5>				</div>
+				</div>
+				<div class="elementor-element elementor-element-869eee5 elementor-widget elementor-widget-heading" data-id="869eee5" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/estampadoras-planas/">Planas</a></h5>				</div>
+				</div>
+				<div class="elementor-element elementor-element-58c0a3d elementor-widget elementor-widget-heading" data-id="58c0a3d" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/estampadoras-independientes/">Independientes</a></h5>				</div>
+				</div>
+				<div class="elementor-element elementor-element-224a5df elementor-widget elementor-widget-heading" data-id="224a5df" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h5 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/estampadoras-multifuncion/">Multifunción</a></h5>				</div>
+				</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-37552ba e-con-full e-flex e-con e-child" data-id="37552ba" data-element_type="container" data-e-type="container">
+		<div class="elementor-element elementor-element-5d7e475 e-con-full e-flex e-con e-child" data-id="5d7e475" data-element_type="container" data-e-type="container">
+				<div class="elementor-element elementor-element-edcf805 elementor-widget elementor-widget-heading" data-id="edcf805" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h4 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/#Nosotros">Nosotros</a></h4>				</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-f11b2b4 e-con-full e-flex e-con e-child" data-id="f11b2b4" data-element_type="container" data-e-type="container">
+				<div class="elementor-element elementor-element-30820d0 elementor-widget elementor-widget-heading" data-id="30820d0" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h4 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/ser-distribuidor/">Ser Distribuidor</a></h4>				</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-55cf6bc e-con-full e-flex e-con e-child" data-id="55cf6bc" data-element_type="container" data-e-type="container">
+				<div class="elementor-element elementor-element-08a0dcb elementor-widget elementor-widget-heading" data-id="08a0dcb" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h4 class="elementor-heading-title elementor-size-default"><a href="https://senko.com.ar/contacto-senko/">Contacto</a></h4>				</div>
+				</div>
+				</div>
+				</div>
+				</div>
+				</div>
+				</footer>
+		
+<script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/hello-elementor/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+		<div data-elementor-type="popup" data-elementor-id="6948" class="elementor elementor-6948 elementor-location-popup" data-elementor-settings="{&quot;a11y_navigation&quot;:&quot;yes&quot;,&quot;triggers&quot;:[],&quot;timing&quot;:[]}" data-elementor-post-type="elementor_library">
+			<div class="elementor-element elementor-element-6ff054b e-flex e-con-boxed e-con e-parent" data-id="6ff054b" data-element_type="container" data-e-type="container">
+					<div class="e-con-inner">
+				<div class="elementor-element elementor-element-eb603a0 elementor-button-align-stretch elementor-widget elementor-widget-form" data-id="eb603a0" data-element_type="widget" data-e-type="widget" data-settings="{&quot;step_next_label&quot;:&quot;Next&quot;,&quot;step_previous_label&quot;:&quot;Previous&quot;,&quot;button_width&quot;:&quot;100&quot;,&quot;step_type&quot;:&quot;number_text&quot;,&quot;step_icon_shape&quot;:&quot;circle&quot;}" data-widget_type="form.default">
+				<div class="elementor-widget-container">
+							<form class="elementor-form" method="post" name="whatsapp" aria-label="whatsapp">
+			<input type="hidden" name="post_id" value="6948"/>
+			<input type="hidden" name="form_id" value="eb603a0"/>
+			<input type="hidden" name="referer_title" value="Página no encontrada" />
+
+			
+			<div class="elementor-form-fields-wrapper elementor-labels-above">
+								<div class="elementor-field-type-text elementor-field-group elementor-column elementor-field-group-name elementor-col-100">
+												<label for="form-field-name" class="elementor-field-label">
+								Nombre							</label>
+														<input size="1" type="text" name="form_fields[name]" id="form-field-name" class="elementor-field elementor-size-sm  elementor-field-textual" placeholder="Nombre">
+											</div>
+								<div class="elementor-field-type-email elementor-field-group elementor-column elementor-field-group-email elementor-col-100 elementor-field-required">
+												<label for="form-field-email" class="elementor-field-label">
+								Email							</label>
+														<input size="1" type="email" name="form_fields[email]" id="form-field-email" class="elementor-field elementor-size-sm  elementor-field-textual" placeholder="Email" required="required">
+											</div>
+								<div class="elementor-field-type-hidden elementor-field-group elementor-column elementor-field-group-field_title elementor-col-100">
+													<input size="1" type="hidden" name="form_fields[field_title]" id="form-field-field_title" class="elementor-field elementor-size-sm  elementor-field-textual">
+											</div>
+								<div class="elementor-field-group elementor-column elementor-field-type-submit elementor-col-100 e-form__buttons">
+					<button class="elementor-button elementor-size-sm" type="submit">
+						<span class="elementor-button-content-wrapper">
+																						<span class="elementor-button-text">Solicitar presupuesto</span>
+													</span>
+					</button>
+				</div>
+			</div>
+		</form>
+						</div>
+				</div>
+					</div>
+				</div>
+				</div>
+					<script>
+				const lazyloadRunObserver = () => {
+					const lazyloadBackgrounds = document.querySelectorAll( `.e-con.e-parent:not(.e-lazyloaded)` );
+					const lazyloadBackgroundObserver = new IntersectionObserver( ( entries ) => {
+						entries.forEach( ( entry ) => {
+							if ( entry.isIntersecting ) {
+								let lazyloadBackground = entry.target;
+								if( lazyloadBackground ) {
+									lazyloadBackground.classList.add( 'e-lazyloaded' );
+								}
+								lazyloadBackgroundObserver.unobserve( entry.target );
+							}
+						});
+					}, { rootMargin: '200px 0px 200px 0px' } );
+					lazyloadBackgrounds.forEach( ( lazyloadBackground ) => {
+						lazyloadBackgroundObserver.observe( lazyloadBackground );
+					} );
+				};
+				const events = [
+					'DOMContentLoaded',
+					'elementor/lazyload/observe',
+				];
+				events.forEach( ( event ) => {
+					document.addEventListener( event, lazyloadRunObserver );
+				} );
+			</script>
+				<script>
+		(function () {
+			var c = document.body.className;
+			c = c.replace(/woocommerce-no-js/, 'woocommerce-js');
+			document.body.className = c;
+		})();
+	</script>
+	<link rel='stylesheet' id='wc-blocks-style-css' href='https://senko.com.ar/wp-content/plugins/woocommerce/assets/client/blocks/wc-blocks.css?ver=wc-10.4.3' media='all' />
+<script src="https://senko.com.ar/wp-content/plugins/honeypot/includes/js/wpa.js?ver=2.3.04" id="wpascript-js"></script>
+<script id="wpascript-js-after">
+wpa_field_info = {"wpa_field_name":"qlgapc8326","wpa_field_value":87621,"wpa_add_test":"no"}
+//# sourceURL=wpascript-js-after
+</script>
+<script id="woocommerce-js-extra">
+var woocommerce_params = {"ajax_url":"/wp-admin/admin-ajax.php","wc_ajax_url":"/?wc-ajax=%%endpoint%%","i18n_password_show":"Mostrar contrase\u00f1a","i18n_password_hide":"Ocultar contrase\u00f1a"};
+//# sourceURL=woocommerce-js-extra
+</script>
+<script src="https://senko.com.ar/wp-content/plugins/woocommerce/assets/js/frontend/woocommerce.min.js?ver=10.4.3" id="woocommerce-js" data-wp-strategy="defer"></script>
+<script src="https://senko.com.ar/wp-content/plugins/elementor/assets/js/webpack.runtime.min.js?ver=3.35.0" id="elementor-webpack-runtime-js"></script>
+<script src="https://senko.com.ar/wp-content/plugins/elementor/assets/js/frontend-modules.min.js?ver=3.35.0" id="elementor-frontend-modules-js"></script>
+<script src="https://senko.com.ar/wp-includes/js/jquery/ui/core.min.js?ver=1.13.3" id="jquery-ui-core-js"></script>
+<script id="elementor-frontend-js-before">
+var elementorFrontendConfig = {"environmentMode":{"edit":false,"wpPreview":false,"isScriptDebug":false},"i18n":{"shareOnFacebook":"Compartir en Facebook","shareOnTwitter":"Compartir en Twitter","pinIt":"Pinear","download":"Descargar","downloadImage":"Descargar imagen","fullscreen":"Pantalla completa","zoom":"Zoom","share":"Compartir","playVideo":"Reproducir v\u00eddeo","previous":"Anterior","next":"Siguiente","close":"Cerrar","a11yCarouselPrevSlideMessage":"Diapositiva anterior","a11yCarouselNextSlideMessage":"Diapositiva siguiente","a11yCarouselFirstSlideMessage":"Esta es la primera diapositiva","a11yCarouselLastSlideMessage":"Esta es la \u00faltima diapositiva","a11yCarouselPaginationBulletMessage":"Ir a la diapositiva"},"is_rtl":false,"breakpoints":{"xs":0,"sm":480,"md":768,"lg":1025,"xl":1440,"xxl":1600},"responsive":{"breakpoints":{"mobile":{"label":"M\u00f3vil vertical","value":767,"default_value":767,"direction":"max","is_enabled":true},"mobile_extra":{"label":"M\u00f3vil horizontal","value":880,"default_value":880,"direction":"max","is_enabled":false},"tablet":{"label":"Tableta vertical","value":1024,"default_value":1024,"direction":"max","is_enabled":true},"tablet_extra":{"label":"Tableta horizontal","value":1200,"default_value":1200,"direction":"max","is_enabled":false},"laptop":{"label":"Port\u00e1til","value":1366,"default_value":1366,"direction":"max","is_enabled":false},"widescreen":{"label":"Pantalla grande","value":2400,"default_value":2400,"direction":"min","is_enabled":false}},"hasCustomBreakpoints":false},"version":"3.35.0","is_static":false,"experimentalFeatures":{"additional_custom_breakpoints":true,"container":true,"theme_builder_v2":true,"nested-elements":true,"home_screen":true,"global_classes_should_enforce_capabilities":true,"e_variables":true,"cloud-library":true,"e_opt_in_v4_page":true,"e_components":true,"e_interactions":true,"e_editor_one":true,"import-export-customization":true,"mega-menu":true,"e_pro_variables":true},"urls":{"assets":"https:\/\/senko.com.ar\/wp-content\/plugins\/elementor\/assets\/","ajaxurl":"https:\/\/senko.com.ar\/wp-admin\/admin-ajax.php","uploadUrl":"https:\/\/senko.com.ar\/wp-content\/uploads"},"nonces":{"floatingButtonsClickTracking":"7db5be68e3"},"swiperClass":"swiper","settings":{"editorPreferences":[]},"kit":{"active_breakpoints":["viewport_mobile","viewport_tablet"],"global_image_lightbox":"yes","lightbox_enable_counter":"yes","lightbox_enable_fullscreen":"yes","lightbox_enable_zoom":"yes","lightbox_enable_share":"yes","lightbox_title_src":"title","lightbox_description_src":"description","woocommerce_notices_elements":[]},"post":{"id":0,"title":"P\u00e1gina no encontrada &#8211; SENKO","excerpt":""}};
+//# sourceURL=elementor-frontend-js-before
+</script>
+<script src="https://senko.com.ar/wp-content/plugins/elementor/assets/js/frontend.min.js?ver=3.35.0" id="elementor-frontend-js"></script>
+<script src="https://senko.com.ar/wp-content/plugins/pro-elements/assets/lib/smartmenus/jquery.smartmenus.min.js?ver=1.2.1" id="smartmenus-js"></script>
+<script src="https://senko.com.ar/wp-content/plugins/pro-elements/assets/lib/sticky/jquery.sticky.min.js?ver=3.34.0" id="e-sticky-js"></script>
+<script id="heateor_sss_sharing_js-js-before">
+function heateorSssLoadEvent(e) {var t=window.onload;if (typeof window.onload!="function") {window.onload=e}else{window.onload=function() {t();e()}}};	var heateorSssSharingAjaxUrl = 'https://senko.com.ar/wp-admin/admin-ajax.php', heateorSssCloseIconPath = 'https://senko.com.ar/wp-content/plugins/sassy-social-share/public/../images/close.png', heateorSssPluginIconPath = 'https://senko.com.ar/wp-content/plugins/sassy-social-share/public/../images/logo.png', heateorSssHorizontalSharingCountEnable = 0, heateorSssVerticalSharingCountEnable = 0, heateorSssSharingOffset = -10; var heateorSssMobileStickySharingEnabled = 0;var heateorSssCopyLinkMessage = "Enlace copiado.";var heateorSssUrlCountFetched = [], heateorSssSharesText = 'Compartidos', heateorSssShareText = 'Compartir';function heateorSssPopup(e) {window.open(e,"popUpWindow","height=400,width=600,left=400,top=100,resizable,scrollbars,toolbar=0,personalbar=0,menubar=no,location=no,directories=no,status")}
+//# sourceURL=heateor_sss_sharing_js-js-before
+</script>
+<script src="https://senko.com.ar/wp-content/plugins/sassy-social-share/public/js/sassy-social-share-public.js?ver=3.3.79" id="heateor_sss_sharing_js-js"></script>
+<script src="https://senko.com.ar/wp-content/plugins/woocommerce/assets/js/sourcebuster/sourcebuster.min.js?ver=10.4.3" id="sourcebuster-js-js"></script>
+<script id="wc-order-attribution-js-extra">
+var wc_order_attribution = {"params":{"lifetime":1.0000000000000000818030539140313095458623138256371021270751953125e-5,"session":30,"base64":false,"ajaxurl":"https://senko.com.ar/wp-admin/admin-ajax.php","prefix":"wc_order_attribution_","allowTracking":true},"fields":{"source_type":"current.typ","referrer":"current_add.rf","utm_campaign":"current.cmp","utm_source":"current.src","utm_medium":"current.mdm","utm_content":"current.cnt","utm_id":"current.id","utm_term":"current.trm","utm_source_platform":"current.plt","utm_creative_format":"current.fmt","utm_marketing_tactic":"current.tct","session_entry":"current_add.ep","session_start_time":"current_add.fd","session_pages":"session.pgs","session_count":"udata.vst","user_agent":"udata.uag"}};
+//# sourceURL=wc-order-attribution-js-extra
+</script>
+<script src="https://senko.com.ar/wp-content/plugins/woocommerce/assets/js/frontend/order-attribution.min.js?ver=10.4.3" id="wc-order-attribution-js"></script>
+<script id="googlesitekit-events-provider-woocommerce-js-before">
+window._googlesitekit.wcdata = window._googlesitekit.wcdata || {};
+window._googlesitekit.wcdata.products = [];
+window._googlesitekit.wcdata.add_to_cart = null;
+window._googlesitekit.wcdata.currency = "USD";
+window._googlesitekit.wcdata.eventsToTrack = ["add_to_cart","purchase"];
+//# sourceURL=googlesitekit-events-provider-woocommerce-js-before
+</script>
+<script src="https://senko.com.ar/wp-content/plugins/google-site-kit/dist/assets/js/googlesitekit-events-provider-woocommerce-9717a4b16d0ac7e06633.js" id="googlesitekit-events-provider-woocommerce-js" defer></script>
+<script src="https://senko.com.ar/wp-content/plugins/pro-elements/assets/js/webpack-pro.runtime.min.js?ver=3.34.0" id="elementor-pro-webpack-runtime-js"></script>
+<script src="https://senko.com.ar/wp-includes/js/dist/hooks.min.js?ver=dd5603f07f9220ed27f1" id="wp-hooks-js"></script>
+<script src="https://senko.com.ar/wp-includes/js/dist/i18n.min.js?ver=c26c3dc7bed366793375" id="wp-i18n-js"></script>
+<script id="wp-i18n-js-after">
+wp.i18n.setLocaleData( { 'text direction\u0004ltr': [ 'ltr' ] } );
+//# sourceURL=wp-i18n-js-after
+</script>
+<script id="elementor-pro-frontend-js-before">
+var ElementorProFrontendConfig = {"ajaxurl":"https:\/\/senko.com.ar\/wp-admin\/admin-ajax.php","nonce":"8d6fe749b6","urls":{"assets":"https:\/\/senko.com.ar\/wp-content\/plugins\/pro-elements\/assets\/","rest":"https:\/\/senko.com.ar\/wp-json\/"},"settings":{"lazy_load_background_images":true},"popup":{"hasPopUps":true},"shareButtonsNetworks":{"facebook":{"title":"Facebook","has_counter":true},"twitter":{"title":"Twitter"},"linkedin":{"title":"LinkedIn","has_counter":true},"pinterest":{"title":"Pinterest","has_counter":true},"reddit":{"title":"Reddit","has_counter":true},"vk":{"title":"VK","has_counter":true},"odnoklassniki":{"title":"OK","has_counter":true},"tumblr":{"title":"Tumblr"},"digg":{"title":"Digg"},"skype":{"title":"Skype"},"stumbleupon":{"title":"StumbleUpon","has_counter":true},"mix":{"title":"Mix"},"telegram":{"title":"Telegram"},"pocket":{"title":"Pocket","has_counter":true},"xing":{"title":"XING","has_counter":true},"whatsapp":{"title":"WhatsApp"},"email":{"title":"Email"},"print":{"title":"Print"},"x-twitter":{"title":"X"},"threads":{"title":"Threads"}},"woocommerce":{"menu_cart":{"cart_page_url":"https:\/\/senko.com.ar","checkout_page_url":"https:\/\/senko.com.ar","fragments_nonce":"70e99a7ac3"}},"facebook_sdk":{"lang":"es_ES","app_id":""},"lottie":{"defaultAnimationUrl":"https:\/\/senko.com.ar\/wp-content\/plugins\/pro-elements\/modules\/lottie\/assets\/animations\/default.json"}};
+//# sourceURL=elementor-pro-frontend-js-before
+</script>
+<script src="https://senko.com.ar/wp-content/plugins/pro-elements/assets/js/frontend.min.js?ver=3.34.0" id="elementor-pro-frontend-js"></script>
+<script src="https://senko.com.ar/wp-content/plugins/pro-elements/assets/js/elements-handlers.min.js?ver=3.34.0" id="pro-elements-handlers-js"></script>
+<script id="wp-emoji-settings" type="application/json">
+{"baseUrl":"https://s.w.org/images/core/emoji/17.0.2/72x72/","ext":".png","svgUrl":"https://s.w.org/images/core/emoji/17.0.2/svg/","svgExt":".svg","source":{"concatemoji":"https://senko.com.ar/wp-includes/js/wp-emoji-release.min.js?ver=6.9.4"}}
+</script>
+<script type="module">
+/*! This file is auto-generated */
+const a=JSON.parse(document.getElementById("wp-emoji-settings").textContent),o=(window._wpemojiSettings=a,"wpEmojiSettingsSupports"),s=["flag","emoji"];function i(e){try{var t={supportTests:e,timestamp:(new Date).valueOf()};sessionStorage.setItem(o,JSON.stringify(t))}catch(e){}}function c(e,t,n){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);t=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(n,0,0);const a=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);return t.every((e,t)=>e===a[t])}function p(e,t){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);var n=e.getImageData(16,16,1,1);for(let e=0;e<n.data.length;e++)if(0!==n.data[e])return!1;return!0}function u(e,t,n,a){switch(t){case"flag":return n(e,"\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!n(e,"\ud83c\udde8\ud83c\uddf6","\ud83c\udde8\u200b\ud83c\uddf6")&&!n(e,"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!a(e,"\ud83e\u1fac8")}return!1}function f(e,t,n,a){let r;const o=(r="undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?new OffscreenCanvas(300,150):document.createElement("canvas")).getContext("2d",{willReadFrequently:!0}),s=(o.textBaseline="top",o.font="600 32px Arial",{});return e.forEach(e=>{s[e]=t(o,e,n,a)}),s}function r(e){var t=document.createElement("script");t.src=e,t.defer=!0,document.head.appendChild(t)}a.supports={everything:!0,everythingExceptFlag:!0},new Promise(t=>{let n=function(){try{var e=JSON.parse(sessionStorage.getItem(o));if("object"==typeof e&&"number"==typeof e.timestamp&&(new Date).valueOf()<e.timestamp+604800&&"object"==typeof e.supportTests)return e.supportTests}catch(e){}return null}();if(!n){if("undefined"!=typeof Worker&&"undefined"!=typeof OffscreenCanvas&&"undefined"!=typeof URL&&URL.createObjectURL&&"undefined"!=typeof Blob)try{var e="postMessage("+f.toString()+"("+[JSON.stringify(s),u.toString(),c.toString(),p.toString()].join(",")+"));",a=new Blob([e],{type:"text/javascript"});const r=new Worker(URL.createObjectURL(a),{name:"wpTestEmojiSupports"});return void(r.onmessage=e=>{i(n=e.data),r.terminate(),t(n)})}catch(e){}i(n=f(s,u,c,p))}t(n)}).then(e=>{for(const n in e)a.supports[n]=e[n],a.supports.everything=a.supports.everything&&a.supports[n],"flag"!==n&&(a.supports.everythingExceptFlag=a.supports.everythingExceptFlag&&a.supports[n]);var t;a.supports.everythingExceptFlag=a.supports.everythingExceptFlag&&!a.supports.flag,a.supports.everything||((t=a.source||{}).concatemoji?r(t.concatemoji):t.wpemoji&&t.twemoji&&(r(t.twemoji),r(t.wpemoji)))});
+//# sourceURL=https://senko.com.ar/wp-includes/js/wp-emoji-loader.min.js
+</script>
+
+</body>
+</html>

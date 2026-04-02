@@ -1,6 +1,7 @@
 import type {
   Product,
   Category,
+  Brand,
   BlogPost,
   Review,
   PaginatedResponse,
@@ -89,6 +90,30 @@ export async function getCategory(
     {
       revalidate: 3600,
       tags: ["categories", `category-${slug}`],
+    }
+  );
+}
+
+// === Brands ===
+
+export async function getBrands(): Promise<Brand[]> {
+  const res = await apiFetch<{ data: Brand[] }>("/brands", undefined, {
+    revalidate: 86400,
+    tags: ["brands"],
+  });
+  return res.data;
+}
+
+export async function getProductsByBrand(
+  brandName: string,
+  params?: { page?: number; per_page?: number; orderby?: string; order?: string }
+): Promise<PaginatedResponse<Product>> {
+  return apiFetch<PaginatedResponse<Product>>(
+    "/products",
+    { brand: brandName, ...params } as Record<string, string | number | undefined>,
+    {
+      revalidate: 3600,
+      tags: ["products", `brand-${brandName}`],
     }
   );
 }

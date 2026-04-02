@@ -179,6 +179,14 @@ export interface SitemapData {
   blog: { slug: string; modified: string }[];
 }
 
+// === Brand Types ===
+
+export interface Brand {
+  name: string;
+  slug: string;
+  count: number;
+}
+
 // === Filter/Query Types ===
 
 /**

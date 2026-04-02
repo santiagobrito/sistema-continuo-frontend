@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getSitemapData } from "@/lib/wordpress/api";
+import { getSitemapData, getBrands } from "@/lib/wordpress/api";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sistemacontinuo.com.ar";
 
@@ -37,6 +37,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: new Date(product.modified),
         changeFrequency: "weekly",
         priority: 0.6,
+      });
+    }
+
+    // Brand pages
+    const brands = await getBrands();
+    entries.push({
+      url: `${SITE_URL}/marca`,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    });
+    for (const brand of brands) {
+      entries.push({
+        url: `${SITE_URL}/marca/${brand.slug}`,
+        changeFrequency: "weekly",
+        priority: 0.7,
       });
     }
 
