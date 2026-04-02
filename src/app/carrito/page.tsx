@@ -88,9 +88,14 @@ export default function CartPage() {
                 {/* Price */}
                 <div className="text-right flex-shrink-0">
                   <p className="text-base font-bold text-gray-900">{formatStorePrice(item.totals.line_total)}</p>
-                  {item.quantity > 1 && (
+                  {parseInt(item.prices.regular_price) > parseInt(item.prices.price) ? (
+                    <div>
+                      <p className="text-xs text-gray-400 line-through">{formatStorePrice(item.prices.regular_price)} c/u</p>
+                      <p className="text-xs text-green-600 font-medium">{formatStorePrice(item.prices.price)} c/u</p>
+                    </div>
+                  ) : item.quantity > 1 ? (
                     <p className="text-xs text-gray-400">{formatStorePrice(item.prices.price)} c/u</p>
-                  )}
+                  ) : null}
                 </div>
               </div>
             ))}

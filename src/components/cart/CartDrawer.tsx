@@ -91,6 +91,11 @@ export function CartDrawer({ open, onClose }: Props) {
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold text-gray-900">{formatStorePrice(item.totals.line_total)}</p>
+                        {parseInt(item.prices.regular_price) > parseInt(item.prices.price) && (
+                          <p className="text-[10px] text-green-600 font-medium">
+                            <span className="text-gray-400 line-through">{formatStorePrice(item.prices.regular_price)}</span> {formatStorePrice(item.prices.price)} c/u
+                          </p>
+                        )}
                         <button onClick={() => removeItem(item.key)} disabled={loading} className="text-[10px] text-red-400 hover:text-red-600 cursor-pointer">Eliminar</button>
                       </div>
                     </div>
