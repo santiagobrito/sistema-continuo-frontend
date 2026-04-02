@@ -174,7 +174,7 @@ async function ProductView({ product, parentSlug }: { product: Product; parentSl
       id: "description",
       label: "Descripcion",
       content: product.description ? (
-        <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-600" dangerouslySetInnerHTML={{ __html: product.description }} />
+        <div className="prose prose-base max-w-none prose-headings:text-gray-900 prose-headings:font-semibold prose-headings:mt-6 prose-headings:mb-3 prose-p:text-gray-600 prose-p:leading-relaxed prose-p:mb-4 prose-li:text-gray-600 prose-li:leading-relaxed prose-strong:text-gray-800 prose-a:text-[#013d5a] prose-a:no-underline hover:prose-a:underline prose-img:rounded-lg prose-table:text-sm prose-th:bg-gray-50 prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2" dangerouslySetInnerHTML={{ __html: product.description }} />
       ) : null,
     },
     {
