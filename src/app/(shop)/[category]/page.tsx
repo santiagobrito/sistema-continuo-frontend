@@ -24,11 +24,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  const { flat } = await getCategories();
-  // Only top-level categories (parent === 0) for this route
-  return flat
-    .filter((c) => c.parent === 0)
-    .map((c) => ({ category: c.slug }));
+  try {
+    const { flat } = await getCategories();
+    return flat
+      .filter((c) => c.parent === 0)
+      .map((c) => ({ category: c.slug }));
+  } catch {
+    return [];
+  }
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {
