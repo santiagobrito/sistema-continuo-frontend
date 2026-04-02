@@ -174,7 +174,7 @@ async function ProductView({ product, parentSlug }: { product: Product; parentSl
       id: "description",
       label: "Descripcion",
       content: product.description ? (
-        <div className="prose prose-base max-w-none prose-headings:text-gray-900 prose-headings:font-semibold prose-headings:mt-6 prose-headings:mb-3 prose-p:text-gray-600 prose-p:leading-relaxed prose-p:mb-4 prose-li:text-gray-600 prose-li:leading-relaxed prose-strong:text-gray-800 prose-a:text-[#013d5a] prose-a:no-underline hover:prose-a:underline prose-img:rounded-lg prose-table:text-sm prose-th:bg-gray-50 prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2" dangerouslySetInnerHTML={{ __html: product.description }} />
+        <div className="prose prose-base max-w-none prose-headings:text-gray-900 prose-headings:font-semibold prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-3 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-100 prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-2 prose-p:text-gray-600 prose-p:leading-relaxed prose-p:mb-4 prose-ul:my-4 prose-ul:pl-5 prose-li:text-gray-600 prose-li:leading-relaxed prose-li:mb-1.5 prose-li:marker:text-[#013d5a] prose-strong:text-gray-800 prose-a:text-[#013d5a] prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-img:my-6 prose-img:shadow-sm prose-table:text-sm prose-th:bg-gray-50 prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2" dangerouslySetInnerHTML={{ __html: product.description }} />
       ) : null,
     },
     {
