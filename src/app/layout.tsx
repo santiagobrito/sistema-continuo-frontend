@@ -5,7 +5,10 @@ import { CartProvider } from "@/components/cart/CartProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { WhatsAppFloat } from "@/components/layout/WhatsAppFloat";
 import { GTMHead, GTMBody } from "@/components/analytics/GTMProvider";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { generateOrganizationSchema, generateWebSiteSchema } from "@/lib/seo/structured-data";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -45,11 +48,13 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col font-sans">
         <GTMBody />
+        <JsonLd data={[generateOrganizationSchema(), generateWebSiteSchema()]} />
         <AuthProvider>
           <CartProvider>
             <Header />
             {children}
             <Footer />
+            <WhatsAppFloat />
           </CartProvider>
         </AuthProvider>
       </body>

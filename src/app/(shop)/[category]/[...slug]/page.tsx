@@ -7,6 +7,8 @@ import { isCatalogProduct } from "@/lib/wordpress/types";
 import Image from "next/image";
 import Link from "next/link";
 import { ProductActions } from "@/components/product/ProductActions";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { generateProductSchema, generateBreadcrumbSchema } from "@/lib/seo/structured-data";
 import { ProductTabs } from "@/components/product/ProductTabs";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ShortDescription } from "@/components/product/ShortDescription";
@@ -193,6 +195,19 @@ function ProductView({ product, parentSlug }: { product: Product; parentSlug: st
           <span className="mx-2 text-gray-300">/</span>
           <span className="text-gray-700 font-medium line-clamp-1">{product.name}</span>
         </nav>
+
+        {/* Schema.org structured data */}
+        <JsonLd data={[
+          generateProductSchema(product, getProductUrl(product)),
+          generateBreadcrumbSchema([
+            { name: "Inicio", url: "/" },
+            ...(product.categories[0]?.path.split("/").map((seg, i, arr) => ({
+              name: seg.replace(/-/g, " "),
+              url: `/${arr.slice(0, i + 1).join("/")}`,
+            })) || []),
+            { name: product.name, url: getProductUrl(product) },
+          ]),
+        ]} />
 
         {/* Product layout */}
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
