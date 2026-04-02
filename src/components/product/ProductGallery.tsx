@@ -122,9 +122,28 @@ export function ProductGallery({
       </div>
 
       {/* Thumbnails */}
-      {totalItems > 1 && (
+      {totalItems > 1 && (() => {
+        // Always show video thumb in last slot if it exists
+        const hasVideo = items.some((it) => it.type === "video");
+        const maxThumbs = 6;
+        let visibleItems: { item: GalleryItem; originalIndex: number }[];
+
+        if (hasVideo && totalItems > maxThumbs) {
+          const videoIndex = items.findIndex((it) => it.type === "video");
+          const imageItems = items
+            .map((item, i) => ({ item, originalIndex: i }))
+            .filter((it) => it.item.type === "image");
+          visibleItems = [
+            ...imageItems.slice(0, maxThumbs - 1),
+            { item: items[videoIndex], originalIndex: videoIndex },
+          ];
+        } else {
+          visibleItems = items.slice(0, maxThumbs).map((item, i) => ({ item, originalIndex: i }));
+        }
+
+        return (
         <div className="grid grid-cols-6 gap-2">
-          {items.slice(0, 6).map((item, i) => (
+          {visibleItems.map(({ item, originalIndex: i }) => (
             <button
               key={item.type === "image" ? item.image!.id : "video"}
               onClick={() => setActiveIndex(i)}
@@ -168,7 +187,8 @@ export function ProductGallery({
             </button>
           ))}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
