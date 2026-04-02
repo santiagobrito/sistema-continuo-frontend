@@ -11,3 +11,15 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+a, button, [role="button"], input[type="submit"], select, summary {
+  cursor: pointer;
+}
+
+a:not([class]) {
+  color: #013d5a;
+  text-decoration: none;
+}
+a:not([class]):hover {
+  text-decoration: underline;
+}

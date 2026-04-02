@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ProductActions } from "@/components/product/ProductActions";
 import { ProductTabs } from "@/components/product/ProductTabs";
+import { ProductGallery } from "@/components/product/ProductGallery";
 
 interface Props {
   params: Promise<{ category: string; slug: string[] }>;
@@ -196,33 +197,7 @@ function ProductView({ product, parentSlug }: { product: Product; parentSlug: st
           <div className="grid grid-cols-1 lg:grid-cols-2">
             {/* Gallery */}
             <div className="p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-100">
-              {product.images.length > 0 ? (
-                <div className="space-y-3">
-                  <div className="aspect-square relative bg-gray-50 rounded-xl overflow-hidden">
-                    <Image
-                      src={product.images[0].url}
-                      alt={product.images[0].alt || product.name}
-                      fill
-                      className="object-contain p-6"
-                      preload
-                      sizes="(max-width: 1024px) 100vw, 50vw"
-                    />
-                  </div>
-                  {product.images.length > 1 && (
-                    <div className="grid grid-cols-5 gap-2">
-                      {product.images.slice(1, 6).map((img) => (
-                        <div key={img.id} className="aspect-square relative bg-gray-50 rounded-lg border border-gray-100 overflow-hidden cursor-pointer hover:border-[#013d5a] transition-colors">
-                          <Image src={img.url} alt={img.alt || product.name} fill className="object-contain p-1" sizes="10vw" />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="aspect-square bg-gray-50 rounded-xl flex items-center justify-center">
-                  <svg className="w-20 h-20 text-gray-200" fill="none" stroke="currentColor" strokeWidth={0.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                </div>
-              )}
+              <ProductGallery images={product.images} productName={product.name} />
             </div>
 
             {/* Product info */}
