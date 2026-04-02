@@ -23,9 +23,9 @@ export function ProductActions({ product }: { product: Product }) {
   // Calculate discount for current quantity
   const activeDiscount = useMemo(() => {
     if (!product.quantity_discounts?.length) return 0;
-    const sorted = [...product.quantity_discounts].sort((a, b) => b.min_qty - a.min_qty);
-    const tier = sorted.find((t) => quantity >= t.min_qty);
-    return tier?.discount_percent || 0;
+    const sorted = [...product.quantity_discounts].sort((a, b) => Number(b.min_qty) - Number(a.min_qty));
+    const tier = sorted.find((t) => quantity >= Number(t.min_qty));
+    return Number(tier?.discount_percent) || 0;
   }, [product.quantity_discounts, quantity]);
 
   const unitPrice = activeDiscount > 0 ? Math.round(activePrice * (1 - activeDiscount / 100)) : activePrice;
@@ -104,10 +104,10 @@ export function ProductActions({ product }: { product: Product }) {
           <table className="w-full">
             <tbody>
               {product.quantity_discounts.map((tier, i) => {
-                const discountedPrice = Math.round(activePrice * (1 - tier.discount_percent / 100));
-                const isActive = quantity >= tier.min_qty && (
+                const discountedPrice = Math.round(activePrice * (1 - Number(tier.discount_percent) / 100));
+                const isActive = quantity >= Number(tier.min_qty) && (
                   i === product.quantity_discounts.length - 1 ||
-                  quantity < product.quantity_discounts[i + 1]?.min_qty
+                  quantity < Number(product.quantity_discounts[i + 1]?.min_qty)
                 );
                 return (
                   <tr
@@ -115,7 +115,7 @@ export function ProductActions({ product }: { product: Product }) {
                     className={`border-t border-green-50 transition-colors cursor-pointer ${
                       isActive ? "bg-green-50" : "hover:bg-gray-50"
                     }`}
-                    onClick={() => setQuantity(tier.min_qty)}
+                    onClick={() => setQuantity(Number(tier.min_qty))}
                   >
                     <td className="px-4 py-2.5 text-sm text-gray-700">
                       {isActive && <span className="inline-block w-1.5 h-1.5 bg-green-500 rounded-full mr-2" />}
