@@ -10,6 +10,9 @@ import { ProductActions } from "@/components/product/ProductActions";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { generateProductSchema, generateBreadcrumbSchema } from "@/lib/seo/structured-data";
 import { ProductTabs } from "@/components/product/ProductTabs";
+import { FrequentlyBoughtTogether } from "@/components/product/FrequentlyBoughtTogether";
+import { ReviewSection } from "@/components/product/ReviewSection";
+import { getProductReviews } from "@/lib/wordpress/api";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ShortDescription } from "@/components/product/ShortDescription";
 
@@ -120,9 +123,12 @@ function SubcategoryView({ category, parentSlug }: { category: Category; parentS
 
 // === Product ===
 
-function ProductView({ product, parentSlug }: { product: Product; parentSlug: string }) {
+async function ProductView({ product, parentSlug }: { product: Product; parentSlug: string }) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
   const productUrl = `${siteUrl}${getProductUrl(product)}`;
+
+  // Fetch reviews
+  const reviewsData = await getProductReviews(product.slug, { per_page: 10 }).catch(() => ({ data: [], total: 0, pages: 0, page: 1 }));
 
   const tabs = [
     {
@@ -165,13 +171,12 @@ function ProductView({ product, parentSlug }: { product: Product; parentSlug: st
       label: "Opiniones",
       count: product.review_count,
       content: (
-        <div className="text-center py-8">
-          <p className="text-gray-500 text-sm">
-            {product.review_count > 0
-              ? `${product.review_count} opiniones — promedio ${product.average_rating}/5`
-              : "Aun no hay opiniones. Se el primero en opinar."}
-          </p>
-        </div>
+        <ReviewSection
+          reviews={reviewsData.data}
+          totalReviews={product.review_count}
+          averageRating={product.average_rating}
+          productSlug={product.slug}
+        />
       ),
     },
   ];
@@ -266,6 +271,16 @@ function ProductView({ product, parentSlug }: { product: Product; parentSlug: st
             <ProductTabs tabs={tabs} />
           </div>
         </div>
+
+        {/* Frequently Bought Together */}
+        {!isCatalogProduct(product) && product.related && product.related.length > 0 && (
+          <div className="mt-10">
+            <FrequentlyBoughtTogether
+              currentProduct={product}
+              crossSells={product.related.filter(r => r.price && !isCatalogProduct(r)).slice(0, 3)}
+            />
+          </div>
+        )}
 
         {/* Related */}
         {product.related && product.related.length > 0 && (

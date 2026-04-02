@@ -1,11 +1,15 @@
-import { getProducts, getProductUrl } from "@/lib/wordpress/api";
+import { getProductUrl } from "@/lib/wordpress/api";
 import { formatPrice } from "@/lib/utils/format";
 import { isCatalogProduct } from "@/lib/wordpress/types";
+import type { Product } from "@/lib/wordpress/types";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
+
+const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
+const API_BASE = `${WP_URL}/wp-json/sistema-continuo/v1`;
 
 interface Props {
   searchParams: Promise<{ q?: string; page?: string }>;
@@ -16,12 +20,64 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   return { title: q ? `Buscar: ${q}` : "Buscar productos" };
 }
 
+/**
+ * Server-side search with same relevance logic as /api/search
+ */
+async function searchWithRelevance(q: string, page: number, perPage: number) {
+  const res = await fetch(`${API_BASE}/products?search=${encodeURIComponent(q)}&per_page=100`, {
+    next: { revalidate: 60 },
+  });
+
+  if (!res.ok) return { data: [], total: 0, pages: 0 };
+
+  const data = await res.json();
+  const qLower = q.toLowerCase();
+
+  // Score and filter
+  const scored = (data.data || []).map((p: Product) => {
+    const name = p.name.toLowerCase();
+    const words = name.split(/[\s\-–,]+/);
+    let relevance = 0;
+
+    const firstWords = words.slice(0, 4).join(" ");
+    if (firstWords.includes(qLower)) relevance += 150;
+    else if (name.startsWith(qLower)) relevance += 120;
+    else if (name.includes(qLower)) {
+      const idx = name.indexOf(qLower);
+      const before = name.slice(Math.max(0, idx - 6), idx).trim();
+      if (before.endsWith("para") || before.endsWith("de") || before.endsWith("con")) {
+        relevance += 5;
+      } else {
+        relevance += 80;
+      }
+    }
+
+    const catMatch = (p.categories || []).some((c: { name: string }) => c.name.toLowerCase().includes(qLower));
+    if (catMatch) relevance += 40;
+    if (p.marca?.toLowerCase().includes(qLower)) relevance += 30;
+
+    return { ...p, _relevance: relevance };
+  });
+
+  const filtered = scored
+    .filter((p: { _relevance: number }) => p._relevance >= 20)
+    .sort((a: { _relevance: number }, b: { _relevance: number }) => b._relevance - a._relevance);
+
+  const total = filtered.length;
+  const pages = Math.ceil(total / perPage);
+  const offset = (page - 1) * perPage;
+  const paged = filtered.slice(offset, offset + perPage);
+
+  return { data: paged, total, pages };
+}
+
 export default async function SearchPage({ searchParams }: Props) {
   const { q = "", page = "1" } = await searchParams;
+  const currentPage = parseInt(page);
 
   const results = q.length >= 2
-    ? await getProducts({ search: q, per_page: 24, page: parseInt(page) }).catch(() => ({ data: [], total: 0, pages: 0, page: 1 }))
-    : { data: [], total: 0, pages: 0, page: 1 };
+    ? await searchWithRelevance(q, currentPage, 24)
+    : { data: [], total: 0, pages: 0 };
 
   return (
     <main className="bg-gray-50 min-h-screen">
@@ -37,7 +93,7 @@ export default async function SearchPage({ searchParams }: Props) {
 
             {results.data.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {results.data.map((product) => (
+                {results.data.map((product: Product) => (
                   <Link
                     key={product.id}
                     href={getProductUrl(product)}
@@ -76,15 +132,14 @@ export default async function SearchPage({ searchParams }: Props) {
               </div>
             )}
 
-            {/* Pagination */}
             {results.pages > 1 && (
               <div className="flex justify-center gap-2 mt-10">
-                {parseInt(page) > 1 && (
-                  <Link href={`/buscar?q=${encodeURIComponent(q)}&page=${parseInt(page) - 1}`} className="px-4 py-2 bg-white border rounded-lg text-sm font-medium hover:border-[#013d5a] cursor-pointer">Anterior</Link>
+                {currentPage > 1 && (
+                  <Link href={`/buscar?q=${encodeURIComponent(q)}&page=${currentPage - 1}`} className="px-4 py-2 bg-white border rounded-lg text-sm font-medium hover:border-[#013d5a] cursor-pointer">Anterior</Link>
                 )}
-                <span className="px-4 py-2 text-sm text-gray-500">{page} / {results.pages}</span>
-                {parseInt(page) < results.pages && (
-                  <Link href={`/buscar?q=${encodeURIComponent(q)}&page=${parseInt(page) + 1}`} className="px-4 py-2 bg-white border rounded-lg text-sm font-medium hover:border-[#013d5a] cursor-pointer">Siguiente</Link>
+                <span className="px-4 py-2 text-sm text-gray-500">{currentPage} / {results.pages}</span>
+                {currentPage < results.pages && (
+                  <Link href={`/buscar?q=${encodeURIComponent(q)}&page=${currentPage + 1}`} className="px-4 py-2 bg-white border rounded-lg text-sm font-medium hover:border-[#013d5a] cursor-pointer">Siguiente</Link>
                 )}
               </div>
             )}
