@@ -42,8 +42,15 @@ export async function GET(request: NextRequest) {
 
   try {
     // Fetch products and categories in parallel
+    // For multi-word queries, search the most distinctive word to get broader results
+    // then rank by full query match in JS
+    const queryWords = q.split(/\s+/).filter((w) => w.length >= 2);
+    const searchTerm = queryWords.length > 1
+      ? queryWords.sort((a, b) => b.length - a.length)[0] // longest word = most distinctive
+      : q;
+
     const [productsRes, categoriesRes] = await Promise.allSettled([
-      fetch(`${API_BASE}/products?search=${encodeURIComponent(q)}&per_page=100`, {
+      fetch(`${API_BASE}/products?search=${encodeURIComponent(searchTerm)}&per_page=100`, {
         next: { revalidate: 60 },
       }),
       fetch(`${API_BASE}/categories`, {
@@ -66,33 +73,45 @@ export async function GET(request: NextRequest) {
         const name = String(p.name || "");
         const marca = String(p.marca || "");
 
-        // Relevance score: primary title match > category match > secondary title match > brand
+        // Relevance score: word-by-word matching
         let relevance = 0;
         const nameLower = name.toLowerCase();
-        const words = nameLower.split(/[\s\-–,]+/);
+        const marcaLower = marca.toLowerCase();
+        const searchWords = qLower.split(/\s+/).filter((w: string) => w.length >= 2);
 
-        // Strong match: query appears as one of the first 3 words of the title
-        const firstWords = words.slice(0, 4).join(" ");
-        if (firstWords.includes(qLower)) relevance += 150;
-        // Medium match: title starts with query
-        else if (nameLower.startsWith(qLower)) relevance += 120;
-        // Weak title match: query is in title but NOT preceded by "para" or "de" (contextual mention)
-        else if (nameLower.includes(qLower)) {
-          const idx = nameLower.indexOf(qLower);
-          const before = nameLower.slice(Math.max(0, idx - 6), idx).trim();
-          if (before.endsWith("para") || before.endsWith("de") || before.endsWith("con")) {
-            relevance += 5; // Very low — "Tinta Para Impresoras" is not about impresoras
-          } else {
-            relevance += 80;
+        // Count how many query words appear in the product name
+        const nameMatches = searchWords.filter((w: string) => nameLower.includes(w)).length;
+        const totalWords = searchWords.length;
+
+        if (totalWords > 0 && nameMatches === totalWords) {
+          // All words match — strong result
+          relevance += 150;
+          // Bonus if full phrase matches
+          if (nameLower.includes(qLower)) relevance += 50;
+        } else if (nameMatches > 0) {
+          // Partial match — score proportionally
+          relevance += Math.round((nameMatches / totalWords) * 100);
+          // Penalize if matched word is after "para"/"de"/"con" (contextual)
+          const primaryWord = searchWords[0];
+          if (primaryWord && nameLower.includes(primaryWord)) {
+            const idx = nameLower.indexOf(primaryWord);
+            const before = nameLower.slice(Math.max(0, idx - 6), idx).trim();
+            if (before.endsWith("para") || before.endsWith("de") || before.endsWith("con")) {
+              relevance -= 60;
+            }
           }
         }
 
-        // Category match (strong signal)
-        const catMatch = cats.some((c: { name: string }) => c.name.toLowerCase().includes(qLower));
-        if (catMatch) relevance += 40;
+        // Category match
+        const cats_arr = (p.categories as { name: string }[]) || [];
+        const catMatch = cats_arr.some((c: { name: string }) =>
+          searchWords.some((w: string) => c.name.toLowerCase().includes(w))
+        );
+        if (catMatch) relevance += 30;
 
         // Brand match
-        if (marca.toLowerCase().includes(qLower)) relevance += 30;
+        const brandMatch = searchWords.some((w: string) => marcaLower.includes(w));
+        if (brandMatch) relevance += 25;
 
         return {
           id: p.id,
