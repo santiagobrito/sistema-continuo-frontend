@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
         hostname: "sistemacontinuo.com.ar",
       },
       {
+        protocol: "https",
+        hostname: "img.youtube.com",
+      },
+      {
         protocol: "http",
         hostname: "localhost",
       },
