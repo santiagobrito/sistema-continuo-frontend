@@ -3,6 +3,8 @@ import { formatPrice } from "@/lib/utils/format";
 import Image from "next/image";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const [categoriesData, productsData] = await Promise.all([
     getCategories().catch(() => ({ data: [], flat: [] })),
