@@ -63,6 +63,8 @@ async function proxyRequest(
     responseHeaders.set("Nonce", responseNonce);
   }
 
+  responseHeaders.set("Content-Type", "application/json");
+
   return new NextResponse(data, {
     status: res.status,
     headers: responseHeaders,
