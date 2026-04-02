@@ -181,6 +181,14 @@ export interface SitemapData {
 
 // === Filter/Query Types ===
 
+/**
+ * Detect if a product is catalog-only (no online purchase).
+ * True if: is_catalog_only flag, OR no price and not purchasable.
+ */
+export function isCatalogProduct(product: Product): boolean {
+  return product.is_catalog_only || (!product.price && !product.purchasable);
+}
+
 export interface ProductFilters {
   category?: string;
   brand?: string;
