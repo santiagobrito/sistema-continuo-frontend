@@ -66,13 +66,33 @@ export async function GET(request: NextRequest) {
         const name = String(p.name || "");
         const marca = String(p.marca || "");
 
-        // Relevance score: title match > brand match > category match > description match
+        // Relevance score: primary title match > category match > secondary title match > brand
         let relevance = 0;
-        if (name.toLowerCase().includes(qLower)) relevance += 100;
-        if (name.toLowerCase().startsWith(qLower)) relevance += 50;
-        if (marca.toLowerCase().includes(qLower)) relevance += 30;
+        const nameLower = name.toLowerCase();
+        const words = nameLower.split(/[\s\-–,]+/);
+
+        // Strong match: query appears as one of the first 3 words of the title
+        const firstWords = words.slice(0, 4).join(" ");
+        if (firstWords.includes(qLower)) relevance += 150;
+        // Medium match: title starts with query
+        else if (nameLower.startsWith(qLower)) relevance += 120;
+        // Weak title match: query is in title but NOT preceded by "para" or "de" (contextual mention)
+        else if (nameLower.includes(qLower)) {
+          const idx = nameLower.indexOf(qLower);
+          const before = nameLower.slice(Math.max(0, idx - 6), idx).trim();
+          if (before.endsWith("para") || before.endsWith("de") || before.endsWith("con")) {
+            relevance += 5; // Very low — "Tinta Para Impresoras" is not about impresoras
+          } else {
+            relevance += 80;
+          }
+        }
+
+        // Category match (strong signal)
         const catMatch = cats.some((c: { name: string }) => c.name.toLowerCase().includes(qLower));
-        if (catMatch) relevance += 20;
+        if (catMatch) relevance += 40;
+
+        // Brand match
+        if (marca.toLowerCase().includes(qLower)) relevance += 30;
 
         return {
           id: p.id,
@@ -97,8 +117,8 @@ export async function GET(request: NextRequest) {
       // Sort by relevance (title matches first)
       products.sort((a, b) => (b as SearchProduct & { _relevance: number })._relevance - (a as SearchProduct & { _relevance: number })._relevance);
 
-      // Filter OUT products that don't match in title, brand, or category (description-only matches are noise)
-      products = products.filter((p) => (p as SearchProduct & { _relevance: number })._relevance > 0);
+      // Filter OUT low-relevance results (description-only or contextual title mentions like "para impresoras")
+      products = products.filter((p) => (p as SearchProduct & { _relevance: number })._relevance >= 20);
 
       // Keep only top results by relevance, then remove internal field
       products = products.slice(0, limit).map(({ ...p }) => {
