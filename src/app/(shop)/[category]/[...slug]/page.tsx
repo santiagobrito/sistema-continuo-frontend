@@ -206,7 +206,11 @@ function ProductView({ product, parentSlug }: { product: Product; parentSlug: st
               {product.marca && (
                 <p className="text-xs font-semibold text-[#013d5a]/50 uppercase tracking-widest mb-1">{product.marca}</p>
               )}
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight mb-4">{product.name}</h1>
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight mb-3">{product.name}</h1>
+
+              {product.short_description && (
+                <div className="text-sm text-gray-500 leading-relaxed mb-4 line-clamp-3" dangerouslySetInnerHTML={{ __html: product.short_description }} />
+              )}
 
               {product.review_count > 0 && (
                 <div className="flex items-center gap-2 mb-5">
