@@ -18,7 +18,7 @@ const NAV_LINKS = [
   { label: "Gran Formato", href: "/gran-formato" },
   { label: "DTF", href: "/insumos-dtf" },
   { label: "Oficina", href: "/oficina" },
-  { label: "Ofertas", href: "/buscar?q=oferta" },
+  { label: "Ofertas", href: "/ofertas" },
 ];
 
 export function Header() {
