@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { formatStorePrice } from "@/lib/utils/format";
 import Link from "next/link";
@@ -93,6 +93,31 @@ export default function CheckoutPage() {
   const [shippingMethod, setShippingMethod] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
+  // Auto-fill from user profile if logged in
+  useEffect(() => {
+    if (profileLoaded) return;
+    fetch("/api/auth/profile")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => {
+        if (!d?.profile) return;
+        const p = d.profile;
+        setFormData((prev) => ({
+          first_name: prev.first_name || p.billing.first_name || p.first_name || "",
+          last_name: prev.last_name || p.billing.last_name || p.last_name || "",
+          email: prev.email || p.billing.email || p.email || "",
+          phone: prev.phone || p.billing.phone || "",
+          dni_cuit: prev.dni_cuit || p.dni_cuit || "",
+          address_1: prev.address_1 || p.shipping.address_1 || p.billing.address_1 || "",
+          city: prev.city || p.shipping.city || p.billing.city || "",
+          state: prev.state || p.shipping.state || p.billing.state || "",
+          postcode: prev.postcode || p.shipping.postcode || p.billing.postcode || "",
+        }));
+        setProfileLoaded(true);
+      })
+      .catch(() => {});
+  }, [profileLoaded]);
 
   // Filter shipping options based on selected province
   const availableShipping = useMemo(() => {

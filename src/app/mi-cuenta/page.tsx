@@ -81,10 +81,10 @@ export default function MiCuentaPage() {
 
         {/* Quick actions */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <Link href="/mi-cuenta/pedidos" className="bg-white rounded-xl border border-gray-100 hover:border-[#013d5a]/20 p-5 transition-all cursor-pointer">
-            <svg className="w-6 h-6 text-[#013d5a] mb-2" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
-            <h3 className="font-semibold text-gray-900 text-sm">Mis pedidos</h3>
-            <p className="text-xs text-gray-500 mt-1">Ver historial de compras</p>
+          <Link href="/mi-cuenta/perfil" className="bg-white rounded-xl border border-gray-100 hover:border-[#013d5a]/20 p-5 transition-all cursor-pointer">
+            <svg className="w-6 h-6 text-[#013d5a] mb-2" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+            <h3 className="font-semibold text-gray-900 text-sm">Mi perfil</h3>
+            <p className="text-xs text-gray-500 mt-1">Datos, facturacion, direcciones</p>
           </Link>
           <Link href="/" className="bg-white rounded-xl border border-gray-100 hover:border-[#013d5a]/20 p-5 transition-all cursor-pointer">
             <svg className="w-6 h-6 text-[#013d5a] mb-2" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016A3.001 3.001 0 0021 9.349m-18 0A2.999 2.999 0 015.999 7.5h12.002A2.999 2.999 0 0121 9.349" /></svg>
