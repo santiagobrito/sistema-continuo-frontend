@@ -253,7 +253,7 @@ async function ProductView({ product, parentSlug }: { product: Product; parentSl
           <div className="grid grid-cols-1 lg:grid-cols-2">
             {/* Gallery */}
             <div className="p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-100">
-              <ProductGallery images={product.images} productName={product.name} />
+              <ProductGallery images={product.images} productName={product.name} videoUrl={product.url_video_youtube} />
             </div>
 
             {/* Product info */}
