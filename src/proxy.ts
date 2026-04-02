@@ -2,21 +2,28 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * Proxy (formerly middleware) — handles:
- * 1. Redirect old WordPress URLs to new structure
- * 2. Canonical URL enforcement (trailing slash consistency)
+ * Proxy — handles:
+ * 1. Category redirects (reorganized categories)
+ * 2. Old WordPress URL redirects
+ * 3. Trailing slash removal
  */
 
-// Old WP URL patterns that need redirecting
+// Category redirects from optimization (old top-level → new nested paths)
+const CATEGORY_REDIRECTS: Record<string, string> = {
+  "/tintas-ocp-para-epson": "/tintas/tintas-ocp-para-epson",
+  "/tintas-ocp-para-hp": "/tintas/tintas-ocp-para-hp",
+  "/tintas-ocp-para-canon": "/tintas/tintas-ocp-para-canon",
+  "/matte-2": "/papel/papeles-fotograficos/matte-2",
+  "/glossy": "/papel/papeles-fotograficos/glossy",
+  "/resinado": "/sublimables/resinado",
+  "/impresoras-y-plotters": "/impresoras",
+};
+
+// Old WP URL patterns
 const OLD_URL_PATTERNS = [
-  // Old product URLs: /producto/slug/ or /product/slug/
   { match: /^\/(?:producto|product)\/([^/]+)\/?$/, redirect: "/$1" },
-  // Old category with /producto-cat/
   { match: /^\/producto-cat\/([^/]+)\/?$/, redirect: "/$1" },
-  // Old WooCommerce cart/checkout
   { match: /^\/cart\/?$/, redirect: "/carrito" },
-  { match: /^\/mi-cuenta\/?$/, redirect: "/mi-cuenta" },
-  // Old pages
   { match: /^\/contactanos\/?$/, redirect: "/contacto" },
   { match: /^\/preguntas-frecuentes\/?$/, redirect: "/faq" },
 ];
@@ -24,19 +31,29 @@ const OLD_URL_PATTERNS = [
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip API routes, static files, images
+  // Skip API routes, static files
   if (
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/static/") ||
+    pathname.startsWith("/admin/") ||
     pathname.includes(".")
   ) {
     return NextResponse.next();
   }
 
-  // Check old URL patterns
+  // Normalize: remove trailing slash for comparison
+  const cleanPath = pathname !== "/" && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+
+  // Category redirects (301 permanent)
+  if (CATEGORY_REDIRECTS[cleanPath]) {
+    const url = new URL(CATEGORY_REDIRECTS[cleanPath], request.url);
+    return NextResponse.redirect(url, 301);
+  }
+
+  // Old URL pattern redirects
   for (const pattern of OLD_URL_PATTERNS) {
-    const match = pathname.match(pattern.match);
+    const match = cleanPath.match(pattern.match);
     if (match) {
       const newPath = pattern.redirect.replace(
         /\$(\d+)/g,
@@ -59,7 +76,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all paths except static files and API
     "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };
