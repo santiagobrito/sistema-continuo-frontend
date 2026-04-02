@@ -43,17 +43,51 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (resolved.type === "product") {
     const p = resolved.data as Product;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+
+    // Auto-generate description if no custom SEO desc
+    const autoDesc = [
+      p.name,
+      p.marca ? `Marca ${p.marca}.` : "",
+      p.price && !isCatalogProduct(p) ? `$${Number(p.price).toLocaleString("es-AR")}.` : "",
+      "Envio a todo Argentina.",
+      "Garantia 1 ano.",
+      "Compra online en Sistema Continuo.",
+    ].filter(Boolean).join(" ").slice(0, 160);
+
+    const desc = p.seo?.description
+      || p.short_description?.replace(/<[^>]*>/g, "").trim().slice(0, 160)
+      || autoDesc;
+
+    const productUrl = getProductUrl(p);
+
     return {
       title: p.seo?.title || p.name,
-      description: p.seo?.description || p.short_description?.replace(/<[^>]*>/g, "").slice(0, 160) || "",
+      description: desc,
+      alternates: { canonical: `${siteUrl}${productUrl}` },
       openGraph: {
         title: p.name,
-        images: p.images[0] ? [{ url: p.images[0].url }] : [],
+        description: desc,
+        images: p.images[0] ? [{ url: p.images[0].url, width: 800, height: 800 }] : [],
+        type: "website",
+        url: `${siteUrl}${productUrl}`,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: p.name,
+        description: desc,
+        images: p.images[0] ? [p.images[0].url] : [],
       },
     };
   }
   const c = resolved.data as Category;
-  return { title: c.seo_title || c.name, description: c.seo_description || "" };
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+  const catDesc = c.seo_description || `Compra ${c.name} online en Sistema Continuo. ${c.count} productos disponibles. Envio a todo Argentina. Hasta 12 cuotas.`;
+  return {
+    title: c.seo_title || c.name,
+    description: catDesc,
+    alternates: { canonical: `${siteUrl}/${c.path}` },
+  };
 }
 
 export default async function CatchAllPage({ params }: Props) {

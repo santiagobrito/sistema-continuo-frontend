@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s | Sistema Continuo",
   },
   description:
-    "E-commerce de maquinaria de impresión, estampadoras, papelería profesional, tintas, papeles y productos para sublimación.",
+    "Estampadoras, impresoras, plotters, tintas, papeles y mas de 600 productos para sublimacion y gran formato. Envios a todo Argentina. Hasta 12 cuotas con MercadoPago.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "https://sistemacontinuo.com.ar"
   ),

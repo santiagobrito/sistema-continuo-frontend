@@ -14,9 +14,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category: slug } = await params;
   try {
     const category = await getCategory(slug);
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+    const desc = category.seo_description || `Compra ${category.name} online en Sistema Continuo. ${category.count} productos disponibles. Envio a todo Argentina. Hasta 12 cuotas con MercadoPago.`;
     return {
-      title: category.seo_title || category.name,
-      description: category.seo_description || `Productos de ${category.name} en Sistema Continuo. Envios a todo el pais.`,
+      title: category.seo_title || `${category.name} — Comprar Online`,
+      description: desc,
+      alternates: { canonical: `${siteUrl}/${slug}` },
+      openGraph: {
+        title: `${category.name} — Sistema Continuo`,
+        description: desc,
+      },
     };
   } catch {
     return { title: "Categoria no encontrada" };
