@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
   try {
     // Fetch products and categories in parallel
     const [productsRes, categoriesRes] = await Promise.allSettled([
-      fetch(`${API_BASE}/products?search=${encodeURIComponent(q)}&per_page=30`, {
+      fetch(`${API_BASE}/products?search=${encodeURIComponent(q)}&per_page=100`, {
         next: { revalidate: 60 },
       }),
       fetch(`${API_BASE}/categories`, {
@@ -118,6 +118,7 @@ export async function GET(request: NextRequest) {
       products.sort((a, b) => (b as SearchProduct & { _relevance: number })._relevance - (a as SearchProduct & { _relevance: number })._relevance);
 
       // Filter OUT low-relevance results (description-only or contextual title mentions like "para impresoras")
+      // But keep products in matching categories (relevance >= 40 from catMatch)
       products = products.filter((p) => (p as SearchProduct & { _relevance: number })._relevance >= 20);
 
       // Keep only top results by relevance, then remove internal field
