@@ -81,6 +81,7 @@ export function ProductGallery({ images, productName }: { images: SCImage[]; pro
                 fill
                 className="object-contain p-1"
                 sizes="80px"
+                loading="lazy"
               />
             </button>
           ))}
