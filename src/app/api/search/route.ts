@@ -97,6 +97,9 @@ export async function GET(request: NextRequest) {
       // Sort by relevance (title matches first)
       products.sort((a, b) => (b as SearchProduct & { _relevance: number })._relevance - (a as SearchProduct & { _relevance: number })._relevance);
 
+      // Filter OUT products that don't match in title, brand, or category (description-only matches are noise)
+      products = products.filter((p) => (p as SearchProduct & { _relevance: number })._relevance > 0);
+
       // Keep only top results by relevance, then remove internal field
       products = products.slice(0, limit).map(({ ...p }) => {
         delete (p as Record<string, unknown>)._relevance;
