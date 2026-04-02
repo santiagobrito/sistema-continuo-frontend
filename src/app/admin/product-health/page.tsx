@@ -61,6 +61,8 @@ const ISSUE_LABELS: Record<string, string> = {
   description_is_url: "Descripcion es solo una URL",
   short_desc_has_images: "Desc corta con imagenes",
   short_desc_has_headings: "Desc corta con titulos H1-H6",
+  broken_images_in_desc: "Imagenes rotas en descripcion",
+  unpriced_variations: "Variaciones sin precio",
 };
 
 export default function ProductHealthPage() {

@@ -136,11 +136,9 @@ export function ProductActions({ product }: { product: Product }) {
       )}
 
       {/* Variations */}
-      {isVariable && product.attributes && product.variations && (
+      {isVariable && product.variations && product.variations.length > 0 && (
         <VariationSelector
-          attributes={product.attributes}
           variations={product.variations}
-          defaultAttributes={product.default_attributes}
           onSelect={setSelectedVariation}
         />
       )}
