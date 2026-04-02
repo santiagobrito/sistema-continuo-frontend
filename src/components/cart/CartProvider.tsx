@@ -15,11 +15,15 @@ import {
   removeCartItem as apiRemoveCartItem,
   type Cart,
 } from "@/lib/woocommerce/cart";
+import { CartDrawer } from "./CartDrawer";
 
 interface CartContextType {
   cart: Cart | null;
   loading: boolean;
   itemCount: number;
+  drawerOpen: boolean;
+  openDrawer: () => void;
+  closeDrawer: () => void;
   addToCart: (
     productId: number,
     quantity?: number,
@@ -36,13 +40,17 @@ const CartContext = createContext<CartContextType | null>(null);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const openDrawer = useCallback(() => setDrawerOpen(true), []);
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
   const refreshCart = useCallback(async () => {
     try {
       const data = await getCart();
       setCart(data);
     } catch {
-      // Cart might not exist yet, that's OK
+      // Cart might not exist yet
     }
   }, []);
 
@@ -61,6 +69,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       try {
         const data = await apiAddToCart(productId, quantity, variationId, variation);
         setCart(data);
+        setDrawerOpen(true); // Auto-open drawer on add
       } finally {
         setLoading(false);
       }
@@ -95,12 +104,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       cart,
       loading,
       itemCount,
+      drawerOpen,
+      openDrawer,
+      closeDrawer,
       addToCart,
       updateItem,
       removeItem,
       refreshCart,
     }}>
       {children}
+      <CartDrawer open={drawerOpen} onClose={closeDrawer} />
     </CartContext>
   );
 }

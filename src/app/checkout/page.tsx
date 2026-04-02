@@ -18,7 +18,7 @@ const SHIPPING_OPTIONS = [
 export default function CheckoutPage() {
   const { cart } = useCart();
   const [formData, setFormData] = useState({
-    first_name: "", last_name: "", email: "", phone: "",
+    first_name: "", last_name: "", email: "", phone: "", dni_cuit: "",
     address_1: "", city: "", state: "", postcode: "",
   });
   const [shippingMethod, setShippingMethod] = useState("local_pickup");
@@ -117,6 +117,10 @@ export default function CheckoutPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">Telefono *</label>
                     <input required type="tel" value={formData.phone} onChange={(e) => updateField("phone", e.target.value)} className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#013d5a] focus:ring-2 focus:ring-[#013d5a]/10" placeholder="11 1234-5678" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">DNI / CUIT *</label>
+                    <input required value={formData.dni_cuit} onChange={(e) => updateField("dni_cuit", e.target.value)} className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#013d5a] focus:ring-2 focus:ring-[#013d5a]/10" placeholder="20-12345678-9 o 12345678" />
                   </div>
                 </div>
               </div>
