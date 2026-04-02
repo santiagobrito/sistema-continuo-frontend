@@ -1,0 +1,114 @@
+"use client";
+
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from "react";
+import {
+  getCart,
+  addToCart as apiAddToCart,
+  updateCartItem as apiUpdateCartItem,
+  removeCartItem as apiRemoveCartItem,
+  type Cart,
+} from "@/lib/woocommerce/cart";
+
+interface CartContextType {
+  cart: Cart | null;
+  loading: boolean;
+  itemCount: number;
+  addToCart: (
+    productId: number,
+    quantity?: number,
+    variationId?: number,
+    variation?: Record<string, string>
+  ) => Promise<void>;
+  updateItem: (key: string, quantity: number) => Promise<void>;
+  removeItem: (key: string) => Promise<void>;
+  refreshCart: () => Promise<void>;
+}
+
+const CartContext = createContext<CartContextType | null>(null);
+
+export function CartProvider({ children }: { children: ReactNode }) {
+  const [cart, setCart] = useState<Cart | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const refreshCart = useCallback(async () => {
+    try {
+      const data = await getCart();
+      setCart(data);
+    } catch {
+      // Cart might not exist yet, that's OK
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshCart();
+  }, [refreshCart]);
+
+  const addToCart = useCallback(
+    async (
+      productId: number,
+      quantity: number = 1,
+      variationId?: number,
+      variation?: Record<string, string>
+    ) => {
+      setLoading(true);
+      try {
+        const data = await apiAddToCart(productId, quantity, variationId, variation);
+        setCart(data);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  const updateItem = useCallback(async (key: string, quantity: number) => {
+    setLoading(true);
+    try {
+      const data = await apiUpdateCartItem(key, quantity);
+      setCart(data);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const removeItem = useCallback(async (key: string) => {
+    setLoading(true);
+    try {
+      const data = await apiRemoveCartItem(key);
+      setCart(data);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const itemCount = cart?.items_count ?? 0;
+
+  return (
+    <CartContext value={{
+      cart,
+      loading,
+      itemCount,
+      addToCart,
+      updateItem,
+      removeItem,
+      refreshCart,
+    }}>
+      {children}
+    </CartContext>
+  );
+}
+
+export function useCart() {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error("useCart must be used within CartProvider");
+  }
+  return context;
+}
