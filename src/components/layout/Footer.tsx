@@ -30,24 +30,25 @@ export function Footer() {
           <h3 className="font-bold mb-4">Categorias</h3>
           <ul className="space-y-2 text-sm text-blue-100">
             <li><Link href="/estampadoras" className="hover:text-white">Estampadoras</Link></li>
-            <li><Link href="/impresoras" className="hover:text-white">Impresoras</Link></li>
             <li><Link href="/silhouette" className="hover:text-white">Silhouette</Link></li>
-            <li><Link href="/productos-para-sublimar" className="hover:text-white">Sublimables</Link></li>
+            <li><Link href="/sublimables" className="hover:text-white">Sublimables</Link></li>
             <li><Link href="/tintas" className="hover:text-white">Tintas</Link></li>
-            <li><Link href="/papeles" className="hover:text-white">Papeles</Link></li>
-            <li><Link href="/gran-formato" className="hover:text-white">Gran Formato</Link></li>
+            <li><Link href="/papel" className="hover:text-white">Papeles</Link></li>
+            <li><Link href="/vinilos" className="hover:text-white">Vinilos</Link></li>
+            <li><Link href="/marca" className="hover:text-white">Marcas</Link></li>
+            <li><Link href="/ofertas" className="hover:text-white">Ofertas</Link></li>
           </ul>
         </div>
 
         {/* Help */}
         <div>
-          <h3 className="font-bold mb-4">Ayuda</h3>
+          <h3 className="font-bold mb-4">Informacion</h3>
           <ul className="space-y-2 text-sm text-blue-100">
-            <li><Link href="/contacto" className="hover:text-white">Contacto</Link></li>
-            <li><Link href="/faq" className="hover:text-white">Preguntas frecuentes</Link></li>
             <li><Link href="/como-comprar" className="hover:text-white">Como comprar</Link></li>
             <li><Link href="/formas-de-pago" className="hover:text-white">Formas de pago</Link></li>
-            <li><Link href="/descargas" className="hover:text-white">Descargas</Link></li>
+            <li><Link href="/envios" className="hover:text-white">Envios</Link></li>
+            <li><Link href="/contacto" className="hover:text-white">Contacto</Link></li>
+            <li><Link href="/blog" className="hover:text-white">Blog</Link></li>
           </ul>
         </div>
 
