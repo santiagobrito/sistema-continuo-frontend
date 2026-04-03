@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { formatStorePrice } from "@/lib/utils/format";
 import Link from "next/link";
+import Script from "next/script";
 
 // All shipping options with zone restrictions and descriptions
 const ALL_SHIPPING_OPTIONS = [
@@ -94,6 +95,8 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<"mercadopago" | "transferencia" | "efectivo">("mercadopago");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const mpCheckoutRef = useRef<HTMLDivElement>(null);
+  const [mpSdkReady, setMpSdkReady] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
 
   // Auto-fill from user profile if logged in
@@ -191,6 +194,22 @@ export default function CheckoutPage() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Error al procesar el pedido");
+
+        // Try modal checkout, fallback to redirect
+        const mpPublicKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || "TEST-d8548e3c-e516-4a3e-ab89-d3b2d9c45ab6";
+        if (mpSdkReady && (window as unknown as Record<string, unknown>).MercadoPago) {
+          try {
+            const mp = new ((window as unknown as Record<string, { new(key: string, opts: Record<string, unknown>): unknown }>).MercadoPago)(mpPublicKey, { locale: "es-AR" });
+            (mp as Record<string, (opts: Record<string, unknown>) => void>).checkout({
+              preference: { id: data.preferenceId },
+              autoOpen: true,
+            });
+            setSubmitting(false);
+            return;
+          } catch {
+            // Fallback to redirect
+          }
+        }
         window.location.href = data.sandboxInitPoint || data.initPoint;
       } else {
         const res = await fetch("/api/orders/create", {
@@ -451,7 +470,7 @@ export default function CheckoutPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                   </svg>
                   {paymentMethod === "mercadopago"
-                    ? "Compra 100% segura — Redirigido a MercadoPago"
+                    ? "Compra 100% segura — Checkout MercadoPago"
                     : "Compra segura — Recibiras un email con los detalles"}
                 </div>
               </div>
@@ -459,6 +478,11 @@ export default function CheckoutPage() {
           </div>
         </form>
       </div>
+      <Script
+        src="https://sdk.mercadopago.com/js/v2"
+        onLoad={() => setMpSdkReady(true)}
+        strategy="lazyOnload"
+      />
     </main>
   );
 }
