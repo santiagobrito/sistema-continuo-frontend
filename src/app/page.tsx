@@ -1,4 +1,4 @@
-import { getCategories, getProducts, getCategoryUrl, getProductUrl } from "@/lib/wordpress/api";
+import { getCategories, getProducts, getBlogPosts, getCategoryUrl, getProductUrl } from "@/lib/wordpress/api";
 import { formatPrice } from "@/lib/utils/format";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,12 +17,14 @@ const MAIN_CATEGORIES = [
 ];
 
 export default async function HomePage() {
-  const [categoriesData, productsData] = await Promise.all([
+  const [categoriesData, productsData, blogData] = await Promise.all([
     getCategories().catch(() => ({ data: [], flat: [] })),
     getProducts({ per_page: 12, orderby: "popularity" }).catch(() => ({ data: [], total: 0, pages: 0, page: 1 })),
+    getBlogPosts({ per_page: 3 }).catch(() => ({ data: [], total: 0, pages: 0, page: 1 })),
   ]);
 
   const products = productsData.data;
+  const blogPosts = blogData.data;
 
   return (
     <main className="bg-gray-50">
@@ -182,6 +184,35 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Blog */}
+      {blogPosts.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 py-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Blog</h2>
+            <Link href="/blog" className="text-sm text-[#013d5a] font-semibold hover:underline">Ver todos</Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {blogPosts.map((post) => (
+              <Link key={post.id} href={`/blog/${post.slug}`} className="group bg-white rounded-xl border border-gray-100 hover:shadow-lg transition-all overflow-hidden">
+                <div className="aspect-[16/9] relative bg-gray-100">
+                  {post.image ? (
+                    <Image src={post.image.url} alt={post.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="33vw" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <svg className="w-8 h-8 text-gray-200" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>
+                    </div>
+                  )}
+                </div>
+                <div className="p-4">
+                  <h3 className="font-bold text-gray-900 group-hover:text-[#013d5a] transition-colors line-clamp-2 text-sm">{post.title}</h3>
+                  <p className="text-xs text-gray-500 mt-2 line-clamp-2">{post.excerpt.replace(/<[^>]*>/g, "")}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

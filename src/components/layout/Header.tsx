@@ -20,6 +20,7 @@ const NAV_LINKS = [
   { label: "Oficina", href: "/oficina" },
   { label: "Marcas", href: "/marca" },
   { label: "Ofertas", href: "/ofertas" },
+  { label: "Blog", href: "/blog" },
 ];
 
 export function Header() {
