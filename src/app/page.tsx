@@ -18,18 +18,33 @@ const MAIN_CATEGORIES = [
 ];
 
 export default async function HomePage() {
-  const [categoriesData, popularData, onSaleData, brandsData, blogData] = await Promise.all([
+  const emptyPaginated = { data: [], total: 0, pages: 0, page: 1 };
+
+  const [categoriesData, onSaleData, brandsData, blogData,
+    estampadorasData, tintasData, papelesData, sublimablesData, silhouetteData
+  ] = await Promise.all([
     getCategories().catch(() => ({ data: [], flat: [] })),
-    getProducts({ per_page: 8, orderby: "popularity" }).catch(() => ({ data: [], total: 0, pages: 0, page: 1 })),
-    getProducts({ per_page: 4, on_sale: "1" }).catch(() => ({ data: [], total: 0, pages: 0, page: 1 })),
+    getProducts({ per_page: 4, on_sale: "1" }).catch(() => emptyPaginated),
     getBrands().catch(() => []),
-    getBlogPosts({ per_page: 3 }).catch(() => ({ data: [], total: 0, pages: 0, page: 1 })),
+    getBlogPosts({ per_page: 3 }).catch(() => emptyPaginated),
+    getProducts({ category: "estampadoras", per_page: 4, orderby: "popularity" }).catch(() => emptyPaginated),
+    getProducts({ category: "tintas", per_page: 4, orderby: "popularity" }).catch(() => emptyPaginated),
+    getProducts({ category: "papel", per_page: 4, orderby: "popularity" }).catch(() => emptyPaginated),
+    getProducts({ category: "sublimables", per_page: 4, orderby: "popularity" }).catch(() => emptyPaginated),
+    getProducts({ category: "silhouette", per_page: 4, orderby: "popularity" }).catch(() => emptyPaginated),
   ]);
 
-  const products = popularData.data;
   const onSaleProducts = onSaleData.data.filter((p) => p.regular_price && Number(p.regular_price) > Number(p.price));
   const brands = brandsData;
   const blogPosts = blogData.data;
+
+  const categorySections = [
+    { title: "Estampadoras", slug: "estampadoras", desc: "Planas, gorras, tazas, 8en1 y automaticas", products: estampadorasData.data, total: estampadorasData.total },
+    { title: "Tintas profesionales", slug: "tintas", desc: "OCP, Artanium, KIIAN para Epson, HP y Canon", products: tintasData.data, total: tintasData.total },
+    { title: "Papeles", slug: "papel", desc: "Sublimacion, transfer, fotografico y autoadhesivo", products: papelesData.data, total: papelesData.total },
+    { title: "Sublimables", slug: "sublimables", desc: "Tazas, remeras, gorras, madera, polimero y mas", products: sublimablesData.data, total: sublimablesData.total },
+    { title: "Silhouette", slug: "silhouette", desc: "Plotters Cameo 5, Curio 2, cuchillas y accesorios", products: silhouetteData.data, total: silhouetteData.total },
+  ];
 
   return (
     <main className="bg-gray-50">
@@ -133,19 +148,29 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Popular products */}
-      {products.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 pb-10">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Los mas vendidos</h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {products.slice(0, 8).map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Category sections */}
+      {categorySections.map((section, i) => (
+        section.products.length > 0 && (
+          <section key={section.slug} className={`py-10 ${i % 2 === 1 ? "bg-white" : ""}`}>
+            <div className="max-w-7xl mx-auto px-4">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">{section.title}</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">{section.desc}</p>
+                </div>
+                <Link href={`/${section.slug}`} className="text-sm font-medium text-[#013d5a] hover:underline whitespace-nowrap">
+                  Ver los {section.total}
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {section.products.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )
+      ))}
 
       {/* Brands */}
       {brands.length > 0 && (
