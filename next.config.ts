@@ -32,6 +32,9 @@ const nextConfig: NextConfig = {
   },
   compress: true,
   poweredByHeader: false,
+  experimental: {
+    optimizePackageImports: ["@/components", "@/lib"],
+  },
 };
 
 export default nextConfig;
