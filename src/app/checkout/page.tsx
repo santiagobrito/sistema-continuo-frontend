@@ -91,6 +91,7 @@ export default function CheckoutPage() {
     address_1: "", city: "", state: "", postcode: "",
   });
   const [shippingMethod, setShippingMethod] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"mercadopago" | "transferencia" | "efectivo">("mercadopago");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [profileLoaded, setProfileLoaded] = useState(false);
@@ -175,21 +176,32 @@ export default function CheckoutPage() {
         image: item.images[0]?.src,
       }));
 
-      const res = await fetch("/api/mercadopago/create-preference", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items,
-          billing: formData,
-          shipping_method: shippingMethod,
-          shipping_cost: shippingCost,
-        }),
-      });
+      const orderPayload = {
+        items,
+        billing: formData,
+        shipping_method: shippingMethod,
+        shipping_cost: shippingCost,
+      };
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Error al procesar el pedido");
-
-      window.location.href = data.sandboxInitPoint || data.initPoint;
+      if (paymentMethod === "mercadopago") {
+        const res = await fetch("/api/mercadopago/create-preference", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Error al procesar el pedido");
+        window.location.href = data.sandboxInitPoint || data.initPoint;
+      } else {
+        const res = await fetch("/api/orders/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...orderPayload, payment_method: paymentMethod }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Error al crear el pedido");
+        window.location.href = `/pedido-confirmado?order=${data.orderId}&payment=${paymentMethod}`;
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
       setSubmitting(false);
@@ -307,6 +319,69 @@ export default function CheckoutPage() {
                   </div>
                 )}
               </div>
+
+              {/* 3. Payment method */}
+              <div className="bg-white rounded-xl border border-gray-100 p-5">
+                <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <span className="w-6 h-6 bg-[#013d5a] text-white rounded-full text-xs flex items-center justify-center font-bold">3</span>
+                  Medio de pago
+                </h2>
+                <div className="space-y-2">
+                  {[
+                    {
+                      id: "mercadopago" as const,
+                      label: "MercadoPago",
+                      desc: "Tarjeta de credito/debito hasta 12 cuotas, dinero en cuenta MP, Rapipago, Pago Facil",
+                      icon: (
+                        <svg className="w-5 h-5 text-[#009ee3]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                      ),
+                    },
+                    {
+                      id: "transferencia" as const,
+                      label: "Transferencia Bancaria",
+                      desc: "Transferencia o deposito. Te enviamos los datos por email al confirmar el pedido.",
+                      icon: (
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg>
+                      ),
+                    },
+                    {
+                      id: "efectivo" as const,
+                      label: "Efectivo en Local",
+                      desc: "Pagas al retirar en Av. Rivadavia 17002, Haedo. Lunes a viernes 9-13 y 14-18hs.",
+                      icon: (
+                        <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" /></svg>
+                      ),
+                    },
+                  ].map((opt) => (
+                    <label
+                      key={opt.id}
+                      className={`block rounded-xl border cursor-pointer transition-all ${
+                        paymentMethod === opt.id
+                          ? "border-[#013d5a] bg-[#013d5a]/5"
+                          : "border-gray-100 hover:border-gray-200"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3 p-3.5">
+                        <input
+                          type="radio"
+                          name="payment"
+                          value={opt.id}
+                          checked={paymentMethod === opt.id}
+                          onChange={() => setPaymentMethod(opt.id)}
+                          className="w-4 h-4 mt-0.5 text-[#013d5a] cursor-pointer"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            {opt.icon}
+                            <p className="text-sm font-semibold text-gray-900">{opt.label}</p>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">{opt.desc}</p>
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Order summary */}
@@ -351,15 +426,23 @@ export default function CheckoutPage() {
                 <button
                   type="submit"
                   disabled={submitting || !shippingMethod}
-                  className="mt-5 w-full flex items-center justify-center gap-2 bg-[#009ee3] hover:bg-[#0087c9] text-white py-4 rounded-xl font-bold text-base transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`mt-5 w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-base transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                    paymentMethod === "mercadopago"
+                      ? "bg-[#009ee3] hover:bg-[#0087c9] text-white"
+                      : "bg-[#013d5a] hover:bg-[#01567a] text-white"
+                  }`}
                 >
                   {submitting ? (
                     <>
                       <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
                       Procesando...
                     </>
-                  ) : (
+                  ) : paymentMethod === "mercadopago" ? (
                     "Pagar con MercadoPago"
+                  ) : paymentMethod === "transferencia" ? (
+                    "Confirmar pedido — Transferencia"
+                  ) : (
+                    "Confirmar pedido — Pago en local"
                   )}
                 </button>
 
@@ -367,7 +450,9 @@ export default function CheckoutPage() {
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                   </svg>
-                  Compra 100% segura — Redirigido a MercadoPago
+                  {paymentMethod === "mercadopago"
+                    ? "Compra 100% segura — Redirigido a MercadoPago"
+                    : "Compra segura — Recibiras un email con los detalles"}
                 </div>
               </div>
             </div>
