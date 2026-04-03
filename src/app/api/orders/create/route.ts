@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { markCartRecovered, subscribeNewsletter } from "@/lib/brevo/client";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
@@ -101,6 +102,10 @@ export async function POST(request: NextRequest) {
     }
 
     const order = await res.json();
+
+    // Auto-subscribe + mark cart recovered
+    markCartRecovered(body.billing.email).catch(() => {});
+    subscribeNewsletter(body.billing.email, `${body.billing.first_name} ${body.billing.last_name}`).catch(() => {});
 
     return NextResponse.json({
       orderId: order.id,

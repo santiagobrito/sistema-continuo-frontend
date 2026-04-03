@@ -123,6 +123,27 @@ export default function CheckoutPage() {
       .catch(() => {});
   }, [profileLoaded]);
 
+  // Track abandoned cart when email is filled (fire once)
+  const [cartTracked, setCartTracked] = useState(false);
+  useEffect(() => {
+    if (cartTracked || !formData.email || !formData.email.includes("@") || !cart) return;
+    const timer = setTimeout(() => {
+      fetch("/api/abandoned-cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          name: `${formData.first_name} ${formData.last_name}`.trim(),
+          phone: formData.phone,
+          items: cart.items.map((i) => ({ name: i.name, quantity: i.quantity, price: parseInt(i.prices.price) })),
+          total: parseInt(cart.totals.total_items || "0"),
+        }),
+      }).catch(() => {});
+      setCartTracked(true);
+    }, 2000); // Wait 2s after typing email to avoid spam
+    return () => clearTimeout(timer);
+  }, [formData.email, formData.first_name, formData.last_name, formData.phone, cart, cartTracked]);
+
   // Filter shipping options based on selected province
   const availableShipping = useMemo(() => {
     const province = formData.state;

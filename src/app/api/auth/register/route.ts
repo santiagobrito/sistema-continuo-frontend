@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSession } from "@/lib/auth/session";
 import { createCustomer, getCustomerByEmail } from "@/lib/auth/wc-api";
+import { subscribeNewsletter } from "@/lib/brevo/client";
 
 export async function POST(request: NextRequest) {
   const { email, first_name, last_name, password } = await request.json();
@@ -19,6 +20,9 @@ export async function POST(request: NextRequest) {
   if (!customer) {
     return NextResponse.json({ error: "Error al crear la cuenta" }, { status: 500 });
   }
+
+  // Auto-subscribe to newsletter
+  subscribeNewsletter(customer.email, `${customer.first_name} ${customer.last_name}`).catch(() => {});
 
   await createSession({
     id: customer.id,

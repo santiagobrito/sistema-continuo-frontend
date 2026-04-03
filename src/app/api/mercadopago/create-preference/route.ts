@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createPreference } from "@/lib/mercadopago/sdk";
+import { markCartRecovered, subscribeNewsletter } from "@/lib/brevo/client";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
@@ -118,6 +119,10 @@ export async function POST(request: NextRequest) {
 
     // 1. Create WC order
     const order = await createWCOrder(body);
+
+    // Mark abandoned cart as recovered + auto-subscribe to newsletter
+    markCartRecovered(body.billing.email).catch(() => {});
+    subscribeNewsletter(body.billing.email, `${body.billing.first_name} ${body.billing.last_name}`).catch(() => {});
 
     // 2. Create MP preference
     const mpItems = body.items.map((item) => ({
