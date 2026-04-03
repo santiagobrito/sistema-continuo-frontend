@@ -4,10 +4,11 @@ import { formatPrice } from "@/lib/utils/format";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { FilterSidebar } from "@/components/shop/FilterSidebar";
 
 interface Props {
   params: Promise<{ category: string }>;
-  searchParams: Promise<{ page?: string; orderby?: string; order?: string }>;
+  searchParams: Promise<{ page?: string; orderby?: string; order?: string; brand?: string; in_stock?: string; on_sale?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -43,7 +44,7 @@ export async function generateStaticParams() {
 
 export default async function CategoryPage({ params, searchParams }: Props) {
   const { category: slug } = await params;
-  const { page = "1", orderby = "date", order = "DESC" } = await searchParams;
+  const { page = "1", orderby = "date", order = "DESC", brand, in_stock, on_sale } = await searchParams;
 
   let category;
   try {
@@ -57,9 +58,23 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     notFound();
   }
 
-  const rawProducts = category.products?.data ?? [];
+  const allProducts = category.products?.data ?? [];
+
+  // Apply client-side filters from URL
+  const brandFilter = brand?.split(",").filter(Boolean) || [];
+  let filteredProducts = allProducts;
+  if (brandFilter.length > 0) {
+    filteredProducts = filteredProducts.filter((p) => brandFilter.includes(p.marca));
+  }
+  if (in_stock === "1") {
+    filteredProducts = filteredProducts.filter((p) => p.stock_status === "instock");
+  }
+  if (on_sale === "1") {
+    filteredProducts = filteredProducts.filter((p) => p.on_sale);
+  }
+
   // Out of stock always last
-  const products = [...rawProducts].sort((a, b) => {
+  const products = [...filteredProducts].sort((a, b) => {
     if (a.stock_status === "outofstock" && b.stock_status !== "outofstock") return 1;
     if (a.stock_status !== "outofstock" && b.stock_status === "outofstock") return -1;
     return 0;
@@ -80,7 +95,11 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         {/* Category header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{category.name}</h1>
-          <p className="text-gray-500">{category.products?.total || 0} productos</p>
+          <p className="text-gray-500">
+            {products.length !== allProducts.length
+              ? `${products.length} de ${allProducts.length} productos`
+              : `${category.products?.total || 0} productos`}
+          </p>
         </div>
 
         {/* Subcategories */}
@@ -106,31 +125,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar filters */}
-          <aside className="lg:w-56 flex-shrink-0">
-            <div className="bg-white rounded-xl border border-gray-100 p-5 sticky top-28">
-              <h3 className="font-semibold text-gray-900 text-sm mb-4">Ordenar por</h3>
-              <div className="space-y-1.5">
-                {[
-                  { label: "Mas recientes", val: "date", ord: "DESC" },
-                  { label: "Menor precio", val: "price", ord: "ASC" },
-                  { label: "Mayor precio", val: "price", ord: "DESC" },
-                  { label: "Mas vendidos", val: "popularity", ord: "DESC" },
-                ].map((opt) => (
-                  <Link
-                    key={opt.val + opt.ord}
-                    href={`/${slug}?orderby=${opt.val}&order=${opt.ord}`}
-                    className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                      orderby === opt.val && order === opt.ord
-                        ? "bg-[#013d5a] text-white font-medium"
-                        : "text-gray-600 hover:bg-gray-50"
-                    }`}
-                  >
-                    {opt.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </aside>
+          <FilterSidebar slug={slug} products={allProducts} />
 
           {/* Product grid */}
           <div className="flex-1">
