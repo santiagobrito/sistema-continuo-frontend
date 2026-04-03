@@ -1,5 +1,6 @@
-import { getCategories, getProducts, getBlogPosts, getCategoryUrl, getProductUrl } from "@/lib/wordpress/api";
+import { getCategories, getProducts, getBrands, getBlogPosts, getCategoryUrl, getProductUrl } from "@/lib/wordpress/api";
 import { formatPrice } from "@/lib/utils/format";
+import type { Product } from "@/lib/wordpress/types";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -17,13 +18,17 @@ const MAIN_CATEGORIES = [
 ];
 
 export default async function HomePage() {
-  const [categoriesData, productsData, blogData] = await Promise.all([
+  const [categoriesData, popularData, onSaleData, brandsData, blogData] = await Promise.all([
     getCategories().catch(() => ({ data: [], flat: [] })),
-    getProducts({ per_page: 12, orderby: "popularity" }).catch(() => ({ data: [], total: 0, pages: 0, page: 1 })),
+    getProducts({ per_page: 8, orderby: "popularity" }).catch(() => ({ data: [], total: 0, pages: 0, page: 1 })),
+    getProducts({ per_page: 4, on_sale: "1" }).catch(() => ({ data: [], total: 0, pages: 0, page: 1 })),
+    getBrands().catch(() => []),
     getBlogPosts({ per_page: 3 }).catch(() => ({ data: [], total: 0, pages: 0, page: 1 })),
   ]);
 
-  const products = productsData.data;
+  const products = popularData.data;
+  const onSaleProducts = onSaleData.data.filter((p) => p.regular_price && Number(p.regular_price) > Number(p.price));
+  const brands = brandsData;
   const blogPosts = blogData.data;
 
   return (
@@ -31,31 +36,40 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="relative bg-gradient-to-br from-[#013d5a] via-[#01567a] to-[#0178a5] text-white overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIi8+PC9zdmc+')] opacity-50" />
-        <div className="relative max-w-7xl mx-auto px-4 py-20 md:py-28">
+        <div className="relative max-w-7xl mx-auto px-4 py-16 md:py-24">
           <div className="max-w-2xl">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-5 tracking-tight">
-              Todo para tu negocio de impresion
+            <p className="text-sm font-semibold text-blue-200 uppercase tracking-widest mb-3">Desde 2005 en Argentina</p>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] mb-5 tracking-tight">
+              Todo para sublimacion en un solo lugar
             </h1>
-            <p className="text-lg md:text-xl text-blue-100/90 mb-8 leading-relaxed">
-              Estampadoras, impresoras, plotters, tintas, papeles y mas de 600 productos para sublimacion y gran formato.
+            <p className="text-lg md:text-xl text-blue-100/90 mb-4 leading-relaxed">
+              +600 productos: estampadoras, sublimadoras, plotters Silhouette, tintas, papeles y artículos sublimables.
             </p>
+            <div className="flex items-center gap-4 text-sm text-blue-200 mb-8">
+              <span className="flex items-center gap-1.5">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                Envio a todo el pais
+              </span>
+              <span className="flex items-center gap-1.5">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                Hasta 12 cuotas
+              </span>
+              <span className="flex items-center gap-1.5 hidden sm:flex">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                Garantia 1 año
+              </span>
+            </div>
             <div className="flex flex-wrap gap-3">
-              <Link
-                href="/estampadoras"
-                className="inline-flex items-center gap-2 bg-white text-[#013d5a] px-7 py-3.5 rounded-full font-semibold hover:bg-blue-50 transition-all shadow-lg shadow-black/10"
-              >
-                Ver catalogo
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
+              <Link href="/estampadoras" className="inline-flex items-center gap-2 bg-white text-[#013d5a] px-7 py-3.5 rounded-full font-semibold hover:bg-blue-50 transition-all shadow-lg shadow-black/10">
+                Ver estampadoras
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
               </Link>
-              <a
-                href="https://wa.me/5491130793862"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-white/10 backdrop-blur text-white px-7 py-3.5 rounded-full font-semibold hover:bg-white/20 transition-all border border-white/20"
-              >
-                Contactar ventas
+              <Link href="/ofertas" className="inline-flex items-center gap-2 bg-red-500 text-white px-7 py-3.5 rounded-full font-semibold hover:bg-red-600 transition-all">
+                Ofertas
+              </Link>
+              <a href="https://wa.me/5491130793862" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-white/10 backdrop-blur text-white px-7 py-3.5 rounded-full font-semibold hover:bg-white/20 transition-all border border-white/20">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+                WhatsApp
               </a>
             </div>
           </div>
@@ -82,65 +96,54 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Products */}
-      {products.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 pb-16">
+      {/* On Sale — urgency */}
+      {onSaleProducts.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 py-10">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Productos destacados</h2>
-            <Link href="/estampadoras" className="text-sm font-medium text-[#013d5a] hover:underline">
-              Ver todos
-            </Link>
+            <div className="flex items-center gap-3">
+              <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">OFERTAS</span>
+              <h2 className="text-2xl font-bold text-gray-900">Descuentos activos</h2>
+            </div>
+            <Link href="/ofertas" className="text-sm font-medium text-[#013d5a] hover:underline">Ver todas</Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-            {products.map((product) => (
-              <Link
-                key={product.id}
-                href={getProductUrl(product)}
-                className="group bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all overflow-hidden"
-              >
-                <div className="aspect-square relative bg-gray-50/50 p-3">
-                  {product.images[0] ? (
-                    <Image
-                      src={product.images[0].url}
-                      alt={product.images[0].alt || product.name}
-                      fill
-                      className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
-                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <svg className="w-12 h-12 text-gray-200" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  )}
-                  {product.on_sale && (
-                    <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Oferta</span>
-                  )}
-                  {product.stock_status === "outofstock" && (
-                    <span className="absolute top-2 right-2 bg-gray-800/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Sin stock</span>
-                  )}
-                </div>
-                <div className="p-3.5 pt-2.5">
-                  {product.marca && (
-                    <p className="text-[10px] font-semibold text-[#013d5a]/60 uppercase tracking-widest mb-0.5">{product.marca}</p>
-                  )}
-                  <h3 className="text-sm font-medium text-gray-900 line-clamp-2 leading-snug mb-2 group-hover:text-[#013d5a] transition-colors">
-                    {product.name}
-                  </h3>
-                  {product.price && !product.is_catalog_only ? (
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-lg font-bold text-gray-900">{formatPrice(product.price)}</span>
-                      {product.on_sale && product.regular_price && (
-                        <span className="text-xs text-gray-400 line-through">{formatPrice(product.regular_price)}</span>
-                      )}
-                    </div>
-                  ) : product.is_catalog_only ? (
-                    <span className="text-sm text-[#013d5a] font-semibold">Consultar precio</span>
-                  ) : null}
-                </div>
-              </Link>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {onSaleProducts.slice(0, 4).map((product) => (
+              <ProductCard key={product.id} product={product} />
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Popular products */}
+      {products.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 pb-10">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Los mas vendidos</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {products.slice(0, 8).map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Brands */}
+      {brands.length > 0 && (
+        <section className="border-t border-gray-200 bg-white py-10">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Marcas</h2>
+              <Link href="/marca" className="text-sm font-medium text-[#013d5a] hover:underline">Ver todas</Link>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-3">
+              {brands.map((brand) => (
+                <Link key={brand.slug} href={`/marca/${brand.slug}`} className="group bg-gray-50 hover:bg-[#013d5a]/5 rounded-xl p-4 text-center transition-all border border-transparent hover:border-[#013d5a]/10">
+                  <p className="font-semibold text-gray-800 group-hover:text-[#013d5a] text-sm">{brand.name}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{brand.count} productos</p>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
       )}
@@ -214,5 +217,43 @@ export default async function HomePage() {
         </section>
       )}
     </main>
+  );
+}
+
+function ProductCard({ product }: { product: Product }) {
+  return (
+    <Link href={getProductUrl(product)} className="group bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all overflow-hidden">
+      <div className="aspect-square relative bg-gray-50/50 p-3">
+        {product.images[0] ? (
+          <Image src={product.images[0].url} alt={product.images[0].alt || product.name} fill className="object-contain p-2 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 50vw, 25vw" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <svg className="w-12 h-12 text-gray-200" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+          </div>
+        )}
+        {product.on_sale && product.regular_price && Number(product.regular_price) > Number(product.price) && (
+          <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+            -{Math.round((1 - Number(product.price) / Number(product.regular_price)) * 100)}%
+          </span>
+        )}
+        {product.stock_status === "outofstock" && (
+          <span className="absolute top-2 right-2 bg-gray-800/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Sin stock</span>
+        )}
+      </div>
+      <div className="p-3.5 pt-2.5">
+        {product.marca && <p className="text-[10px] font-semibold text-[#013d5a]/60 uppercase tracking-widest mb-0.5">{product.marca}</p>}
+        <h3 className="text-sm font-medium text-gray-900 line-clamp-2 leading-snug mb-2 group-hover:text-[#013d5a] transition-colors">{product.name}</h3>
+        {product.price && !product.is_catalog_only ? (
+          <div className="flex items-baseline gap-2">
+            <span className="text-base font-bold text-gray-900">{formatPrice(product.price)}</span>
+            {product.on_sale && product.regular_price && Number(product.regular_price) > Number(product.price) && (
+              <span className="text-xs text-gray-400 line-through">{formatPrice(product.regular_price)}</span>
+            )}
+          </div>
+        ) : product.is_catalog_only ? (
+          <span className="text-sm text-[#013d5a] font-semibold">Consultar</span>
+        ) : null}
+      </div>
+    </Link>
   );
 }
