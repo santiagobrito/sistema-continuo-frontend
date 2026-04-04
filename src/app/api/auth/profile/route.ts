@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
+import { updateBrevoContact } from "@/lib/brevo/client";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
@@ -89,6 +90,18 @@ export async function GET() {
           );
           return meta?.value || "";
         })(),
+        birthday: (() => {
+          const meta = customer.meta_data?.find(
+            (m: { key: string }) => m.key === "sc_birthday"
+          );
+          return meta?.value || "";
+        })(),
+        profile_photo: (() => {
+          const meta = customer.meta_data?.find(
+            (m: { key: string }) => m.key === "sc_profile_photo"
+          );
+          return meta?.value || "";
+        })(),
       },
     });
   } catch {
@@ -132,6 +145,14 @@ export async function PUT(request: NextRequest) {
       metaData.push({ key: "billing_dni_cuit", value: body.dni_cuit });
     }
 
+    if (body.birthday !== undefined) {
+      metaData.push({ key: "sc_birthday", value: body.birthday });
+    }
+
+    if (body.profile_photo !== undefined) {
+      metaData.push({ key: "sc_profile_photo", value: body.profile_photo });
+    }
+
     if (metaData.length > 0) {
       updateData.meta_data = metaData;
     }
@@ -148,6 +169,14 @@ export async function PUT(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Sync changes to Brevo (non-blocking)
+    updateBrevoContact(user.email, {
+      firstName: body.first_name,
+      lastName: body.last_name,
+      phone: body.billing?.phone,
+      birthday: body.birthday,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch {

@@ -8,6 +8,7 @@ const BREVO_API_KEY = process.env.BREVO_API_KEY || "";
 const BREVO_BASE = "https://api.brevo.com/v3";
 const NEWSLETTER_LIST_ID = parseInt(process.env.BREVO_NEWSLETTER_LIST_ID || "9");
 const ABANDONED_CART_LIST_ID = parseInt(process.env.BREVO_ABANDONED_CART_LIST_ID || "10");
+const BIRTHDAY_LIST_ID = parseInt(process.env.BREVO_BIRTHDAY_LIST_ID || "11");
 
 async function brevoFetch(endpoint: string, options: RequestInit = {}) {
   const res = await fetch(`${BREVO_BASE}${endpoint}`, {
@@ -95,6 +96,48 @@ export async function markCartRecovered(email: string) {
     });
   } catch {
     // Non-critical, ignore
+  }
+}
+
+/**
+ * Update contact attributes in Brevo (syncs profile changes)
+ * Also manages birthday list: adds to list 11 if birthday set, removes if cleared.
+ */
+export async function updateBrevoContact(
+  email: string,
+  data: {
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    birthday?: string; // YYYY-MM-DD or empty
+  },
+) {
+  const attributes: Record<string, string | number> = {};
+  if (data.firstName !== undefined) attributes.FIRSTNAME = data.firstName;
+  if (data.lastName !== undefined) attributes.LASTNAME = data.lastName;
+  if (data.phone !== undefined) attributes.SMS = data.phone;
+  if (data.birthday !== undefined) attributes.BIRTHDAY = data.birthday;
+
+  const listIds: number[] = [];
+  const unlinkListIds: number[] = [];
+
+  if (data.birthday) {
+    listIds.push(BIRTHDAY_LIST_ID);
+  } else if (data.birthday === "") {
+    unlinkListIds.push(BIRTHDAY_LIST_ID);
+  }
+
+  try {
+    await brevoFetch(`/contacts/${encodeURIComponent(email)}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        attributes,
+        ...(listIds.length > 0 ? { listIds } : {}),
+        ...(unlinkListIds.length > 0 ? { unlinkListIds } : {}),
+      }),
+    });
+  } catch {
+    // Non-critical — don't break profile save
   }
 }
 
