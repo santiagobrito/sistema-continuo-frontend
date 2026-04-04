@@ -573,6 +573,14 @@ export default function CheckoutPage() {
                   )}
                 </button>
 
+                {!shippingMethod && !submitting && (
+                  <p className="mt-2 text-center text-xs text-amber-600 font-medium">
+                    {!formData.state
+                      ? "Selecciona tu provincia para elegir el metodo de envio"
+                      : "Selecciona un metodo de envio para continuar"}
+                  </p>
+                )}
+
                 <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-gray-400">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
