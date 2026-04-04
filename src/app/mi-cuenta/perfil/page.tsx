@@ -1,9 +1,17 @@
 "use client";
 
 import { useAuth } from "@/components/auth/AuthProvider";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+
+export default function PerfilPageWrapper() {
+  return (
+    <Suspense>
+      <PerfilPage />
+    </Suspense>
+  );
+}
 
 interface Address {
   first_name: string;
@@ -52,9 +60,11 @@ const PROVINCIAS = [
 
 const inputClass = "w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#013d5a] focus:ring-2 focus:ring-[#013d5a]/10 transition-colors";
 
-export default function PerfilPage() {
+function PerfilPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isWelcome = searchParams.get("bienvenida") === "1";
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -205,7 +215,14 @@ export default function PerfilPage() {
           <span className="text-gray-900 font-medium">Perfil</span>
         </nav>
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Mi perfil</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Mi perfil</h1>
+
+        {isWelcome && (
+          <div className="mb-6 p-4 bg-[#013d5a]/5 border border-[#013d5a]/10 rounded-xl">
+            <h2 className="font-semibold text-[#013d5a] mb-1">Cuenta creada con exito</h2>
+            <p className="text-sm text-gray-600">Completa tus datos para una mejor experiencia de compra. El telefono y la direccion agilizan el checkout.</p>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-gray-100 rounded-xl p-1">

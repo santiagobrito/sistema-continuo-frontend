@@ -63,8 +63,10 @@ export async function POST(request: NextRequest) {
 
     // Find or create WC customer
     let customer = await getCustomerByEmail(payload.email);
+    let isNew = false;
 
     if (!customer) {
+      isNew = true;
       customer = await createCustomer({
         email: payload.email,
         first_name: payload.given_name || payload.name?.split(" ")[0] || "",
@@ -73,6 +75,14 @@ export async function POST(request: NextRequest) {
 
       if (!customer) {
         return NextResponse.json({ error: "No se pudo crear la cuenta" }, { status: 500 });
+      }
+
+      // Store Google avatar in customer meta
+      if (payload.picture) {
+        const { updateCustomer } = await import("@/lib/auth/wc-api");
+        updateCustomer(customer.id, {
+          meta_data: [{ key: "sc_profile_photo", value: payload.picture }],
+        }).catch(() => {});
       }
 
       // Auto-subscribe to newsletter (new customer)
@@ -93,6 +103,7 @@ export async function POST(request: NextRequest) {
         email: customer.email,
         name: `${customer.first_name} ${customer.last_name}`.trim(),
       },
+      isNew,
     });
   } catch {
     return NextResponse.json({ error: "Error en login con Google" }, { status: 500 });

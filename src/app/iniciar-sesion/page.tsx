@@ -27,8 +27,13 @@ export default function LoginPage() {
     }
   }
 
-  function handleGoogleSuccess() {
-    router.push("/mi-cuenta");
+  function handleGoogleSuccess({ isNew }: { user: { id: number; email: string; name: string }; isNew: boolean }) {
+    if (isNew) {
+      // New account via Google — send to profile to complete data
+      router.push("/mi-cuenta/perfil?bienvenida=1");
+    } else {
+      router.push("/mi-cuenta");
+    }
     router.refresh();
   }
 

@@ -27,8 +27,12 @@ export default function RegisterPage() {
     }
   }
 
-  function handleGoogleSuccess() {
-    router.push("/mi-cuenta");
+  function handleGoogleSuccess({ isNew }: { user: { id: number; email: string; name: string }; isNew: boolean }) {
+    if (isNew) {
+      router.push("/mi-cuenta/perfil?bienvenida=1");
+    } else {
+      router.push("/mi-cuenta");
+    }
     router.refresh();
   }
 

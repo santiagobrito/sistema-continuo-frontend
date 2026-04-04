@@ -5,7 +5,7 @@ import { useEffect, useCallback } from "react";
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 
 interface Props {
-  onSuccess: (user: { id: number; email: string; name: string }) => void;
+  onSuccess: (data: { user: { id: number; email: string; name: string }; isNew: boolean }) => void;
   onError?: (error: string) => void;
 }
 
@@ -38,7 +38,7 @@ export function GoogleLoginButton({ onSuccess, onError }: Props) {
           return;
         }
 
-        onSuccess(data.user);
+        onSuccess({ user: data.user, isNew: data.isNew });
       } catch {
         onError?.("Error de conexion");
       }
