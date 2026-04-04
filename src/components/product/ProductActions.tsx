@@ -48,6 +48,30 @@ export function ProductActions({
     setTimeout(() => setAdded(false), 2500);
   }
 
+  // Back in stock notification
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [notifyStatus, setNotifyStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+  async function handleNotifySubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!notifyEmail.includes("@")) return;
+    setNotifyStatus("loading");
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_WP_URL}/wp-json/sistema-continuo/v1/back-in-stock`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id: product.id, email: notifyEmail }),
+      });
+      if (res.ok) {
+        setNotifyStatus("success");
+      } else {
+        setNotifyStatus("error");
+      }
+    } catch {
+      setNotifyStatus("error");
+    }
+  }
+
   // Don't show buy section for out of stock products
   if (!inStock && !isVariable) {
     return (
@@ -63,13 +87,33 @@ export function ProductActions({
             <span className="w-2.5 h-2.5 bg-red-500 rounded-full" />
             Producto sin stock
           </p>
-          <p className="text-sm text-red-500/80">Dejanos tu email y te avisamos cuando vuelva a estar disponible.</p>
-          <form className="mt-3 flex gap-2">
-            <input type="email" placeholder="tu@email.com" className="flex-1 px-4 py-2.5 border border-red-200 rounded-lg text-sm focus:outline-none focus:border-red-400" />
-            <button type="submit" className="px-5 py-2.5 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors cursor-pointer">
-              Avisarme
-            </button>
-          </form>
+          {notifyStatus === "success" ? (
+            <p className="text-sm text-green-600 font-medium mt-3">Te vamos a avisar cuando vuelva a estar disponible.</p>
+          ) : (
+            <>
+              <p className="text-sm text-red-500/80">Dejanos tu email y te avisamos cuando vuelva a estar disponible.</p>
+              <form onSubmit={handleNotifySubmit} className="mt-3 flex gap-2">
+                <input
+                  type="email"
+                  required
+                  placeholder="tu@email.com"
+                  value={notifyEmail}
+                  onChange={(e) => setNotifyEmail(e.target.value)}
+                  className="flex-1 px-4 py-2.5 border border-red-200 rounded-lg text-sm focus:outline-none focus:border-red-400"
+                />
+                <button
+                  type="submit"
+                  disabled={notifyStatus === "loading"}
+                  className="px-5 py-2.5 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {notifyStatus === "loading" ? "..." : "Avisarme"}
+                </button>
+              </form>
+              {notifyStatus === "error" && (
+                <p className="text-xs text-red-400 mt-2">Hubo un error. Intenta de nuevo.</p>
+              )}
+            </>
+          )}
         </div>
         <ShippingPaymentInfo />
       </div>
