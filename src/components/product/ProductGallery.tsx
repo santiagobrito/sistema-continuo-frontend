@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import type { SCImage } from "@/lib/wordpress/types";
 
@@ -33,6 +33,9 @@ export function ProductGallery({
   videoUrl?: string;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const thumbsRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   // Build gallery items: images first, video last
   const items: GalleryItem[] = images.map((img) => ({ type: "image" as const, image: img }));
@@ -43,6 +46,47 @@ export function ProductGallery({
     } else if (isDirectVideo(videoUrl)) {
       items.push({ type: "video", videoUrl, videoKind: "direct" });
     }
+  }
+
+  const totalItems = items.length;
+
+  // Check if thumbnail strip can scroll
+  const updateScrollState = useCallback(() => {
+    const el = thumbsRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    updateScrollState();
+    const el = thumbsRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateScrollState, { passive: true });
+    // Also check on resize
+    const ro = new ResizeObserver(updateScrollState);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", updateScrollState);
+      ro.disconnect();
+    };
+  }, [updateScrollState, totalItems]);
+
+  // Scroll active thumbnail into view
+  useEffect(() => {
+    const el = thumbsRef.current;
+    if (!el) return;
+    const thumb = el.children[activeIndex] as HTMLElement | undefined;
+    if (thumb) {
+      thumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    }
+  }, [activeIndex]);
+
+  function scrollThumbs(dir: "left" | "right") {
+    const el = thumbsRef.current;
+    if (!el) return;
+    const amount = el.clientWidth * 0.6;
+    el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
   }
 
   if (items.length === 0) {
@@ -56,7 +100,6 @@ export function ProductGallery({
   }
 
   const active = items[activeIndex];
-  const totalItems = items.length;
 
   return (
     <div className="space-y-3">
@@ -121,74 +164,87 @@ export function ProductGallery({
         )}
       </div>
 
-      {/* Thumbnails */}
-      {totalItems > 1 && (() => {
-        // Always show video thumb in last slot if it exists
-        const hasVideo = items.some((it) => it.type === "video");
-        const maxThumbs = 6;
-        let visibleItems: { item: GalleryItem; originalIndex: number }[];
-
-        if (hasVideo && totalItems > maxThumbs) {
-          const videoIndex = items.findIndex((it) => it.type === "video");
-          const imageItems = items
-            .map((item, i) => ({ item, originalIndex: i }))
-            .filter((it) => it.item.type === "image");
-          visibleItems = [
-            ...imageItems.slice(0, maxThumbs - 1),
-            { item: items[videoIndex], originalIndex: videoIndex },
-          ];
-        } else {
-          visibleItems = items.slice(0, maxThumbs).map((item, i) => ({ item, originalIndex: i }));
-        }
-
-        return (
-        <div className="grid grid-cols-6 gap-2">
-          {visibleItems.map(({ item, originalIndex: i }) => (
+      {/* Thumbnails — scrollable horizontal strip */}
+      {totalItems > 1 && (
+        <div className="relative group">
+          {/* Left scroll arrow */}
+          {canScrollLeft && (
             <button
-              key={item.type === "image" ? item.image!.id : "video"}
-              onClick={() => setActiveIndex(i)}
-              className={`aspect-square relative bg-gray-50 rounded-lg overflow-hidden cursor-pointer transition-all ${
-                i === activeIndex
-                  ? "ring-2 ring-[#013d5a] ring-offset-1"
-                  : "border border-gray-100 hover:border-gray-300"
-              }`}
+              onClick={() => scrollThumbs("left")}
+              className="absolute left-0 top-0 bottom-0 z-10 w-7 bg-gradient-to-r from-white via-white/80 to-transparent flex items-center justify-start cursor-pointer"
+              aria-label="Ver anteriores"
             >
-              {item.type === "image" && item.image ? (
-                <Image
-                  src={item.image.url}
-                  alt={item.image.alt || productName}
-                  fill
-                  className="object-contain p-1"
-                  sizes="80px"
-                  loading="lazy"
-                />
-              ) : item.type === "video" ? (
-                <>
-                  {item.videoKind === "youtube" && item.videoId ? (
-                    <Image
-                      src={`https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg`}
-                      alt={`Video de ${productName}`}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-gray-800" />
-                  )}
-                  {/* Play overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                    <svg className="w-6 h-6 text-white drop-shadow" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                </>
-              ) : null}
+              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
             </button>
-          ))}
+          )}
+
+          {/* Thumbnail strip */}
+          <div
+            ref={thumbsRef}
+            className="flex gap-2 overflow-x-auto scroll-smooth"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {items.map((item, i) => (
+              <button
+                key={item.type === "image" ? item.image!.id : "video"}
+                onClick={() => setActiveIndex(i)}
+                className={`shrink-0 w-[60px] h-[60px] relative bg-gray-50 rounded-lg overflow-hidden cursor-pointer transition-all ${
+                  i === activeIndex
+                    ? "ring-2 ring-[#013d5a] ring-offset-1"
+                    : "border border-gray-100 hover:border-gray-300"
+                }`}
+              >
+                {item.type === "image" && item.image ? (
+                  <Image
+                    src={item.image.url}
+                    alt={item.image.alt || productName}
+                    fill
+                    className="object-contain p-1"
+                    sizes="60px"
+                    loading="lazy"
+                  />
+                ) : item.type === "video" ? (
+                  <>
+                    {item.videoKind === "youtube" && item.videoId ? (
+                      <Image
+                        src={`https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg`}
+                        alt={`Video de ${productName}`}
+                        fill
+                        className="object-cover"
+                        sizes="60px"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gray-800" />
+                    )}
+                    {/* Play overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                      <svg className="w-5 h-5 text-white drop-shadow" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                  </>
+                ) : null}
+              </button>
+            ))}
+          </div>
+
+          {/* Right scroll arrow */}
+          {canScrollRight && (
+            <button
+              onClick={() => scrollThumbs("right")}
+              className="absolute right-0 top-0 bottom-0 z-10 w-7 bg-gradient-to-l from-white via-white/80 to-transparent flex items-center justify-end cursor-pointer"
+              aria-label="Ver más"
+            >
+              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
+          )}
         </div>
-        );
-      })()}
+      )}
     </div>
   );
 }
