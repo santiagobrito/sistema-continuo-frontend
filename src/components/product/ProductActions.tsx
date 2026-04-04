@@ -57,7 +57,7 @@ export function ProductActions({
     if (!notifyEmail.includes("@")) return;
     setNotifyStatus("loading");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_WP_URL}/wp-json/sistema-continuo/v1/back-in-stock`, {
+      const res = await fetch("/api/back-in-stock", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ product_id: product.id, email: notifyEmail }),
