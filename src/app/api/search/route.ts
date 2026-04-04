@@ -1,11 +1,15 @@
 /**
- * GET /api/search?q=estampadora&limit=8
+ * GET /api/search?q=estampadora+de+mano&limit=8
  *
- * Live search: queries WP custom API for products + categories.
- * Returns grouped results with images, prices, categories.
+ * Smart search with:
+ * - Synonym expansion ("manual" → "mano", "portatil")
+ * - Fuzzy typo correction ("estampadra" → "estampadora")
+ * - Multi-query: tries original + variants, merges + deduplicates
+ * - Relevance ranking: word-by-word scoring
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { processSearchQuery } from "@/lib/search/synonyms";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const API_BASE = `${WP_URL}/wp-json/sistema-continuo/v1`;
@@ -32,6 +36,89 @@ interface SearchCategory {
   path: string;
 }
 
+interface RawProduct {
+  id: number;
+  name: string;
+  slug: string;
+  price: string;
+  regular_price: string;
+  on_sale: boolean;
+  images: { url: string }[];
+  marca: string;
+  categories: { name: string; slug: string; path: string }[];
+  purchasable: boolean;
+  stock_status: string;
+}
+
+async function searchWP(term: string): Promise<RawProduct[]> {
+  try {
+    const res = await fetch(
+      `${API_BASE}/products?search=${encodeURIComponent(term)}&per_page=100`,
+      { next: { revalidate: 60 } },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.data || [];
+  } catch {
+    return [];
+  }
+}
+
+function scoreProduct(
+  product: RawProduct,
+  originalQuery: string,
+  allQueryWords: string[],
+): number {
+  const nameLower = product.name.toLowerCase();
+  const marcaLower = (product.marca || "").toLowerCase();
+  const qLower = originalQuery.toLowerCase();
+
+  let score = 0;
+
+  // Full phrase match in name — strongest signal
+  if (nameLower.includes(qLower)) {
+    score += 200;
+  }
+
+  // Word-by-word matching against original query
+  const nameMatches = allQueryWords.filter((w) => nameLower.includes(w)).length;
+  const totalWords = allQueryWords.length;
+
+  if (totalWords > 0 && nameMatches === totalWords) {
+    score += 150;
+  } else if (nameMatches > 0) {
+    score += Math.round((nameMatches / totalWords) * 100);
+
+    // Penalize contextual mentions ("tinta PARA impresoras" when searching "impresora")
+    const primaryWord = allQueryWords[0];
+    if (primaryWord && nameLower.includes(primaryWord)) {
+      const idx = nameLower.indexOf(primaryWord);
+      const before = nameLower.slice(Math.max(0, idx - 6), idx).trim();
+      if (before.endsWith("para") || before.endsWith("de") || before.endsWith("con")) {
+        score -= 60;
+      }
+    }
+  }
+
+  // Category match
+  const catMatch = (product.categories || []).some((c) =>
+    allQueryWords.some((w) => c.name.toLowerCase().includes(w)),
+  );
+  if (catMatch) score += 30;
+
+  // Brand match
+  if (allQueryWords.some((w) => marcaLower.includes(w))) {
+    score += 25;
+  }
+
+  // In stock bonus
+  if (product.stock_status === "instock") {
+    score += 5;
+  }
+
+  return score;
+}
+
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get("q")?.trim() || "";
   const limit = parseInt(request.nextUrl.searchParams.get("limit") || "8");
@@ -41,121 +128,100 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Fetch products and categories in parallel
-    // For multi-word queries, search the most distinctive word to get broader results
-    // then rank by full query match in JS
-    const queryWords = q.split(/\s+/).filter((w) => w.length >= 2);
-    const searchTerm = queryWords.length > 1
-      ? queryWords.sort((a, b) => b.length - a.length)[0] // longest word = most distinctive
-      : q;
+    // Process query: fix typos + expand synonyms
+    const { corrected, variants, wasCorrected } = processSearchQuery(q);
 
-    const [productsRes, categoriesRes] = await Promise.allSettled([
-      fetch(`${API_BASE}/products?search=${encodeURIComponent(searchTerm)}&per_page=100`, {
-        next: { revalidate: 60 },
-      }),
-      fetch(`${API_BASE}/categories`, {
-        next: { revalidate: 3600 },
-      }),
-    ]);
-
-    // Parse products
-    let products: SearchProduct[] = [];
-    if (productsRes.status === "fulfilled" && productsRes.value.ok) {
-      const data = await productsRes.value.json();
-      const qLower = q.toLowerCase();
-
-      products = (data.data || []).map((p: Record<string, unknown>) => {
-        const cats = (p.categories as { name: string; slug: string; path: string }[]) || [];
-        const deepest = cats.reduce((best: { path: string } | null, c: { path: string }) => {
-          return !best || c.path.split("/").length > best.path.split("/").length ? c : best;
-        }, null);
-
-        const name = String(p.name || "");
-        const marca = String(p.marca || "");
-
-        // Relevance score: word-by-word matching
-        let relevance = 0;
-        const nameLower = name.toLowerCase();
-        const marcaLower = marca.toLowerCase();
-        const searchWords = qLower.split(/\s+/).filter((w: string) => w.length >= 2);
-
-        // Count how many query words appear in the product name
-        const nameMatches = searchWords.filter((w: string) => nameLower.includes(w)).length;
-        const totalWords = searchWords.length;
-
-        if (totalWords > 0 && nameMatches === totalWords) {
-          // All words match — strong result
-          relevance += 150;
-          // Bonus if full phrase matches
-          if (nameLower.includes(qLower)) relevance += 50;
-        } else if (nameMatches > 0) {
-          // Partial match — score proportionally
-          relevance += Math.round((nameMatches / totalWords) * 100);
-          // Penalize if matched word is after "para"/"de"/"con" (contextual)
-          const primaryWord = searchWords[0];
-          if (primaryWord && nameLower.includes(primaryWord)) {
-            const idx = nameLower.indexOf(primaryWord);
-            const before = nameLower.slice(Math.max(0, idx - 6), idx).trim();
-            if (before.endsWith("para") || before.endsWith("de") || before.endsWith("con")) {
-              relevance -= 60;
-            }
-          }
+    // Build list of WP search terms to try
+    // For each variant, pick the longest word (most distinctive) for WP search
+    const searchTerms = new Set<string>();
+    for (const variant of variants) {
+      const words = variant.split(/\s+/).filter((w) => w.length >= 2);
+      // Add the longest word
+      if (words.length > 1) {
+        searchTerms.add(words.sort((a, b) => b.length - a.length)[0]);
+      }
+      // Also add second-longest if available (catches "mano" when longest is "estampadora")
+      if (words.length > 1) {
+        const sorted = [...words].sort((a, b) => b.length - a.length);
+        if (sorted[1] && sorted[1].length >= 3) {
+          searchTerms.add(sorted[1]);
         }
-
-        // Category match
-        const cats_arr = (p.categories as { name: string }[]) || [];
-        const catMatch = cats_arr.some((c: { name: string }) =>
-          searchWords.some((w: string) => c.name.toLowerCase().includes(w))
-        );
-        if (catMatch) relevance += 30;
-
-        // Brand match
-        const brandMatch = searchWords.some((w: string) => marcaLower.includes(w));
-        if (brandMatch) relevance += 25;
-
-        return {
-          id: p.id,
-          name,
-          slug: p.slug,
-          price: p.price || "",
-          regular_price: p.regular_price || "",
-          on_sale: p.on_sale,
-          image: (p.images as { url: string }[])?.[0]?.url || null,
-          marca,
-          categories: cats.map((c: { name: string; slug: string; path: string }) => ({
-            name: c.name,
-            slug: c.slug,
-            path: c.path,
-          })),
-          is_catalog: !p.price && !p.purchasable,
-          url: deepest ? `/${deepest.path}/${p.slug}` : `/${p.slug}`,
-          _relevance: relevance,
-        };
-      });
-
-      // Sort by relevance (title matches first)
-      products.sort((a, b) => (b as SearchProduct & { _relevance: number })._relevance - (a as SearchProduct & { _relevance: number })._relevance);
-
-      // Filter OUT low-relevance results (description-only or contextual title mentions like "para impresoras")
-      // But keep products in matching categories (relevance >= 40 from catMatch)
-      products = products.filter((p) => (p as SearchProduct & { _relevance: number })._relevance >= 20);
-
-      // Keep only top results by relevance, then remove internal field
-      products = products.slice(0, limit).map(({ ...p }) => {
-        delete (p as Record<string, unknown>)._relevance;
-        return p;
-      });
+      }
+      // For single-word queries, add the word itself
+      if (words.length === 1) {
+        searchTerms.add(words[0]);
+      }
     }
 
-    // Filter categories by search query
+    // Fetch products from WP for each search term (parallel, deduplicate)
+    const allQueryWords = corrected.toLowerCase().split(/\s+/).filter((w) => w.length >= 2);
+    // Also include original query words for scoring
+    const originalWords = q.toLowerCase().split(/\s+/).filter((w) => w.length >= 2);
+    const scoringWords = [...new Set([...allQueryWords, ...originalWords])];
+
+    const [productResults, categoriesRes] = await Promise.all([
+      Promise.all(
+        Array.from(searchTerms).slice(0, 4).map((term) => searchWP(term)),
+      ),
+      fetch(`${API_BASE}/categories`, { next: { revalidate: 3600 } }),
+    ]);
+
+    // Merge + deduplicate products
+    const seen = new Set<number>();
+    const allProducts: (RawProduct & { _score: number })[] = [];
+
+    for (const batch of productResults) {
+      for (const product of batch) {
+        if (seen.has(product.id)) continue;
+        seen.add(product.id);
+
+        const score = scoreProduct(product, corrected, scoringWords);
+        if (score >= 15) {
+          allProducts.push({ ...product, _score: score });
+        }
+      }
+    }
+
+    // Sort by score
+    allProducts.sort((a, b) => b._score - a._score);
+
+    // Format output
+    const products: SearchProduct[] = allProducts.slice(0, limit).map((p) => {
+      const cats = p.categories || [];
+      const deepest = cats.reduce(
+        (best: { path: string } | null, c: { path: string }) =>
+          !best || c.path.split("/").length > best.path.split("/").length ? c : best,
+        null,
+      );
+
+      return {
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        price: p.price || "",
+        regular_price: p.regular_price || "",
+        on_sale: p.on_sale,
+        image: p.images?.[0]?.url || null,
+        marca: p.marca || "",
+        categories: cats.map((c) => ({ name: c.name, slug: c.slug, path: c.path })),
+        is_catalog: !p.price && !p.purchasable,
+        url: deepest ? `/${deepest.path}/${p.slug}` : `/${p.slug}`,
+      };
+    });
+
+    // Filter categories
     let categories: SearchCategory[] = [];
-    if (categoriesRes.status === "fulfilled" && categoriesRes.value.ok) {
-      const catData = await categoriesRes.value.json();
+    if (categoriesRes.ok) {
+      const catData = await categoriesRes.json();
       const flat = catData.flat || [];
-      const qLower = q.toLowerCase();
+      const qLower = corrected.toLowerCase();
+      // Match categories against original + corrected query
       categories = flat
-        .filter((c: { name: string; count: number }) =>
-          c.name.toLowerCase().includes(qLower) && c.count > 0
+        .filter(
+          (c: { name: string; count: number }) =>
+            c.count > 0 &&
+            (c.name.toLowerCase().includes(qLower) ||
+              scoringWords.some((w) => c.name.toLowerCase().includes(w))),
         )
         .slice(0, 4)
         .map((c: { id: number; name: string; slug: string; count: number; path: string }) => ({
@@ -171,6 +237,7 @@ export async function GET(request: NextRequest) {
       products,
       categories,
       query: q,
+      corrected_query: wasCorrected ? corrected : undefined,
       total_products: products.length,
     });
   } catch {

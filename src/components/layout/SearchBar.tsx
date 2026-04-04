@@ -32,6 +32,7 @@ interface SearchResults {
   products: SearchProduct[];
   categories: SearchCategory[];
   query: string;
+  corrected_query?: string;
 }
 
 export function SearchBar({ mobile = false }: { mobile?: boolean }) {
@@ -174,6 +175,14 @@ export function SearchBar({ mobile = false }: { mobile?: boolean }) {
         <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 max-h-[70vh] overflow-y-auto">
           {hasResults ? (
             <>
+              {/* Did you mean? */}
+              {results.corrected_query && (
+                <div className="px-4 pt-3 pb-1">
+                  <p className="text-xs text-gray-500">
+                    Mostrando resultados para <button onClick={() => setQuery(results.corrected_query!)} className="font-semibold text-[#013d5a] hover:underline cursor-pointer">{results.corrected_query}</button>
+                  </p>
+                </div>
+              )}
               {/* Categories */}
               {results.categories.length > 0 && (
                 <div className="px-4 pt-3 pb-2">
