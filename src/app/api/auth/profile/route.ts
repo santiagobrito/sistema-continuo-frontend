@@ -124,7 +124,12 @@ export async function PUT(request: NextRequest) {
     if (body.last_name) updateData.last_name = body.last_name;
 
     if (body.billing) {
-      updateData.billing = body.billing;
+      const billing = { ...body.billing };
+      // WC rejects empty email string — remove it or use account email
+      if (!billing.email) {
+        delete billing.email;
+      }
+      updateData.billing = billing;
     }
 
     if (body.shipping) {
