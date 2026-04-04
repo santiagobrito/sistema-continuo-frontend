@@ -39,6 +39,7 @@ interface CheckoutBody {
   };
   shipping_method?: string;
   shipping_cost?: number;
+  gclid?: string;
 }
 
 async function createWCOrder(body: CheckoutBody): Promise<{ id: number; number: string }> {
@@ -74,6 +75,9 @@ async function createWCOrder(body: CheckoutBody): Promise<{ id: number; number: 
     payment_method: "mercadopago",
     payment_method_title: "MercadoPago",
     set_paid: false,
+    meta_data: [
+      ...(body.gclid ? [{ key: "_gclid", value: body.gclid }] : []),
+    ],
   };
 
   // Add shipping line if applicable

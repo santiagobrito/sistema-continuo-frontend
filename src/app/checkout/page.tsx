@@ -5,6 +5,7 @@ import { useCart } from "@/components/cart/CartProvider";
 import { formatStorePrice } from "@/lib/utils/format";
 import Link from "next/link";
 import Script from "next/script";
+import { getGclid } from "@/components/analytics/GclidCapture";
 
 // All shipping options with zone restrictions and descriptions
 const ALL_SHIPPING_OPTIONS = [
@@ -205,6 +206,7 @@ export default function CheckoutPage() {
         billing: formData,
         shipping_method: shippingMethod,
         shipping_cost: shippingCost,
+        gclid: getGclid() || undefined,
       };
 
       if (paymentMethod === "mercadopago") {
