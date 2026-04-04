@@ -61,8 +61,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const productUrl = getProductUrl(p);
 
+    const seoTitle = p.seo?.title || p.name;
     return {
-      title: p.seo?.title || p.name,
+      title: seoTitle.includes("Sistema Continuo") ? { absolute: seoTitle } : seoTitle,
       description: desc,
       alternates: { canonical: `${siteUrl}${productUrl}` },
       openGraph: {
@@ -84,7 +85,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
   const catDesc = c.seo_description || `Compra ${c.name} online en Sistema Continuo. ${c.count} productos disponibles. Envio a todo Argentina. Hasta 12 cuotas.`;
   return {
-    title: c.seo_title || c.name,
+    title: (c.seo_title && c.seo_title.includes("Sistema Continuo")) ? { absolute: c.seo_title } : (c.seo_title || c.name),
     description: catDesc,
     alternates: { canonical: `${siteUrl}/${c.path}` },
   };

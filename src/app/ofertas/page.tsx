@@ -7,7 +7,7 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Ofertas — Sistema Continuo",
+  title: "Ofertas",
   description:
     "Productos en oferta en Sistema Continuo. Estampadoras, plotters, tintas y papeles con descuento. Envio a todo Argentina.",
   alternates: {

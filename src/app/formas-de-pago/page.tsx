@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Formas de pago — Sistema Continuo",
+  title: "Formas de pago",
   description: "MercadoPago hasta 12 cuotas, transferencia bancaria y efectivo. Todos los medios de pago disponibles.",
 };
 

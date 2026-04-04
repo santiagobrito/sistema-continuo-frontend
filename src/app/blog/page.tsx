@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Blog — Sistema Continuo",
+  title: "Blog",
   description: "Guias, tutoriales y novedades sobre sublimacion, estampadoras, plotters de corte y personalizacion. Consejos para tu negocio.",
   alternates: { canonical: `${process.env.NEXT_PUBLIC_SITE_URL || ""}/blog` },
 };

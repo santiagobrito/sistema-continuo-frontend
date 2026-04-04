@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
     const desc = category.seo_description || `Compra ${category.name} online en Sistema Continuo. ${category.count} productos disponibles. Envio a todo Argentina. Hasta 12 cuotas con MercadoPago.`;
     return {
-      title: category.seo_title || `${category.name} — Comprar Online`,
+      title: (category.seo_title && category.seo_title.includes("Sistema Continuo")) ? { absolute: category.seo_title } : (category.seo_title || `${category.name} — Comprar Online`),
       description: desc,
       alternates: { canonical: `${siteUrl}/${slug}` },
       openGraph: {

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Envios — Sistema Continuo",
+  title: "Envios",
   description: "Envios a todo el pais: moto CABA/GBA, Correo Argentino y transporte al interior. Retiro gratis en Haedo.",
 };
 

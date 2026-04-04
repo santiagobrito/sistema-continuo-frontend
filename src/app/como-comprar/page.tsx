@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Como comprar — Sistema Continuo",
+  title: "Como comprar",
   description: "Guia paso a paso para comprar en Sistema Continuo. Registro, carrito, checkout y medios de pago.",
 };
 

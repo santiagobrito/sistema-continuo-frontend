@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Contacto — Sistema Continuo",
+  title: "Contacto",
   description: "Contactanos por WhatsApp, telefono o email. Av. Rivadavia 17002, Haedo. Atencion de lunes a viernes.",
 };
 

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Marcas — Sistema Continuo",
+  title: "Marcas",
   description:
     "Explora todas las marcas disponibles en Sistema Continuo: Silhouette, Senko, Epson, Artanium y mas. Envio a todo Argentina.",
   alternates: {
