@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
 import type { Review } from "@/lib/wordpress/types";
 
 interface Props {
@@ -11,28 +12,36 @@ interface Props {
 }
 
 export function ReviewSection({ reviews, totalReviews, averageRating, productSlug }: Props) {
+  const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", rating: 5, content: "" });
+  const [formData, setFormData] = useState({ rating: 5, content: "" });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!user) return;
     setSubmitting(true);
+    setError("");
     try {
-      await fetch(`/api/store/../sistema-continuo/v1/products/${productSlug}/reviews`, {
+      const res = await fetch(`/api/reviews`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          author_name: formData.name,
-          author_email: formData.email,
+          product_slug: productSlug,
           rating: formData.rating,
           content: formData.content,
         }),
       });
-      setSubmitted(true);
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Error al enviar");
+      } else {
+        setSubmitted(true);
+      }
     } catch {
-      // Silent fail
+      setError("Error de conexion");
     }
     setSubmitting(false);
   }
@@ -92,13 +101,16 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
         <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-center">
           <p className="text-green-700 font-medium">Gracias por tu opinion. Sera publicada luego de ser revisada.</p>
         </div>
+      ) : !user ? (
+        <div className="bg-gray-50 rounded-xl p-4 text-center">
+          <p className="text-sm text-gray-600">
+            <a href="/iniciar-sesion" className="text-[#013d5a] font-semibold hover:underline">Inicia sesion</a> para dejar tu opinion.
+            Solo los compradores verificados pueden opinar.
+          </p>
+        </div>
       ) : showForm ? (
         <form onSubmit={handleSubmit} className="bg-gray-50 rounded-xl p-5 space-y-4">
-          <h4 className="font-semibold text-gray-900">Deja tu opinion</h4>
-          <div className="grid grid-cols-2 gap-3">
-            <input required placeholder="Tu nombre" value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} className="px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#013d5a]" />
-            <input required type="email" placeholder="Tu email" value={formData.email} onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))} className="px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#013d5a]" />
-          </div>
+          <h4 className="font-semibold text-gray-900">Tu opinion como {user.name.split(" ")[0]}</h4>
           <div>
             <label className="block text-sm text-gray-600 mb-1.5">Puntuacion</label>
             <div className="flex gap-1">
@@ -112,6 +124,9 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
             </div>
           </div>
           <textarea required placeholder="Conta tu experiencia con el producto..." value={formData.content} onChange={(e) => setFormData(p => ({ ...p, content: e.target.value }))} rows={3} className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#013d5a]" />
+          {error && (
+            <div className="bg-red-50 border border-red-100 rounded-lg p-3 text-sm text-red-600">{error}</div>
+          )}
           <button type="submit" disabled={submitting} className="px-6 py-2.5 bg-[#013d5a] text-white rounded-lg text-sm font-semibold hover:bg-[#01567a] transition-colors cursor-pointer disabled:opacity-50">
             {submitting ? "Enviando..." : "Enviar opinion"}
           </button>
