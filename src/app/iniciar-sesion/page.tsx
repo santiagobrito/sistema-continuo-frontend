@@ -28,13 +28,12 @@ export default function LoginPage() {
   }
 
   function handleGoogleSuccess({ isNew }: { user: { id: number; email: string; name: string }; isNew: boolean }) {
+    // Full page navigation to ensure AuthProvider re-reads session cookie
     if (isNew) {
-      // New account via Google — send to profile to complete data
-      router.push("/mi-cuenta/perfil?bienvenida=1");
+      window.location.href = "/mi-cuenta/perfil?bienvenida=1";
     } else {
-      router.push("/mi-cuenta");
+      window.location.href = "/mi-cuenta";
     }
-    router.refresh();
   }
 
   return (

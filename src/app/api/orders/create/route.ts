@@ -28,6 +28,7 @@ interface OrderBody {
   shipping_cost?: number;
   payment_method: "transferencia" | "efectivo";
   gclid?: string;
+  coupon_code?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
       payment_method: body.payment_method,
       payment_method_title: paymentTitles[body.payment_method] || body.payment_method,
       set_paid: false,
+      coupon_lines: body.coupon_code ? [{ code: body.coupon_code }] : [],
       meta_data: [
         ...(body.gclid ? [{ key: "_gclid", value: body.gclid }] : []),
       ],

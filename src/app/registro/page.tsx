@@ -29,11 +29,10 @@ export default function RegisterPage() {
 
   function handleGoogleSuccess({ isNew }: { user: { id: number; email: string; name: string }; isNew: boolean }) {
     if (isNew) {
-      router.push("/mi-cuenta/perfil?bienvenida=1");
+      window.location.href = "/mi-cuenta/perfil?bienvenida=1";
     } else {
-      router.push("/mi-cuenta");
+      window.location.href = "/mi-cuenta";
     }
-    router.refresh();
   }
 
   const inputClass = "w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#013d5a] focus:ring-2 focus:ring-[#013d5a]/10";

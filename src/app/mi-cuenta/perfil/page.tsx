@@ -313,7 +313,7 @@ function PerfilPage() {
                   className={inputClass}
                   max={new Date().toISOString().split("T")[0]}
                 />
-                <p className="text-xs text-gray-400 mt-1">Te enviaremos un regalo especial en tu cumple</p>
+                <p className="text-xs text-gray-400 mt-1">Asi podemos saludarte en tu dia</p>
               </div>
             </div>
           )}

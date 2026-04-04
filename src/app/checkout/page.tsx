@@ -96,6 +96,17 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<"mercadopago" | "transferencia" | "efectivo">("mercadopago");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // Coupon state
+  const [couponInput, setCouponInput] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discount_amount: number;
+    label: string;
+    free_shipping: boolean;
+  } | null>(null);
   const mpCheckoutRef = useRef<HTMLDivElement>(null);
   const [mpSdkReady, setMpSdkReady] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
@@ -178,12 +189,46 @@ export default function CheckoutPage() {
 
   const selectedShipping = ALL_SHIPPING_OPTIONS.find((o) => o.id === shippingMethod);
   const needsAddress = shippingMethod !== "local_pickup" && shippingMethod !== "";
-  const shippingCost = selectedShipping?.price || 0;
+  const shippingCost = (appliedCoupon?.free_shipping && shippingMethod) ? 0 : (selectedShipping?.price || 0);
   const subtotal = parseInt(cart.totals.total_items || "0");
-  const total = subtotal + shippingCost;
+  const couponDiscount = appliedCoupon?.discount_amount || 0;
+  const total = Math.max(0, subtotal - couponDiscount + shippingCost);
 
   function updateField(field: string, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function applyCoupon() {
+    if (!couponInput.trim()) return;
+    setCouponLoading(true);
+    setCouponError("");
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponInput.trim(), subtotal }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setCouponError(data.error || "Cupon no valido");
+      } else {
+        setAppliedCoupon({
+          code: data.code,
+          discount_amount: data.discount_amount,
+          label: data.label,
+          free_shipping: data.free_shipping,
+        });
+        setCouponInput("");
+      }
+    } catch {
+      setCouponError("Error al validar");
+    }
+    setCouponLoading(false);
+  }
+
+  function removeCoupon() {
+    setAppliedCoupon(null);
+    setCouponError("");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -207,6 +252,7 @@ export default function CheckoutPage() {
         shipping_method: shippingMethod,
         shipping_cost: shippingCost,
         gclid: getGclid() || undefined,
+        coupon_code: appliedCoupon?.code || undefined,
       };
 
       if (paymentMethod === "mercadopago") {
@@ -444,15 +490,54 @@ export default function CheckoutPage() {
                   ))}
                 </div>
 
+                {/* Coupon */}
+                <div className="border-t border-gray-100 pt-3 mb-3">
+                  {appliedCoupon ? (
+                    <div className="flex items-center justify-between bg-green-50 border border-green-100 rounded-lg px-3 py-2">
+                      <div>
+                        <span className="text-xs font-bold text-green-700 uppercase">{appliedCoupon.code}</span>
+                        <span className="text-xs text-green-600 ml-2">{appliedCoupon.label}</span>
+                      </div>
+                      <button onClick={removeCoupon} className="text-xs text-red-500 hover:text-red-700 cursor-pointer font-medium">Quitar</button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponInput}
+                        onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError(""); }}
+                        placeholder="Codigo de descuento"
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-[#013d5a]"
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyCoupon(); } }}
+                      />
+                      <button
+                        type="button"
+                        onClick={applyCoupon}
+                        disabled={couponLoading || !couponInput.trim()}
+                        className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50"
+                      >
+                        {couponLoading ? "..." : "Aplicar"}
+                      </button>
+                    </div>
+                  )}
+                  {couponError && <p className="text-xs text-red-500 mt-1.5">{couponError}</p>}
+                </div>
+
                 <div className="border-t border-gray-100 pt-3 space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Subtotal</span>
                     <span>{formatStorePrice(cart.totals.total_items)}</span>
                   </div>
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Descuento ({appliedCoupon.code})</span>
+                      <span className="font-medium">-${couponDiscount.toLocaleString("es-AR")}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-gray-500">Envio</span>
                     <span className="font-medium">
-                      {!shippingMethod ? "—" : shippingCost > 0 ? `$${shippingCost.toLocaleString("es-AR")}` : selectedShipping?.id === "local_pickup" ? "Gratis" : "A cotizar"}
+                      {!shippingMethod ? "—" : appliedCoupon?.free_shipping ? <span className="text-green-600">Gratis (cupon)</span> : shippingCost > 0 ? `$${shippingCost.toLocaleString("es-AR")}` : selectedShipping?.id === "local_pickup" ? "Gratis" : "A cotizar"}
                     </span>
                   </div>
                   <div className="border-t border-gray-100 pt-3 flex justify-between items-baseline">
