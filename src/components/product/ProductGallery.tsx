@@ -111,7 +111,7 @@ export function ProductGallery({
             alt={active.image.alt || productName}
             fill
             className="object-contain p-6"
-            preload={activeIndex === 0}
+            priority={activeIndex === 0}
             sizes="(max-width: 1024px) 100vw, 50vw"
           />
         ) : active.type === "video" && active.videoKind === "youtube" ? (
