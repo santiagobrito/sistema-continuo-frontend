@@ -53,7 +53,7 @@ export default async function HomePage() {
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIi8+PC9zdmc+')] opacity-50" />
         <div className="relative max-w-7xl mx-auto px-4 py-16 md:py-24">
           <div className="max-w-2xl">
-            <p className="text-sm font-semibold text-blue-200 uppercase tracking-widest mb-3">Desde 2005 en Argentina</p>
+            <p className="text-sm font-semibold text-blue-200 uppercase tracking-widest mb-3">+20 años equipando emprendedores</p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] mb-5 tracking-tight">
               Todo para sublimacion en un solo lugar
             </h1>
