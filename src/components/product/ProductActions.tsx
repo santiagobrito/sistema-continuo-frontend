@@ -141,7 +141,6 @@ export function ProductActions({
               </>
             )}
           </div>
-          <p className="text-xs text-gray-400 mt-1">IVA incluido</p>
         </div>
       )}
 
