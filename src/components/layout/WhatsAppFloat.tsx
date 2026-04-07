@@ -8,7 +8,7 @@ export function WhatsAppFloat() {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-2">
+    <div className="fixed bottom-5 left-5 z-40 flex flex-col items-start gap-2">
       {/* Tooltip */}
       {expanded && (
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 w-72 animate-in fade-in slide-in-from-bottom-2">
