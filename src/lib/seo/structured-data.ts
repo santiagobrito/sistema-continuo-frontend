@@ -71,6 +71,22 @@ export function generateProductSchema(product: Product, url: string, reviews?: R
     }));
   }
 
+  // Video
+  if (product.url_video_youtube) {
+    const videoId = product.url_video_youtube.match(/(?:youtu\.be\/|v=|embed\/)([a-zA-Z0-9_-]{11})/)?.[1];
+    if (videoId) {
+      schema.video = {
+        "@type": "VideoObject",
+        name: product.name,
+        description: product.seo?.description || `Video de ${product.name}`,
+        thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+        contentUrl: product.url_video_youtube,
+        embedUrl: `https://www.youtube.com/embed/${videoId}`,
+        uploadDate: "2024-01-01",
+      };
+    }
+  }
+
   return schema;
 }
 
