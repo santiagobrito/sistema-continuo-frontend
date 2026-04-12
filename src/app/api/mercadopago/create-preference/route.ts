@@ -157,9 +157,9 @@ export async function POST(request: NextRequest) {
       },
       external_reference: String(order.id),
       back_urls: {
-        success: `${SITE_URL}/pedido-confirmado?order=${order.id}&status=approved`,
+        success: `${SITE_URL}/pedido-confirmado?order=${order.id}&status=approved&email=${encodeURIComponent(body.billing.email || "")}`,
         failure: `${SITE_URL}/checkout?order=${order.id}&status=rejected`,
-        pending: `${SITE_URL}/pedido-confirmado?order=${order.id}&status=pending`,
+        pending: `${SITE_URL}/pedido-confirmado?order=${order.id}&status=pending&email=${encodeURIComponent(body.billing.email || "")}`,
       },
       notification_url: MP_WEBHOOK_URL || undefined,
     });

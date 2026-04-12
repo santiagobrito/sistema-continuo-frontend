@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { GoogleCustomerReviews } from "./GoogleCustomerReviews";
 
 interface Props {
-  searchParams: Promise<{ order?: string; status?: string; payment?: string }>;
+  searchParams: Promise<{ order?: string; status?: string; payment?: string; email?: string; shipping?: string }>;
 }
 
 export default async function OrderConfirmedPage({ searchParams }: Props) {
-  const { order, status, payment } = await searchParams;
+  const { order, status, payment, email, shipping } = await searchParams;
 
   const isApproved = status === "approved";
   const isPending = status === "pending";
@@ -122,6 +123,11 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
           </a>
         </div>
       </div>
+
+      {/* Google Customer Reviews opt-in */}
+      {order && email && (
+        <GoogleCustomerReviews orderId={order} email={email} shippingMethod={shipping} />
+      )}
     </main>
   );
 }

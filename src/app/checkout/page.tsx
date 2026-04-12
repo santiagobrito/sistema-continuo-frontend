@@ -288,7 +288,7 @@ export default function CheckoutPage() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Error al crear el pedido");
-        window.location.href = `/pedido-confirmado?order=${data.orderId}&payment=${paymentMethod}`;
+        window.location.href = `/pedido-confirmado?order=${data.orderId}&payment=${paymentMethod}&email=${encodeURIComponent(formData.email)}&shipping=${encodeURIComponent(shippingMethod)}`;
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
