@@ -42,7 +42,12 @@ export default function FormasDePagoPage() {
               </div>
               <h2 className="text-lg font-bold text-gray-900">Transferencia bancaria</h2>
             </div>
-            <p className="text-sm text-gray-600 mb-2">Realiza una transferencia o depósito bancario. Al confirmar el pedido te enviamos los datos (CBU, alias, titular) por email.</p>
+            <p className="text-sm text-gray-600 mb-3">Transferencia o depósito a nuestra cuenta del Banco Santander.</p>
+            <div className="bg-gray-50 rounded-lg p-3 space-y-1 text-xs text-gray-600 mb-2">
+              <p><span className="font-semibold">CBU:</span> <span className="font-mono">0720366220000000036722</span></p>
+              <p><span className="font-semibold">Alias:</span> PERA.RAMA.PIANO</p>
+              <p><span className="font-semibold">Titular:</span> Sistema Continuo S.H. — CUIT 30-71126591-7</p>
+            </div>
             <p className="text-xs text-gray-400">El pedido se procesa una vez acreditado el pago (1-2 días hábiles).</p>
           </div>
 

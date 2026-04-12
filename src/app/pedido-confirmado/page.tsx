@@ -27,12 +27,14 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 text-left mb-6">
               <h3 className="font-bold text-blue-900 mb-3">Datos para transferencia</h3>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-blue-700">Banco</span><span className="font-medium text-blue-900">A confirmar por email</span></div>
-                <div className="flex justify-between"><span className="text-blue-700">CBU / Alias</span><span className="font-medium text-blue-900">Se envía por email</span></div>
-                <div className="flex justify-between"><span className="text-blue-700">Titular</span><span className="font-medium text-blue-900">Sistema Continuo</span></div>
-                <div className="flex justify-between"><span className="text-blue-700">CUIT</span><span className="font-medium text-blue-900">A confirmar</span></div>
+                <div className="flex justify-between"><span className="text-blue-700">Banco</span><span className="font-medium text-blue-900">Santander</span></div>
+                <div className="flex justify-between"><span className="text-blue-700">Cuenta</span><span className="font-medium text-blue-900">Cta. Cte. 366-000367/2</span></div>
+                <div className="flex justify-between"><span className="text-blue-700">CBU</span><span className="font-medium text-blue-900 font-mono text-xs">0720366220000000036722</span></div>
+                <div className="flex justify-between"><span className="text-blue-700">Alias</span><span className="font-medium text-blue-900">PERA.RAMA.PIANO</span></div>
+                <div className="flex justify-between"><span className="text-blue-700">Titular</span><span className="font-medium text-blue-900">Sistema Continuo S.H.</span></div>
+                <div className="flex justify-between"><span className="text-blue-700">CUIT</span><span className="font-medium text-blue-900">30-71126591-7</span></div>
               </div>
-              <p className="text-xs text-blue-600 mt-3">Enviamos los datos completos a tu email. Una vez acreditado el pago, procesamos tu pedido.</p>
+              <p className="text-xs text-blue-600 mt-3">Una vez acreditado el pago (1-2 días hábiles), procesamos tu pedido y te avisamos por email.</p>
             </div>
           </>
         ) : isEfectivo ? (
