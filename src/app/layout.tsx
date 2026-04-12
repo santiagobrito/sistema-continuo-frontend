@@ -61,17 +61,20 @@ export default function RootLayout({
             <WhatsAppFloat />
           </CartProvider>
         </AuthProvider>
-        <script src="https://www.gstatic.com/shopping/merchant/merchantwidget.js" id="merchantWidgetScript" defer />
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              document.getElementById('merchantWidgetScript').addEventListener('load', function() {
+              var s = document.createElement('script');
+              s.src = 'https://www.gstatic.com/shopping/merchant/merchantwidget.js';
+              s.defer = true;
+              s.onload = function() {
                 merchantwidget.start({
                   merchant_id: 115456767,
                   position: 'BOTTOM_RIGHT',
                   region: 'AR',
                 });
-              });
+              };
+              document.body.appendChild(s);
             `,
           }}
         />
