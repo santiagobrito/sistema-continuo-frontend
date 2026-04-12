@@ -200,3 +200,16 @@ export function formatPrice(price: string | number): string {
     maximumFractionDigits: 0,
   }).format(num);
 }
+
+// === Settings ===
+
+export interface SiteSettings {
+  whatsapp_ventas: string;
+  whatsapp_gran_formato: string;
+  telefono_fijo: string;
+  email_ventas: string;
+}
+
+export async function getSettings(): Promise<SiteSettings> {
+  return apiFetch<SiteSettings>("/settings", undefined, { revalidate: 300 });
+}

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getProduct, getCategory, getProductUrl, getCategoryUrl } from "@/lib/wordpress/api";
+import { getProduct, getCategory, getProductUrl, getCategoryUrl, getSettings } from "@/lib/wordpress/api";
 import { formatPrice, getWhatsAppUrl } from "@/lib/utils/format";
 import type { Metadata } from "next";
 import type { Product, Category } from "@/lib/wordpress/types";
@@ -170,8 +170,11 @@ async function ProductView({ product, parentSlug }: { product: Product; parentSl
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
   const productUrl = `${siteUrl}${getProductUrl(product)}`;
 
-  // Fetch reviews
-  const reviewsData = await getProductReviews(product.slug, { per_page: 10 }).catch(() => ({ data: [], total: 0, pages: 0, page: 1 }));
+  // Fetch reviews + settings in parallel
+  const [reviewsData, settings] = await Promise.all([
+    getProductReviews(product.slug, { per_page: 10 }).catch(() => ({ data: [], total: 0, pages: 0, page: 1 })),
+    getSettings().catch(() => ({ whatsapp_ventas: "5491133466497", whatsapp_gran_formato: "5491130793862", telefono_fijo: "01146501592", email_ventas: "ventas@sistemacontinuo.com.ar" })),
+  ]);
 
   const tabs = [
     {
@@ -267,7 +270,7 @@ async function ProductView({ product, parentSlug }: { product: Product; parentSl
               <div className="p-6 lg:p-8">
                 {product.marca && <p className="text-xs font-semibold text-[#013d5a]/50 uppercase tracking-widest mb-1">{product.marca}</p>}
                 <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight mb-3">{product.name}</h1>
-                <CatalogCTA productName={product.name} productUrl={productUrl} />
+                <CatalogCTA productName={product.name} productUrl={productUrl} whatsapp={settings.whatsapp_gran_formato} email={settings.email_ventas} />
               </div>
             </div>
           ) : (
@@ -321,9 +324,7 @@ async function ProductView({ product, parentSlug }: { product: Product; parentSl
 
 // === Catalog CTA for Gran Formato / products without online sale ===
 
-const WHATSAPP_GRAN_FORMATO = process.env.NEXT_PUBLIC_WHATSAPP_GRAN_FORMATO || "5491133466497";
-
-function CatalogCTA({ productName, productUrl }: { productName: string; productUrl: string }) {
+function CatalogCTA({ productName, productUrl, whatsapp, email }: { productName: string; productUrl: string; whatsapp: string; email: string }) {
   const message = encodeURIComponent(
     `Hola, estoy interesado en ${productName}. Me gustaría recibir una cotización. ${productUrl}`
   );
@@ -350,7 +351,7 @@ function CatalogCTA({ productName, productUrl }: { productName: string; productU
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <a
-            href={`https://wa.me/${WHATSAPP_GRAN_FORMATO}?text=${message}`}
+            href={`https://wa.me/${whatsapp}?text=${message}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-3.5 rounded-xl font-semibold text-sm transition-colors cursor-pointer"
@@ -359,7 +360,7 @@ function CatalogCTA({ productName, productUrl }: { productName: string; productU
             Hablar con un ejecutivo
           </a>
           <a
-            href={`mailto:ventas@sistemacontinuo.com.ar?subject=Cotización: ${encodeURIComponent(productName)}&body=${encodeURIComponent(`Hola, me interesa recibir cotización por: ${productName}\n\n${productUrl}`)}`}
+            href={`mailto:${email}?subject=Cotización: ${encodeURIComponent(productName)}&body=${encodeURIComponent(`Hola, me interesa recibir cotización por: ${productName}\n\n${productUrl}`)}`}
             className="flex items-center justify-center gap-2 bg-white border border-[#013d5a]/20 text-[#013d5a] py-3.5 rounded-xl font-semibold text-sm hover:bg-[#013d5a]/5 transition-colors cursor-pointer"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
