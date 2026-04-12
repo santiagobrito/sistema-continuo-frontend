@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const category = await getCategory(slug);
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
-    const desc = category.seo_description || `Compra ${category.name} online en Sistema Continuo. ${category.count} productos disponibles. Envio a todo Argentina. Hasta 12 cuotas con MercadoPago.`;
+    const desc = category.seo_description || `Compra ${category.name} online en Sistema Continuo. ${category.count} productos disponibles. Envío a todo Argentina. Hasta 12 cuotas con MercadoPago.`;
     return {
       title: (category.seo_title && category.seo_title.includes("Sistema Continuo")) ? { absolute: category.seo_title } : (category.seo_title || `${category.name} — Comprar Online`),
       description: desc,
@@ -207,7 +207,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
               </>
             ) : (
               <div className="text-center py-20">
-                <p className="text-gray-400 text-lg">No hay productos en esta categoria.</p>
+                <p className="text-gray-400 text-lg">No hay productos en esta categoría.</p>
               </div>
             )}
           </div>

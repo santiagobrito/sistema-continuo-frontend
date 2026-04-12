@@ -20,11 +20,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Sistema Continuo — Sublimacion, Estampadoras y Plotters | Argentina",
+    default: "Sistema Continuo — Sublimación, Estampadoras y Plotters | Argentina",
     template: "%s | Sistema Continuo",
   },
   description:
-    "Tienda online de sublimacion: estampadoras, sublimadoras, impresoras Epson, plotters Silhouette, tintas, papeles y +600 productos. Envios a todo Argentina. Hasta 12 cuotas.",
+    "Tienda online de sublimación: estampadoras, sublimadoras, impresoras Epson, plotters Silhouette, tintas, papeles y +600 productos. Envíos a todo Argentina. Hasta 12 cuotas.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "https://sistemacontinuo.com.ar"
   ),

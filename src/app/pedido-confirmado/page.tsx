@@ -28,7 +28,7 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
               <h3 className="font-bold text-blue-900 mb-3">Datos para transferencia</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-blue-700">Banco</span><span className="font-medium text-blue-900">A confirmar por email</span></div>
-                <div className="flex justify-between"><span className="text-blue-700">CBU / Alias</span><span className="font-medium text-blue-900">Se envia por email</span></div>
+                <div className="flex justify-between"><span className="text-blue-700">CBU / Alias</span><span className="font-medium text-blue-900">Se envía por email</span></div>
                 <div className="flex justify-between"><span className="text-blue-700">Titular</span><span className="font-medium text-blue-900">Sistema Continuo</span></div>
                 <div className="flex justify-between"><span className="text-blue-700">CUIT</span><span className="font-medium text-blue-900">A confirmar</span></div>
               </div>
@@ -47,11 +47,11 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
             <div className="bg-amber-50 border border-amber-100 rounded-xl p-5 text-left mb-6">
               <h3 className="font-bold text-amber-900 mb-3">Datos del local</h3>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-amber-700">Direccion</span><span className="font-medium text-amber-900">Av. Rivadavia 17002, Haedo</span></div>
+                <div className="flex justify-between"><span className="text-amber-700">Dirección</span><span className="font-medium text-amber-900">Av. Rivadavia 17002, Haedo</span></div>
                 <div className="flex justify-between"><span className="text-amber-700">Horario</span><span className="font-medium text-amber-900">Lun a Vie 9-13 y 14-18hs</span></div>
-                <div className="flex justify-between"><span className="text-amber-700">Telefono</span><span className="font-medium text-amber-900">(011) 4650-1592</span></div>
+                <div className="flex justify-between"><span className="text-amber-700">Teléfono</span><span className="font-medium text-amber-900">(011) 4650-1592</span></div>
               </div>
-              <p className="text-xs text-amber-600 mt-3">Te avisamos por email/WhatsApp cuando tu pedido este listo para retirar.</p>
+              <p className="text-xs text-amber-600 mt-3">Te avisamos por email/WhatsApp cuando tu pedido esté listo para retirar.</p>
             </div>
           </>
         ) : isApproved ? (
@@ -66,8 +66,8 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
               Tu pedido #{order} fue procesado correctamente.
             </p>
             <p className="text-gray-400 text-sm mb-8">
-              Te enviamos un email de confirmacion con los detalles de tu compra.
-              Nuestro equipo te contactara para coordinar el envio.
+              Te enviamos un email de confirmación con los detalles de tu compra.
+              Nuestro equipo te contactará para coordinar el envío.
             </p>
           </>
         ) : isPending ? (
@@ -79,7 +79,7 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-3">Pago pendiente</h1>
             <p className="text-gray-500 text-lg mb-2">
-              Tu pedido #{order} esta pendiente de confirmacion.
+              Tu pedido #{order} está pendiente de confirmación.
             </p>
             <p className="text-gray-400 text-sm mb-8">
               Si elegiste pago por transferencia o efectivo, completa el pago para que procesemos tu pedido.
@@ -111,7 +111,7 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
             Seguir comprando
           </Link>
           <a
-            href="https://wa.me/5491130793862"
+            href="https://wa.me/5491133466497"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 bg-green-500 text-white px-8 py-3.5 rounded-xl font-semibold hover:bg-green-600 transition-colors cursor-pointer"

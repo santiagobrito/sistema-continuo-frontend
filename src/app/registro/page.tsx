@@ -42,7 +42,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl border border-gray-100 p-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Crear cuenta</h1>
-          <p className="text-sm text-gray-500 mb-6">Registrate para seguir tus pedidos y comprar mas rapido.</p>
+          <p className="text-sm text-gray-500 mb-6">Registrate para seguir tus pedidos y comprar más rápido.</p>
 
           {/* Google Sign-In */}
           <GoogleLoginButton
@@ -75,8 +75,8 @@ export default function RegisterPage() {
 
           <div className="mt-6 pt-6 border-t border-gray-100 text-center">
             <p className="text-sm text-gray-500">
-              Ya tenes cuenta?{" "}
-              <Link href="/iniciar-sesion" className="text-[#013d5a] font-semibold hover:underline cursor-pointer">Iniciar sesion</Link>
+              ¿Ya tenés cuenta?{" "}
+              <Link href="/iniciar-sesion" className="text-[#013d5a] font-semibold hover:underline cursor-pointer">Iniciar sesión</Link>
             </p>
           </div>
         </div>

@@ -14,16 +14,16 @@ const ALL_SHIPPING_OPTIONS = [
     label: "Retiro en local",
     price: 0,
     zones: ["all"],
-    desc: "Av. Rivadavia 17002, Haedo. Te avisamos cuando tu pedido este listo. Lunes a viernes 9-13 y 14-18hs.",
-    time: "Disponible en 24-48hs habiles",
+    desc: "Av. Rivadavia 17002, Haedo. Te avisamos cuando tu pedido esté listo. Lunes a viernes 9-13 y 14-18hs.",
+    time: "Disponible en 24-48hs hábiles",
   },
   {
     id: "moto_caba",
     label: "Moto CABA",
     price: 4836,
     zones: ["C"],
-    desc: "Envio en moto a domicilio dentro de CABA. Costo por 1 bulto. Si no entra en moto, tendra recargo.",
-    time: "Despacho en 24-48hs habiles",
+    desc: "Envío en moto a domicilio dentro de CABA. Costo por 1 bulto. Si no entra en moto, tendrá recargo.",
+    time: "Despacho en 24-48hs hábiles",
     minOrder: 25000,
   },
   {
@@ -31,8 +31,8 @@ const ALL_SHIPPING_OPTIONS = [
     label: "Moto GBA Zona 1",
     price: 7728,
     zones: ["B"],
-    desc: "San Fernando, San Isidro, San Martin, Vicente Lopez, Hurlingham, Ituzaingo, Moron, 3 de Febrero, La Matanza Norte, Lomas de Zamora, Lanus, Avellaneda.",
-    time: "Despacho en 24-48hs habiles",
+    desc: "San Fernando, San Isidro, San Martín, Vicente López, Hurlingham, Ituzaingó, Morón, 3 de Febrero, La Matanza Norte, Lomas de Zamora, Lanús, Avellaneda.",
+    time: "Despacho en 24-48hs hábiles",
     minOrder: 25000,
   },
   {
@@ -40,8 +40,8 @@ const ALL_SHIPPING_OPTIONS = [
     label: "Moto GBA Zona 2",
     price: 10725,
     zones: ["B"],
-    desc: "Tigre, Malvinas Argentinas, Jose C. Paz, San Miguel, Moreno, Merlo, Ezeiza, Esteban Echeverria, Almirante Brown, Florencio Varela, Berazategui, Quilmes, Escobar, Pilar, La Plata, Berisso.",
-    time: "Despacho en 24-48hs habiles",
+    desc: "Tigre, Malvinas Argentinas, José C. Paz, San Miguel, Moreno, Merlo, Ezeiza, Esteban Echeverría, Almirante Brown, Florencio Varela, Berazategui, Quilmes, Escobar, Pilar, La Plata, Berisso.",
+    time: "Despacho en 24-48hs hábiles",
     minOrder: 25000,
   },
   {
@@ -49,16 +49,16 @@ const ALL_SHIPPING_OPTIONS = [
     label: "Correo Argentino a domicilio",
     price: 0,
     zones: ["all"],
-    desc: "Envio a domicilio por Correo Argentino. El costo se cotiza al confirmar el pedido y se informa por email/WhatsApp.",
-    time: "Despacho en 3 dias habiles. Entrega 3-7 dias habiles segun destino",
+    desc: "Envío a domicilio por Correo Argentino. El costo se cotiza al confirmar el pedido y se informa por email/WhatsApp.",
+    time: "Despacho en 3 días hábiles. Entrega 3-7 días hábiles según destino",
   },
   {
     id: "correo_sucursal",
     label: "Correo Argentino a sucursal",
     price: 0,
     zones: ["all"],
-    desc: "Envio a sucursal de Correo Argentino mas cercana. Mas economico que a domicilio. Costo a cotizar.",
-    time: "Despacho en 3 dias habiles",
+    desc: "Envío a sucursal de Correo Argentino más cercana. Más económico que a domicilio. Costo a cotizar.",
+    time: "Despacho en 3 días hábiles",
   },
   {
     id: "transporte",
@@ -66,7 +66,7 @@ const ALL_SHIPPING_OPTIONS = [
     price: 3061,
     zones: ["interior"],
     desc: "Se cobra costo de despacho ($3.061). El flete del transporte se abona al retirar en destino (terminal o sucursal). Indicar transporte de preferencia.",
-    time: "Despacho en 3 dias habiles",
+    time: "Despacho en 3 días hábiles",
   },
 ];
 
@@ -74,16 +74,16 @@ const PROVINCIAS = [
   { code: "C", name: "CABA", zone: "caba" },
   { code: "B", name: "Buenos Aires", zone: "gba" },
   { code: "K", name: "Catamarca", zone: "interior" }, { code: "H", name: "Chaco", zone: "interior" },
-  { code: "U", name: "Chubut", zone: "interior" }, { code: "X", name: "Cordoba", zone: "interior" },
-  { code: "W", name: "Corrientes", zone: "interior" }, { code: "E", name: "Entre Rios", zone: "interior" },
+  { code: "U", name: "Chubut", zone: "interior" }, { code: "X", name: "Córdoba", zone: "interior" },
+  { code: "W", name: "Corrientes", zone: "interior" }, { code: "E", name: "Entre Ríos", zone: "interior" },
   { code: "P", name: "Formosa", zone: "interior" }, { code: "Y", name: "Jujuy", zone: "interior" },
   { code: "L", name: "La Pampa", zone: "interior" }, { code: "F", name: "La Rioja", zone: "interior" },
   { code: "M", name: "Mendoza", zone: "interior" }, { code: "N", name: "Misiones", zone: "interior" },
-  { code: "Q", name: "Neuquen", zone: "interior" }, { code: "R", name: "Rio Negro", zone: "interior" },
+  { code: "Q", name: "Neuquén", zone: "interior" }, { code: "R", name: "Río Negro", zone: "interior" },
   { code: "A", name: "Salta", zone: "interior" }, { code: "J", name: "San Juan", zone: "interior" },
   { code: "D", name: "San Luis", zone: "interior" }, { code: "Z", name: "Santa Cruz", zone: "interior" },
   { code: "S", name: "Santa Fe", zone: "interior" }, { code: "G", name: "Santiago del Estero", zone: "interior" },
-  { code: "V", name: "Tierra del Fuego", zone: "interior" }, { code: "T", name: "Tucuman", zone: "interior" },
+  { code: "V", name: "Tierra del Fuego", zone: "interior" }, { code: "T", name: "Tucumán", zone: "interior" },
 ];
 
 export default function CheckoutPage() {
@@ -210,7 +210,7 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setCouponError(data.error || "Cupon no valido");
+        setCouponError(data.error || "Cupón no válido");
       } else {
         setAppliedCoupon({
           code: data.code,
@@ -233,7 +233,7 @@ export default function CheckoutPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!shippingMethod) { setError("Selecciona un metodo de envio"); return; }
+    if (!shippingMethod) { setError("Selecciona un método de envío"); return; }
     setError("");
     setSubmitting(true);
 
@@ -321,7 +321,7 @@ export default function CheckoutPage() {
                   <input required placeholder="Nombre *" value={formData.first_name} onChange={(e) => updateField("first_name", e.target.value)} className={inputClass} />
                   <input required placeholder="Apellido *" value={formData.last_name} onChange={(e) => updateField("last_name", e.target.value)} className={inputClass} />
                   <input required type="email" placeholder="Email *" value={formData.email} onChange={(e) => updateField("email", e.target.value)} className={inputClass} />
-                  <input required type="tel" placeholder="Telefono *" value={formData.phone} onChange={(e) => updateField("phone", e.target.value)} className={inputClass} />
+                  <input required type="tel" placeholder="Teléfono *" value={formData.phone} onChange={(e) => updateField("phone", e.target.value)} className={inputClass} />
                   <input required placeholder="DNI / CUIT *" value={formData.dni_cuit} onChange={(e) => updateField("dni_cuit", e.target.value)} className={`${inputClass} sm:col-span-2`} />
                 </div>
               </div>
@@ -330,7 +330,7 @@ export default function CheckoutPage() {
               <div className="bg-white rounded-xl border border-gray-100 p-5">
                 <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                   <span className="w-6 h-6 bg-[#013d5a] text-white rounded-full text-xs flex items-center justify-center font-bold">2</span>
-                  Direccion y envio
+                  Dirección y envío
                 </h2>
 
                 {/* Province first — determines available shipping */}
@@ -345,8 +345,8 @@ export default function CheckoutPage() {
                 {/* Address fields (hidden for local pickup) */}
                 {formData.state && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-                    <input placeholder="Direccion" value={formData.address_1} onChange={(e) => updateField("address_1", e.target.value)} className={`${inputClass} sm:col-span-2`} />
-                    <input placeholder="Codigo postal" value={formData.postcode} onChange={(e) => updateField("postcode", e.target.value)} className={inputClass} />
+                    <input placeholder="Dirección" value={formData.address_1} onChange={(e) => updateField("address_1", e.target.value)} className={`${inputClass} sm:col-span-2`} />
+                    <input placeholder="Código postal" value={formData.postcode} onChange={(e) => updateField("postcode", e.target.value)} className={inputClass} />
                   </div>
                 )}
 
@@ -354,7 +354,7 @@ export default function CheckoutPage() {
                 {formData.state ? (
                   <>
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                      Metodos de envio disponibles para {PROVINCIAS.find(p => p.code === formData.state)?.name}
+                      Métodos de envío disponibles para {PROVINCIAS.find(p => p.code === formData.state)?.name}
                     </p>
                     <div className="space-y-2">
                       {availableShipping.map((opt) => {
@@ -392,7 +392,7 @@ export default function CheckoutPage() {
                                 <p className="text-xs text-gray-500 mt-1 leading-relaxed">{opt.desc}</p>
                                 <p className="text-[10px] text-[#013d5a] font-medium mt-1">{opt.time}</p>
                                 {opt.minOrder && !meetsMinimum && (
-                                  <p className="text-[10px] text-red-500 mt-1">Monto minimo: ${opt.minOrder.toLocaleString("es-AR")}</p>
+                                  <p className="text-[10px] text-red-500 mt-1">Monto mínimo: ${opt.minOrder.toLocaleString("es-AR")}</p>
                                 )}
                               </div>
                             </div>
@@ -403,7 +403,7 @@ export default function CheckoutPage() {
                   </>
                 ) : (
                   <div className="bg-gray-50 rounded-lg p-4 text-center">
-                    <p className="text-sm text-gray-400">Selecciona tu provincia para ver los metodos de envio disponibles</p>
+                    <p className="text-sm text-gray-400">Selecciona tu provincia para ver los métodos de envío disponibles</p>
                   </div>
                 )}
               </div>
@@ -419,7 +419,7 @@ export default function CheckoutPage() {
                     {
                       id: "mercadopago" as const,
                       label: "MercadoPago",
-                      desc: "Tarjeta de credito/debito hasta 12 cuotas, dinero en cuenta MP, Rapipago, Pago Facil",
+                      desc: "Tarjeta de crédito/débito hasta 12 cuotas, dinero en cuenta MP, Rapipago, Pago Fácil",
                       icon: (
                         <svg className="w-5 h-5 text-[#009ee3]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                       ),
@@ -427,7 +427,7 @@ export default function CheckoutPage() {
                     {
                       id: "transferencia" as const,
                       label: "Transferencia Bancaria",
-                      desc: "Transferencia o deposito. Te enviamos los datos por email al confirmar el pedido.",
+                      desc: "Transferencia o depósito. Te enviamos los datos por email al confirmar el pedido.",
                       icon: (
                         <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg>
                       ),
@@ -506,7 +506,7 @@ export default function CheckoutPage() {
                         type="text"
                         value={couponInput}
                         onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError(""); }}
-                        placeholder="Codigo de descuento"
+                        placeholder="Código de descuento"
                         className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-[#013d5a]"
                         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyCoupon(); } }}
                       />
@@ -535,9 +535,9 @@ export default function CheckoutPage() {
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Envio</span>
+                    <span className="text-gray-500">Envío</span>
                     <span className="font-medium">
-                      {!shippingMethod ? "—" : appliedCoupon?.free_shipping ? <span className="text-green-600">Gratis (cupon)</span> : shippingCost > 0 ? `$${shippingCost.toLocaleString("es-AR")}` : selectedShipping?.id === "local_pickup" ? "Gratis" : "A cotizar"}
+                      {!shippingMethod ? "—" : appliedCoupon?.free_shipping ? <span className="text-green-600">Gratis (cupón)</span> : shippingCost > 0 ? `$${shippingCost.toLocaleString("es-AR")}` : selectedShipping?.id === "local_pickup" ? "Gratis" : "A cotizar"}
                     </span>
                   </div>
                   <div className="border-t border-gray-100 pt-3 flex justify-between items-baseline">
@@ -576,8 +576,8 @@ export default function CheckoutPage() {
                 {!shippingMethod && !submitting && (
                   <p className="mt-2 text-center text-xs text-amber-600 font-medium">
                     {!formData.state
-                      ? "Selecciona tu provincia para elegir el metodo de envio"
-                      : "Selecciona un metodo de envio para continuar"}
+                      ? "Selecciona tu provincia para elegir el método de envío"
+                      : "Selecciona un método de envío para continuar"}
                   </p>
                 )}
 
@@ -587,7 +587,7 @@ export default function CheckoutPage() {
                   </svg>
                   {paymentMethod === "mercadopago"
                     ? "Compra 100% segura — Checkout MercadoPago"
-                    : "Compra segura — Recibiras un email con los detalles"}
+                    : "Compra segura — Recibirás un email con los detalles"}
                 </div>
               </div>
             </div>

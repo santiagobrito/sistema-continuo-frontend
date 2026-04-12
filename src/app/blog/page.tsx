@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Blog",
-  description: "Guias, tutoriales y novedades sobre sublimacion, estampadoras, plotters de corte y personalizacion. Consejos para tu negocio.",
+  description: "Guías, tutoriales y novedades sobre sublimación, estampadoras, plotters de corte y personalización. Consejos para tu negocio.",
   alternates: { canonical: `${process.env.NEXT_PUBLIC_SITE_URL || ""}/blog` },
 };
 
@@ -32,7 +32,7 @@ export default async function BlogPage({ searchParams }: Props) {
 
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Blog</h1>
-          <p className="text-gray-500">Guias, tutoriales y novedades sobre sublimacion y personalizacion</p>
+          <p className="text-gray-500">Guías, tutoriales y novedades sobre sublimación y personalización</p>
         </div>
 
         {posts.length > 0 ? (
@@ -97,7 +97,7 @@ export default async function BlogPage({ searchParams }: Props) {
           </>
         ) : (
           <div className="text-center py-20">
-            <p className="text-gray-400 text-lg">Proximamente publicaremos contenido.</p>
+            <p className="text-gray-400 text-lg">Próximamente publicaremos contenido.</p>
           </div>
         )}
       </div>

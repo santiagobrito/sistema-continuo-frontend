@@ -47,7 +47,7 @@ export function ShortDescription({ html }: { html: string }) {
           onClick={() => setExpanded(!expanded)}
           className="mt-1.5 text-xs font-semibold text-[#013d5a] hover:underline cursor-pointer flex items-center gap-1"
         >
-          {expanded ? "Ver menos" : "Ver mas"}
+          {expanded ? "Ver menos" : "Ver más"}
           <svg
             className={`w-3 h-3 transition-transform ${expanded ? "rotate-180" : ""}`}
             fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"

@@ -88,7 +88,7 @@ export function ProductDetail({
         {/* WhatsApp link */}
         {!product.is_catalog_only && (
           <a
-            href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5491130793862"}?text=${encodeURIComponent(`Hola, me interesa ${product.name} — ${productUrl}`)}`}
+            href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5491133466497"}?text=${encodeURIComponent(`Hola, me interesa ${product.name} — ${productUrl}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-4 inline-flex items-center gap-2 text-green-600 hover:text-green-700 text-sm font-medium cursor-pointer"

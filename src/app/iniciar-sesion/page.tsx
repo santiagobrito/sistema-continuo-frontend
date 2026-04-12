@@ -40,7 +40,7 @@ export default function LoginPage() {
     <main className="bg-gray-50 min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl border border-gray-100 p-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Iniciar sesion</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Iniciar sesión</h1>
           <p className="text-sm text-gray-500 mb-6">Ingresa con el email de tu cuenta o de una compra anterior.</p>
 
           {/* Google Sign-In */}

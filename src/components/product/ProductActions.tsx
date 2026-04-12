@@ -148,7 +148,7 @@ export function ProductActions({
       {product.quantity_discounts && product.quantity_discounts.length > 0 && (
         <div className="rounded-xl overflow-hidden border border-green-100">
           <div className="bg-green-50 px-4 py-2.5">
-            <p className="text-sm font-semibold text-green-800">Compra mas, paga menos</p>
+            <p className="text-sm font-semibold text-green-800">Comprá más, pagá menos</p>
           </div>
           <table className="w-full">
             <tbody>
@@ -199,7 +199,7 @@ export function ProductActions({
       {inStock ? (
         <p className="flex items-center gap-1.5 text-sm text-green-600">
           <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          En stock — envio inmediato
+          En stock — envío inmediato
         </p>
       ) : isVariable && !selectedVariation ? null : (
         <p className="flex items-center gap-1.5 text-sm text-amber-600">
@@ -249,7 +249,7 @@ export function ProductActions({
                 Agregado
               </span>
             ) : isVariable && !selectedVariation ? (
-              "Selecciona una opcion"
+              "Selecciona una opción"
             ) : (
               <span className="flex items-center justify-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
@@ -275,7 +275,7 @@ function ShippingPaymentInfo() {
           </svg>
         </div>
         <div>
-          <p className="text-sm font-medium text-gray-900">Envios a todo el pais</p>
+          <p className="text-sm font-medium text-gray-900">Envíos a todo el país</p>
           <p className="text-xs text-gray-500">Correo Argentino, moto CABA/GBA, transporte</p>
         </div>
       </div>
@@ -297,8 +297,8 @@ function ShippingPaymentInfo() {
           </svg>
         </div>
         <div>
-          <p className="text-sm font-medium text-gray-900">Garantia 1 ano</p>
-          <p className="text-xs text-gray-500">Soporte tecnico y post-venta incluidos</p>
+          <p className="text-sm font-medium text-gray-900">Garantía 1 año</p>
+          <p className="text-xs text-gray-500">Soporte técnico y post-venta incluidos</p>
         </div>
       </div>
     </div>

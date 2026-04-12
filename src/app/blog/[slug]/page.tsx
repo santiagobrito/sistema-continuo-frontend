@@ -6,8 +6,8 @@ import Link from "next/link";
 
 const AUTHOR = {
   name: "Sistema Continuo",
-  role: "Especialistas en sublimacion y estampado",
-  bio: "Con mas de 15 anos en el rubro, Sistema Continuo es referente en Argentina en maquinaria de impresion, sublimacion y estampado. Desde nuestro local en Haedo, Buenos Aires, asesoramos a emprendedores y profesionales con equipos, insumos y soporte tecnico.",
+  role: "Especialistas en sublimación y estampado",
+  bio: "Con más de 15 años en el rubro, Sistema Continuo es referente en Argentina en maquinaria de impresión, sublimación y estampado. Desde nuestro local en Haedo, Buenos Aires, asesoramos a emprendedores y profesionales con equipos, insumos y soporte técnico.",
   image: "/logo.webp",
   url: "https://sistemacontinuo.com.ar",
   social: {

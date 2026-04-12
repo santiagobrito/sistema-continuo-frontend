@@ -93,24 +93,24 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
           ))}
         </div>
       ) : (
-        <p className="text-gray-500 text-sm mb-6">Aun no hay opiniones. Se el primero en opinar.</p>
+        <p className="text-gray-500 text-sm mb-6">Aún no hay opiniones. Sé el primero en opinar.</p>
       )}
 
       {/* Review form */}
       {submitted ? (
         <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-center">
-          <p className="text-green-700 font-medium">Gracias por tu opinion. Sera publicada luego de ser revisada.</p>
+          <p className="text-green-700 font-medium">Gracias por tu opinión. Será publicada luego de ser revisada.</p>
         </div>
       ) : !user ? (
         <div className="bg-gray-50 rounded-xl p-4 text-center">
           <p className="text-sm text-gray-600">
-            <a href="/iniciar-sesion" className="text-[#013d5a] font-semibold hover:underline">Inicia sesion</a> para dejar tu opinion.
+            <a href="/iniciar-sesion" className="text-[#013d5a] font-semibold hover:underline">Iniciá sesión</a> para dejar tu opinión.
             Solo los compradores verificados pueden opinar.
           </p>
         </div>
       ) : showForm ? (
         <form onSubmit={handleSubmit} className="bg-gray-50 rounded-xl p-5 space-y-4">
-          <h4 className="font-semibold text-gray-900">Tu opinion como {user.name.split(" ")[0]}</h4>
+          <h4 className="font-semibold text-gray-900">Tu opinión como {user.name.split(" ")[0]}</h4>
           <div>
             <label className="block text-sm text-gray-600 mb-1.5">Puntuacion</label>
             <div className="flex gap-1">
@@ -128,12 +128,12 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
             <div className="bg-red-50 border border-red-100 rounded-lg p-3 text-sm text-red-600">{error}</div>
           )}
           <button type="submit" disabled={submitting} className="px-6 py-2.5 bg-[#013d5a] text-white rounded-lg text-sm font-semibold hover:bg-[#01567a] transition-colors cursor-pointer disabled:opacity-50">
-            {submitting ? "Enviando..." : "Enviar opinion"}
+            {submitting ? "Enviando..." : "Enviar opinión"}
           </button>
         </form>
       ) : (
         <button onClick={() => setShowForm(true)} className="text-sm font-semibold text-[#013d5a] hover:underline cursor-pointer">
-          Escribir una opinion
+          Escribir una opinión
         </button>
       )}
     </div>

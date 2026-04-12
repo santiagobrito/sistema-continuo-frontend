@@ -37,31 +37,31 @@ const ISSUE_LABELS: Record<string, string> = {
   missing_dimensions: "Sin dimensiones",
   missing_sku: "Sin SKU",
   duplicate_sku: "SKU duplicado",
-  missing_barcode: "Sin codigo de barras",
+  missing_barcode: "Sin código de barras",
   missing_brand: "Sin marca",
   missing_price: "Sin precio",
-  sale_price_gte_regular: "Precio oferta >= regular",
-  no_description: "Sin descripcion",
-  short_description: "Descripcion corta",
-  no_short_description: "Sin descripcion corta",
-  no_images: "Sin imagenes",
-  few_images: "Pocas imagenes (<3)",
+  sale_price_gte_regular: "Precio oferta ≥ regular",
+  no_description: "Sin descripción",
+  short_description: "Descripción corta",
+  no_short_description: "Sin descripción corta",
+  no_images: "Sin imágenes",
+  few_images: "Pocas imágenes (<3)",
   no_seo_title: "Sin SEO title",
   seo_title_long: "SEO title largo (>60)",
   seo_title_short: "SEO title corto (<30)",
-  no_seo_description: "Sin meta description",
+  no_seo_description: "Sin meta descripción",
   seo_desc_long: "Meta desc larga (>160)",
   seo_desc_short: "Meta desc corta (<120)",
-  no_category: "Sin categoria",
+  no_category: "Sin categoría",
   uncategorized: "En 'Sin categorizar'",
-  shallow_category: "Categoria sin profundidad",
-  descriptions_inverted: "Descripcion corta/larga invertidas",
+  shallow_category: "Categoría sin profundidad",
+  descriptions_inverted: "Descripción corta/larga invertidas",
   short_desc_too_long: "Desc corta demasiado larga (>500)",
   short_desc_has_urls: "Desc corta contiene URLs",
-  description_is_url: "Descripcion es solo una URL",
-  short_desc_has_images: "Desc corta con imagenes",
-  short_desc_has_headings: "Desc corta con titulos H1-H6",
-  broken_images_in_desc: "Imagenes rotas en descripcion",
+  description_is_url: "Descripción es solo una URL",
+  short_desc_has_images: "Desc corta con imágenes",
+  short_desc_has_headings: "Desc corta con títulos H1-H6",
+  broken_images_in_desc: "Imágenes rotas en descripción",
   unpriced_variations: "Variaciones sin precio",
 };
 
@@ -110,7 +110,7 @@ export default function ProductHealthPage() {
       setData(result);
       setAuthenticated(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error de conexion");
+      setError(err instanceof Error ? err.message : "Error de conexión");
     } finally {
       setLoading(false);
     }
@@ -154,7 +154,7 @@ export default function ProductHealthPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Product Health Score</h1>
-            <p className="text-gray-500 text-sm mt-1">Analisis de calidad de datos de {data?.summary.total || 0} productos</p>
+            <p className="text-gray-500 text-sm mt-1">Análisis de calidad de datos de {data?.summary.total || 0} productos</p>
           </div>
           <button
             onClick={fetchData}
@@ -189,7 +189,7 @@ export default function ProductHealthPage() {
             </button>
             <button onClick={() => { setScoreFilter("red"); setPage(1); }} className={`bg-white rounded-xl border p-5 text-center cursor-pointer transition-all ${scoreFilter === "red" ? "border-red-500 ring-2 ring-red-500/10" : "border-gray-100 hover:border-gray-200"}`}>
               <p className="text-3xl font-bold text-red-600">{data.summary.red}</p>
-              <p className="text-xs text-gray-500 mt-1">Criticos (0-39)</p>
+              <p className="text-xs text-gray-500 mt-1">Críticos (0-39)</p>
             </button>
           </div>
         )}
@@ -268,7 +268,7 @@ export default function ProductHealthPage() {
                       <td className="px-4 py-3 hidden md:table-cell">
                         <span className="text-xs text-gray-500">
                           {product.type === "simple" ? "Simple" : product.type === "variable" ? "Variable" : product.type}
-                          {product.is_catalog && " (catalogo)"}
+                          {product.is_catalog && " (catálogo)"}
                         </span>
                       </td>
                       <td className="px-4 py-3 hidden lg:table-cell">
@@ -317,7 +317,7 @@ export default function ProductHealthPage() {
             {data.pages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
                 <p className="text-xs text-gray-500">
-                  Pagina {data.page} de {data.pages} ({data.summary.total} productos)
+                  Página {data.page} de {data.pages} ({data.summary.total} productos)
                 </p>
                 <div className="flex gap-2">
                   {page > 1 && (

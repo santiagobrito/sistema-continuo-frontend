@@ -5,7 +5,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Marcas",
   description:
-    "Explora todas las marcas disponibles en Sistema Continuo: Silhouette, Senko, Epson, Artanium y mas. Envio a todo Argentina.",
+    "Explora todas las marcas disponibles en Sistema Continuo: Silhouette, Senko, Epson, Artanium y más. Envío a todo Argentina.",
   alternates: {
     canonical: `${process.env.NEXT_PUBLIC_SITE_URL || ""}/marca`,
   },

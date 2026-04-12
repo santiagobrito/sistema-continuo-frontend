@@ -200,7 +200,7 @@ export async function sendAbandonedCartEmail(
         </div>
         <p style="color:#999;font-size:12px;text-align:center;margin-top:30px">
           Enviamos a todo el pais. Hasta 12 cuotas con MercadoPago.<br>
-          <a href="https://wa.me/5491130793862" style="color:#013d5a">Dudas? WhatsApp 11 3079-3862</a>
+          <a href="https://wa.me/5491133466497" style="color:#013d5a">Dudas? WhatsApp 11 3346-6497</a>
         </p>
       </div>
     </div>

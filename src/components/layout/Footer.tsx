@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { NewsletterForm } from "./NewsletterForm";
 
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5491130793862";
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5491133466497";
 
 export function Footer() {
   return (
@@ -24,7 +24,7 @@ export function Footer() {
         <div>
           <h3 className="font-bold text-lg mb-4">Sistema Continuo</h3>
           <p className="text-sm text-blue-100 leading-relaxed">
-            Maquinaria de impresion, estampadoras, papeleria profesional y productos para sublimacion.
+            Maquinaria de impresión, estampadoras, papelería profesional y productos para sublimación.
           </p>
           <div className="flex gap-3 mt-4">
             <a href="https://www.instagram.com/sistemacontinuo" target="_blank" rel="noopener noreferrer" className="text-blue-200 hover:text-white">
@@ -41,7 +41,7 @@ export function Footer() {
 
         {/* Categories */}
         <div>
-          <h3 className="font-bold mb-4">Categorias</h3>
+          <h3 className="font-bold mb-4">Categorías</h3>
           <ul className="space-y-2 text-sm text-blue-100">
             <li><Link href="/estampadoras" className="hover:text-white">Estampadoras</Link></li>
             <li><Link href="/silhouette" className="hover:text-white">Silhouette</Link></li>
@@ -56,11 +56,11 @@ export function Footer() {
 
         {/* Help */}
         <div>
-          <h3 className="font-bold mb-4">Informacion</h3>
+          <h3 className="font-bold mb-4">Información</h3>
           <ul className="space-y-2 text-sm text-blue-100">
-            <li><Link href="/como-comprar" className="hover:text-white">Como comprar</Link></li>
+            <li><Link href="/como-comprar" className="hover:text-white">Cómo comprar</Link></li>
             <li><Link href="/formas-de-pago" className="hover:text-white">Formas de pago</Link></li>
-            <li><Link href="/envios" className="hover:text-white">Envios</Link></li>
+            <li><Link href="/envios" className="hover:text-white">Envíos</Link></li>
             <li><Link href="/contacto" className="hover:text-white">Contacto</Link></li>
             <li><Link href="/blog" className="hover:text-white">Blog</Link></li>
           </ul>
@@ -78,7 +78,7 @@ export function Footer() {
             </li>
             <li>
               <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer" className="hover:text-white">
-                WhatsApp: 11 3079-3862
+                WhatsApp: 11 3346-6497
               </a>
             </li>
             <li>

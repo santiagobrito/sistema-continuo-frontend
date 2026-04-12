@@ -47,7 +47,7 @@ export function getWhatsAppUrl(
   productName: string,
   productUrl: string
 ): string {
-  const phone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5491130793862";
+  const phone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5491133466497";
   const message = encodeURIComponent(
     `Hola, me interesa ${productName} — ${productUrl}`
   );

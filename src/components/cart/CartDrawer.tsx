@@ -113,7 +113,7 @@ export function CartDrawer({ open, onClose }: Props) {
               <span className="text-gray-500">Subtotal</span>
               <span className="font-bold text-gray-900 text-lg">{formatStorePrice(cart.totals.total_price)}</span>
             </div>
-            <p className="text-xs text-gray-400">Envio se calcula en el checkout</p>
+            <p className="text-xs text-gray-400">Envío se calcula en el checkout</p>
             <Link
               href="/checkout"
               onClick={onClose}

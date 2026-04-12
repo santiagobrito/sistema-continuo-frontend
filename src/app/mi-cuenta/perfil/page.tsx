@@ -46,16 +46,16 @@ const PROVINCIAS = [
   { code: "C", name: "CABA" },
   { code: "B", name: "Buenos Aires" },
   { code: "K", name: "Catamarca" }, { code: "H", name: "Chaco" },
-  { code: "U", name: "Chubut" }, { code: "X", name: "Cordoba" },
-  { code: "W", name: "Corrientes" }, { code: "E", name: "Entre Rios" },
+  { code: "U", name: "Chubut" }, { code: "X", name: "Córdoba" },
+  { code: "W", name: "Corrientes" }, { code: "E", name: "Entre Ríos" },
   { code: "P", name: "Formosa" }, { code: "Y", name: "Jujuy" },
   { code: "L", name: "La Pampa" }, { code: "F", name: "La Rioja" },
   { code: "M", name: "Mendoza" }, { code: "N", name: "Misiones" },
-  { code: "Q", name: "Neuquen" }, { code: "R", name: "Rio Negro" },
+  { code: "Q", name: "Neuquén" }, { code: "R", name: "Río Negro" },
   { code: "A", name: "Salta" }, { code: "J", name: "San Juan" },
   { code: "D", name: "San Luis" }, { code: "Z", name: "Santa Cruz" },
   { code: "S", name: "Santa Fe" }, { code: "G", name: "Santiago del Estero" },
-  { code: "V", name: "Tierra del Fuego" }, { code: "T", name: "Tucuman" },
+  { code: "V", name: "Tierra del Fuego" }, { code: "T", name: "Tucumán" },
 ];
 
 const inputClass = "w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#013d5a] focus:ring-2 focus:ring-[#013d5a]/10 transition-colors";
@@ -134,7 +134,7 @@ function PerfilPage() {
       ...profile,
       extra_addresses: [
         ...profile.extra_addresses,
-        { label: `Direccion ${profile.extra_addresses.length + 2}`, first_name: "", last_name: "", address_1: "", address_2: "", city: "", state: "", postcode: "", country: "AR", company: "" },
+        { label: `Dirección ${profile.extra_addresses.length + 2}`, first_name: "", last_name: "", address_1: "", address_2: "", city: "", state: "", postcode: "", country: "AR", company: "" },
       ],
     });
   }
@@ -201,8 +201,8 @@ function PerfilPage() {
 
   const tabs = [
     { id: "personal" as const, label: "Datos personales" },
-    { id: "billing" as const, label: "Facturacion" },
-    { id: "shipping" as const, label: "Direcciones de envio" },
+    { id: "billing" as const, label: "Facturación" },
+    { id: "shipping" as const, label: "Direcciones de envío" },
   ];
 
   return (
@@ -219,8 +219,8 @@ function PerfilPage() {
 
         {isWelcome && (
           <div className="mb-6 p-4 bg-[#013d5a]/5 border border-[#013d5a]/10 rounded-xl">
-            <h2 className="font-semibold text-[#013d5a] mb-1">Cuenta creada con exito</h2>
-            <p className="text-sm text-gray-600">Completa tus datos para una mejor experiencia de compra. El telefono y la direccion agilizan el checkout.</p>
+            <h2 className="font-semibold text-[#013d5a] mb-1">Cuenta creada con éxito</h2>
+            <p className="text-sm text-gray-600">Completa tus datos para una mejor experiencia de compra. El teléfono y la dirección agilizan el checkout.</p>
           </div>
         )}
 
@@ -297,8 +297,8 @@ function PerfilPage() {
                 <p className="text-xs text-gray-400 mt-1">El email no se puede cambiar</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Telefono</label>
-                <input value={profile.billing.phone || ""} onChange={(e) => updateBilling("phone", e.target.value)} className={inputClass} placeholder="Ej: 1130793862" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                <input value={profile.billing.phone || ""} onChange={(e) => updateBilling("phone", e.target.value)} className={inputClass} placeholder="Ej: 1133466497" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">DNI / CUIT</label>
@@ -313,7 +313,7 @@ function PerfilPage() {
                   className={inputClass}
                   max={new Date().toISOString().split("T")[0]}
                 />
-                <p className="text-xs text-gray-400 mt-1">Asi podemos saludarte en tu dia</p>
+                <p className="text-xs text-gray-400 mt-1">Así podemos saludarte en tu día</p>
               </div>
             </div>
           )}
@@ -321,7 +321,7 @@ function PerfilPage() {
           {/* Billing */}
           {activeTab === "billing" && (
             <div className="space-y-4">
-              <p className="text-sm text-gray-500 mb-2">Datos de facturacion. Se usan para generar la factura de compra.</p>
+              <p className="text-sm text-gray-500 mb-2">Datos de facturación. Se usan para generar la factura de compra.</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
@@ -337,7 +337,7 @@ function PerfilPage() {
                 <input value={profile.billing.company} onChange={(e) => updateBilling("company", e.target.value)} className={inputClass} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Direccion</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
                 <input value={profile.billing.address_1} onChange={(e) => updateBilling("address_1", e.target.value)} className={inputClass} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -353,12 +353,12 @@ function PerfilPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Codigo postal</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Código postal</label>
                   <input value={profile.billing.postcode} onChange={(e) => updateBilling("postcode", e.target.value)} className={inputClass} />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email de facturacion</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email de facturación</label>
                 <input value={profile.billing.email || ""} onChange={(e) => updateBilling("email", e.target.value)} className={inputClass} placeholder="Si es distinto al de la cuenta" />
               </div>
             </div>
@@ -368,7 +368,7 @@ function PerfilPage() {
           {activeTab === "shipping" && (
             <div className="space-y-6">
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Direccion principal de envio</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">Dirección principal de envío</h3>
                 <AddressForm address={profile.shipping} onChange={(f, v) => updateShipping(f, v)} />
               </div>
 
@@ -377,7 +377,7 @@ function PerfilPage() {
                 <div key={i} className="border-t border-gray-100 pt-6">
                   <div className="flex items-center justify-between mb-3">
                     <input
-                      value={addr.label || `Direccion ${i + 2}`}
+                      value={addr.label || `Dirección ${i + 2}`}
                       onChange={(e) => updateExtraAddress(i, "label", e.target.value)}
                       className="font-semibold text-gray-900 bg-transparent border-0 focus:outline-none focus:ring-0 p-0"
                     />
@@ -393,7 +393,7 @@ function PerfilPage() {
                 onClick={addExtraAddress}
                 className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 hover:border-[#013d5a] hover:text-[#013d5a] transition-colors cursor-pointer"
               >
-                + Agregar otra direccion de envio
+                + Agregar otra dirección de envío
               </button>
             </div>
           )}
@@ -432,7 +432,7 @@ function AddressForm({ address, onChange }: { address: Address; onChange: (field
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Direccion</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
         <input value={address.address_1} onChange={(e) => onChange("address_1", e.target.value)} className={inputClass} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -448,7 +448,7 @@ function AddressForm({ address, onChange }: { address: Address; onChange: (field
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Codigo postal</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Código postal</label>
           <input value={address.postcode} onChange={(e) => onChange("postcode", e.target.value)} className={inputClass} />
         </div>
       </div>

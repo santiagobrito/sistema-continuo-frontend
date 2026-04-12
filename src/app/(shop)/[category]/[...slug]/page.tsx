@@ -50,8 +50,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       p.name,
       p.marca ? `Marca ${p.marca}.` : "",
       p.price && !isCatalogProduct(p) ? `$${Number(p.price).toLocaleString("es-AR")}.` : "",
-      "Envio a todo Argentina.",
-      "Garantia 1 ano.",
+      "Envío a todo Argentina.",
+      "Garantía 1 año.",
       "Compra online en Sistema Continuo.",
     ].filter(Boolean).join(" ").slice(0, 160);
 
@@ -83,7 +83,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   const c = resolved.data as Category;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
-  const catDesc = c.seo_description || `Compra ${c.name} online en Sistema Continuo. ${c.count} productos disponibles. Envio a todo Argentina. Hasta 12 cuotas.`;
+  const catDesc = c.seo_description || `Compra ${c.name} online en Sistema Continuo. ${c.count} productos disponibles. Envío a todo Argentina. Hasta 12 cuotas.`;
   return {
     title: (c.seo_title && c.seo_title.includes("Sistema Continuo")) ? { absolute: c.seo_title } : (c.seo_title || c.name),
     description: catDesc,
@@ -150,7 +150,7 @@ function SubcategoryView({ category, parentSlug }: { category: Category; parentS
                 {product.price && !isCatalogProduct(product) ? (
                   <span className="text-base font-bold text-gray-900">{formatPrice(product.price)}</span>
                 ) : isCatalogProduct(product) ? (
-                  <span className="text-sm text-[#013d5a] font-semibold">Solicitar cotizacion</span>
+                  <span className="text-sm text-[#013d5a] font-semibold">Solicitar cotización</span>
                 ) : null}
               </div>
             </Link>
@@ -173,7 +173,7 @@ async function ProductView({ product, parentSlug }: { product: Product; parentSl
   const tabs = [
     {
       id: "description",
-      label: "Descripcion",
+      label: "Descripción",
       content: product.description ? (
         <div className="prose prose-base max-w-none prose-headings:text-gray-900 prose-headings:font-semibold prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-3 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-100 prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-2 prose-p:text-gray-600 prose-p:leading-relaxed prose-p:mb-4 prose-ul:my-4 prose-ul:pl-5 prose-li:text-gray-600 prose-li:leading-relaxed prose-li:mb-1.5 prose-li:marker:text-[#013d5a] prose-strong:text-gray-800 prose-a:text-[#013d5a] prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-img:my-6 prose-img:shadow-sm prose-table:text-sm prose-th:bg-gray-50 prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2" dangerouslySetInnerHTML={{ __html: product.description }} />
       ) : null,
@@ -313,11 +313,11 @@ async function ProductView({ product, parentSlug }: { product: Product; parentSl
 
 // === Catalog CTA for Gran Formato / products without online sale ===
 
-const WHATSAPP_GRAN_FORMATO = process.env.NEXT_PUBLIC_WHATSAPP_GRAN_FORMATO || "5491130793862";
+const WHATSAPP_GRAN_FORMATO = process.env.NEXT_PUBLIC_WHATSAPP_GRAN_FORMATO || "5491133466497";
 
 function CatalogCTA({ productName, productUrl }: { productName: string; productUrl: string }) {
   const message = encodeURIComponent(
-    `Hola, estoy interesado en ${productName}. Me gustaria recibir una cotizacion. ${productUrl}`
+    `Hola, estoy interesado en ${productName}. Me gustaría recibir una cotización. ${productUrl}`
   );
 
   return (
@@ -332,10 +332,10 @@ function CatalogCTA({ productName, productUrl }: { productName: string; productU
           <div>
             <h3 className="font-bold text-[#013d5a] text-lg">Equipo de gran formato</h3>
             <p className="text-sm text-gray-600 mt-1 leading-relaxed">
-              Este equipo requiere una cotizacion personalizada. Por sus caracteristicas
-              de tamanio y configuracion, nuestro equipo de ejecutivos te asesora para
-              encontrar la mejor solucion para tu negocio, incluyendo instalacion,
-              capacitacion y soporte tecnico.
+              Este equipo requiere una cotización personalizada. Por sus características
+              de tamaño y configuración, nuestro equipo de ejecutivos te asesora para
+              encontrar la mejor solución para tu negocio, incluyendo instalación,
+              capacitación y soporte técnico.
             </p>
           </div>
         </div>
@@ -348,14 +348,14 @@ function CatalogCTA({ productName, productUrl }: { productName: string; productU
             className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-3.5 rounded-xl font-semibold text-sm transition-colors cursor-pointer"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
-            Hablar con ejecutivo
+            Hablar con un ejecutivo
           </a>
           <a
-            href={`mailto:ventas@sistemacontinuo.com.ar?subject=Cotizacion: ${encodeURIComponent(productName)}&body=${encodeURIComponent(`Hola, me interesa recibir cotizacion por: ${productName}\n\n${productUrl}`)}`}
+            href={`mailto:ventas@sistemacontinuo.com.ar?subject=Cotización: ${encodeURIComponent(productName)}&body=${encodeURIComponent(`Hola, me interesa recibir cotización por: ${productName}\n\n${productUrl}`)}`}
             className="flex items-center justify-center gap-2 bg-white border border-[#013d5a]/20 text-[#013d5a] py-3.5 rounded-xl font-semibold text-sm hover:bg-[#013d5a]/5 transition-colors cursor-pointer"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
-            Solicitar cotizacion por email
+            Solicitar cotización por email
           </a>
         </div>
       </div>
@@ -363,14 +363,14 @@ function CatalogCTA({ productName, productUrl }: { productName: string; productU
       <div className="grid grid-cols-3 gap-3 text-center">
         <div className="bg-white rounded-xl border border-gray-100 p-3">
           <p className="text-xs font-semibold text-gray-900">Asesoramiento</p>
-          <p className="text-[10px] text-gray-500 mt-0.5">Tecnico especializado</p>
+          <p className="text-[10px] text-gray-500 mt-0.5">Técnico especializado</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-3">
-          <p className="text-xs font-semibold text-gray-900">Instalacion</p>
-          <p className="text-[10px] text-gray-500 mt-0.5">Opcional con capacitacion</p>
+          <p className="text-xs font-semibold text-gray-900">Instalación</p>
+          <p className="text-[10px] text-gray-500 mt-0.5">Opcional con capacitación</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-3">
-          <p className="text-xs font-semibold text-gray-900">Financiacion</p>
+          <p className="text-xs font-semibold text-gray-900">Financiación</p>
           <p className="text-[10px] text-gray-500 mt-0.5">Planes a medida</p>
         </div>
       </div>

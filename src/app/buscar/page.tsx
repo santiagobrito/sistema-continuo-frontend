@@ -114,7 +114,7 @@ export default async function SearchPage({ searchParams }: Props) {
                       )}
                       <h3 className="text-sm font-medium text-gray-900 line-clamp-2 leading-snug mb-2 group-hover:text-[#013d5a] transition-colors">{product.name}</h3>
                       {isCatalogProduct(product) ? (
-                        <span className="text-sm text-[#013d5a] font-semibold">Solicitar cotizacion</span>
+                        <span className="text-sm text-[#013d5a] font-semibold">Solicitar cotización</span>
                       ) : product.price ? (
                         <span className="text-base font-bold text-gray-900">{formatPrice(product.price)}</span>
                       ) : null}
@@ -147,7 +147,7 @@ export default async function SearchPage({ searchParams }: Props) {
         ) : (
           <div className="text-center py-16">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Buscar productos</h1>
-            <p className="text-gray-500">Usa la barra de busqueda para encontrar lo que necesitas.</p>
+            <p className="text-gray-500">Usa la barra de búsqueda para encontrar lo que necesitas.</p>
           </div>
         )}
       </div>

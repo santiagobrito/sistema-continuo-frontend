@@ -33,11 +33,11 @@ export function Header() {
       {/* Top bar */}
       <div className="bg-gradient-to-r from-[#013d5a] to-[#01567a] text-white/90 text-xs">
         <div className="max-w-7xl mx-auto px-4 h-8 flex items-center justify-between">
-          <span className="hidden sm:inline">Envios a todo el pais</span>
+          <span className="hidden sm:inline">Envíos a todo el país</span>
           <div className="flex items-center gap-4 ml-auto">
             <a href="tel:+541146501592" className="hover:text-white transition-colors">(011) 4650-1592</a>
             <a
-              href="https://wa.me/5491130793862"
+              href="https://wa.me/5491133466497"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 hover:text-white transition-colors"

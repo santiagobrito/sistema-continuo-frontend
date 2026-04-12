@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Ofertas",
   description:
-    "Productos en oferta en Sistema Continuo. Estampadoras, plotters, tintas y papeles con descuento. Envio a todo Argentina.",
+    "Productos en oferta en Sistema Continuo. Estampadoras, plotters, tintas y papeles con descuento. Envío a todo Argentina.",
   alternates: {
     canonical: `${process.env.NEXT_PUBLIC_SITE_URL || ""}/ofertas`,
   },

@@ -23,11 +23,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
   return {
     title: { absolute: `${brand.name} — Comprar Online | Sistema Continuo` },
-    description: `Todos los productos ${brand.name} en Sistema Continuo. ${brand.count} productos disponibles. Envio a todo Argentina. Hasta 12 cuotas con MercadoPago.`,
+    description: `Todos los productos ${brand.name} en Sistema Continuo. ${brand.count} productos disponibles. Envío a todo Argentina. Hasta 12 cuotas con MercadoPago.`,
     alternates: { canonical: `${siteUrl}/marca/${slug}` },
     openGraph: {
       title: `${brand.name} — Sistema Continuo`,
-      description: `Productos ${brand.name}: ${brand.count} disponibles con envio a todo el pais.`,
+      description: `Productos ${brand.name}: ${brand.count} disponibles con envío a todo el país.`,
     },
   };
 }

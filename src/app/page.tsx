@@ -42,7 +42,7 @@ export default async function HomePage() {
     { title: "Estampadoras", slug: "estampadoras", desc: "Planas, gorras, tazas, 8en1 y automaticas", products: estampadorasData.data, total: estampadorasData.total },
     { title: "Tintas profesionales", slug: "tintas", desc: "OCP, Artanium, KIIAN para Epson, HP y Canon", products: tintasData.data, total: tintasData.total },
     { title: "Papeles", slug: "papel", desc: "Sublimacion, transfer, fotografico y autoadhesivo", products: papelesData.data, total: papelesData.total },
-    { title: "Sublimables", slug: "sublimables", desc: "Tazas, remeras, gorras, madera, polimero y mas", products: sublimablesData.data, total: sublimablesData.total },
+    { title: "Sublimables", slug: "sublimables", desc: "Tazas, remeras, gorras, madera, polímero y más", products: sublimablesData.data, total: sublimablesData.total },
     { title: "Silhouette", slug: "silhouette", desc: "Plotters Cameo 5, Curio 2, cuchillas y accesorios", products: silhouetteData.data, total: silhouetteData.total },
   ];
 
@@ -55,7 +55,7 @@ export default async function HomePage() {
           <div className="max-w-2xl">
             <p className="text-sm font-semibold text-blue-200 uppercase tracking-widest mb-3">+20 años equipando emprendedores</p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] mb-5 tracking-tight">
-              Todo para sublimacion en un solo lugar
+              Todo para sublimación en un solo lugar
             </h1>
             <p className="text-lg md:text-xl text-blue-100/90 mb-4 leading-relaxed">
               +600 productos: estampadoras, sublimadoras, plotters Silhouette, tintas, papeles y artículos sublimables.
@@ -63,7 +63,7 @@ export default async function HomePage() {
             <div className="flex items-center gap-4 text-sm text-blue-200 mb-8">
               <span className="flex items-center gap-1.5">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                Envio a todo el pais
+                Envío a todo el país
               </span>
               <span className="flex items-center gap-1.5">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
@@ -71,7 +71,7 @@ export default async function HomePage() {
               </span>
               <span className="flex items-center gap-1.5 hidden sm:flex">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                Garantia 1 año
+                Garantía 1 año
               </span>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -82,7 +82,7 @@ export default async function HomePage() {
               <Link href="/ofertas" className="inline-flex items-center gap-2 bg-red-500 text-white px-7 py-3.5 rounded-full font-semibold hover:bg-red-600 transition-all">
                 Ofertas
               </Link>
-              <a href="https://wa.me/5491130793862" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-white/10 backdrop-blur text-white px-7 py-3.5 rounded-full font-semibold hover:bg-white/20 transition-all border border-white/20">
+              <a href="https://wa.me/5491133466497" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-white/10 backdrop-blur text-white px-7 py-3.5 rounded-full font-semibold hover:bg-white/20 transition-all border border-white/20">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
                 WhatsApp
               </a>
@@ -117,7 +117,7 @@ export default async function HomePage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
               <p className="text-sm font-semibold text-blue-200 uppercase tracking-widest mb-2">Todo en uno</p>
-              <h2 className="text-2xl md:text-3xl font-bold mb-3">Combos de sublimacion</h2>
+              <h2 className="text-2xl md:text-3xl font-bold mb-3">Combos de sublimación</h2>
               <p className="text-blue-100 text-sm leading-relaxed max-w-md">
                 Estampadora + insumos + artículos sublimables. Todo lo que necesitas para arrancar o potenciar tu negocio en un solo pack con precio especial.
               </p>
@@ -202,7 +202,7 @@ export default async function HomePage() {
               </svg>
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 text-sm">Envios a todo el pais</h3>
+              <h3 className="font-semibold text-gray-900 text-sm">Envíos a todo el país</h3>
               <p className="text-xs text-gray-500 mt-0.5">Correo Argentino, moto y transporte</p>
             </div>
           </div>

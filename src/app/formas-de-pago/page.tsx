@@ -27,10 +27,10 @@ export default function FormasDePagoPage() {
               <h2 className="text-lg font-bold text-gray-900">MercadoPago</h2>
             </div>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li>Tarjeta de credito hasta 12 cuotas sin interes</li>
-              <li>Tarjeta de debito</li>
+              <li>Tarjeta de crédito hasta 12 cuotas sin interés</li>
+              <li>Tarjeta de débito</li>
               <li>Dinero en cuenta MercadoPago</li>
-              <li>Rapipago y Pago Facil</li>
+              <li>Rapipago y Pago Fácil</li>
             </ul>
             <p className="text-xs text-gray-400 mt-3">Pago seguro procesado directamente por MercadoPago. No almacenamos datos de tarjeta.</p>
           </div>
@@ -42,8 +42,8 @@ export default function FormasDePagoPage() {
               </div>
               <h2 className="text-lg font-bold text-gray-900">Transferencia bancaria</h2>
             </div>
-            <p className="text-sm text-gray-600 mb-2">Realiza una transferencia o deposito bancario. Al confirmar el pedido te enviamos los datos (CBU, alias, titular) por email.</p>
-            <p className="text-xs text-gray-400">El pedido se procesa una vez acreditado el pago (1-2 dias habiles).</p>
+            <p className="text-sm text-gray-600 mb-2">Realiza una transferencia o depósito bancario. Al confirmar el pedido te enviamos los datos (CBU, alias, titular) por email.</p>
+            <p className="text-xs text-gray-400">El pedido se procesa una vez acreditado el pago (1-2 días hábiles).</p>
           </div>
 
           <div className="bg-white rounded-xl border border-gray-100 p-6">

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5491130793862";
+const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5491133466497";
 
 export function WhatsAppFloat() {
   const [expanded, setExpanded] = useState(false);
