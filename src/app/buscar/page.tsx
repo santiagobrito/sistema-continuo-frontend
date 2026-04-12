@@ -116,7 +116,10 @@ export default async function SearchPage({ searchParams }: Props) {
                       {isCatalogProduct(product) ? (
                         <span className="text-sm text-[#013d5a] font-semibold">Solicitar cotización</span>
                       ) : product.price ? (
-                        <span className="text-base font-bold text-gray-900">{formatPrice(product.price)}</span>
+                        <span className="text-base font-bold text-gray-900">
+                          {formatPrice(product.price)}
+                          {product.unidad_venta && <span className="text-xs text-gray-500">/{product.unidad_venta}</span>}
+                        </span>
                       ) : null}
                     </div>
                   </Link>

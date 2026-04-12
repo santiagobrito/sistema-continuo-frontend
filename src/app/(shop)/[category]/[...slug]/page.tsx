@@ -148,7 +148,10 @@ function SubcategoryView({ category, parentSlug }: { category: Category; parentS
               <div className="p-3.5 pt-2">
                 <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2 group-hover:text-[#013d5a]">{product.name}</h3>
                 {product.price && !isCatalogProduct(product) ? (
-                  <span className="text-base font-bold text-gray-900">{formatPrice(product.price)}</span>
+                  <span className="text-base font-bold text-gray-900">
+                    {formatPrice(product.price)}
+                    {product.unidad_venta && <span className="text-xs text-gray-500">/{product.unidad_venta}</span>}
+                  </span>
                 ) : isCatalogProduct(product) ? (
                   <span className="text-sm text-[#013d5a] font-semibold">Solicitar cotización</span>
                 ) : null}
@@ -299,7 +302,12 @@ async function ProductView({ product, parentSlug }: { product: Product; parentSl
                   </div>
                   <div className="p-2.5">
                     <h3 className="text-xs font-medium line-clamp-2 text-gray-700 group-hover:text-[#013d5a]">{rel.name}</h3>
-                    {rel.price && <p className="text-sm font-bold mt-1 text-gray-900">{formatPrice(rel.price)}</p>}
+                    {rel.price && (
+                      <p className="text-sm font-bold mt-1 text-gray-900">
+                        {formatPrice(rel.price)}
+                        {rel.unidad_venta && <span className="text-xs text-gray-500 font-normal">/{rel.unidad_venta}</span>}
+                      </p>
+                    )}
                   </div>
                 </Link>
               ))}

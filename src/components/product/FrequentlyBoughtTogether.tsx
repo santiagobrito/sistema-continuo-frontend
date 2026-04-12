@@ -64,7 +64,10 @@ export function FrequentlyBoughtTogether({ currentProduct, crossSells }: Props) 
           </div>
           <div>
             <p className="text-xs font-medium text-gray-900 line-clamp-1">{currentProduct.name}</p>
-            <p className="text-sm font-bold">{formatPrice(currentProduct.price)}</p>
+            <p className="text-sm font-bold">
+              {formatPrice(currentProduct.price)}
+              {currentProduct.unidad_venta && <span className="text-xs text-gray-500 font-normal">/{currentProduct.unidad_venta}</span>}
+            </p>
           </div>
         </div>
 
@@ -93,7 +96,10 @@ export function FrequentlyBoughtTogether({ currentProduct, crossSells }: Props) 
                 <Link href={getProductUrl(product)} className="text-xs font-medium text-gray-900 line-clamp-1 hover:text-[#013d5a]">
                   {product.name}
                 </Link>
-                <p className="text-sm font-bold">{formatPrice(product.price)}</p>
+                <p className="text-sm font-bold">
+                  {formatPrice(product.price)}
+                  {product.unidad_venta && <span className="text-xs text-gray-500 font-normal">/{product.unidad_venta}</span>}
+                </p>
               </div>
             </label>
           </div>

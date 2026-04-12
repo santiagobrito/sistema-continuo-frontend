@@ -18,6 +18,7 @@ interface SearchProduct {
   categories: { name: string; slug: string; path: string }[];
   is_catalog: boolean;
   url: string;
+  unidad_venta: string;
 }
 
 interface SearchCategory {
@@ -254,6 +255,7 @@ export function SearchBar({ mobile = false }: { mobile?: boolean }) {
                           ) : product.price ? (
                             <div>
                               <span className="text-sm font-bold text-gray-900">{formatPrice(product.price)}</span>
+                              {product.unidad_venta && <span className="text-xs text-gray-500">/{product.unidad_venta}</span>}
                               {product.on_sale && product.regular_price && (
                                 <p className="text-[10px] text-gray-400 line-through">{formatPrice(product.regular_price)}</p>
                               )}

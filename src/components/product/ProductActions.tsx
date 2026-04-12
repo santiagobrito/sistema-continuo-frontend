@@ -129,12 +129,14 @@ export function ProductActions({
             {activeDiscount > 0 ? (
               <>
                 <span className="text-3xl font-bold text-green-600">{formatPrice(unitPrice)}</span>
+                {product.unidad_venta && <span className="text-lg text-gray-500">/{product.unidad_venta}</span>}
                 <span className="text-lg text-gray-400 line-through">{formatPrice(activePrice)}</span>
                 <span className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">-{activeDiscount}%</span>
               </>
             ) : (
               <>
                 <span className="text-3xl font-bold text-gray-900">{formatPrice(activePrice)}</span>
+                {product.unidad_venta && <span className="text-lg text-gray-500">/{product.unidad_venta}</span>}
                 {isOnSale && activeRegularPrice > activePrice && (
                   <span className="text-lg text-gray-400 line-through">{formatPrice(activeRegularPrice)}</span>
                 )}

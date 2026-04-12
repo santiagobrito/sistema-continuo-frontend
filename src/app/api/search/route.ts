@@ -26,6 +26,7 @@ interface SearchProduct {
   categories: { name: string; slug: string; path: string }[];
   is_catalog: boolean;
   url: string;
+  unidad_venta: string;
 }
 
 interface SearchCategory {
@@ -48,6 +49,7 @@ interface RawProduct {
   categories: { name: string; slug: string; path: string }[];
   purchasable: boolean;
   stock_status: string;
+  unidad_venta: string;
 }
 
 async function searchWP(term: string): Promise<RawProduct[]> {
@@ -206,6 +208,7 @@ export async function GET(request: NextRequest) {
         categories: cats.map((c) => ({ name: c.name, slug: c.slug, path: c.path })),
         is_catalog: !p.price && !p.purchasable,
         url: deepest ? `/${deepest.path}/${p.slug}` : `/${p.slug}`,
+        unidad_venta: p.unidad_venta || "",
       };
     });
 

@@ -290,6 +290,7 @@ function ProductCard({ product }: { product: Product }) {
         {product.price && !product.is_catalog_only ? (
           <div className="flex items-baseline gap-2">
             <span className="text-base font-bold text-gray-900">{formatPrice(product.price)}</span>
+            {product.unidad_venta && <span className="text-xs text-gray-500">/{product.unidad_venta}</span>}
             {product.on_sale && product.regular_price && Number(product.regular_price) > Number(product.price) && (
               <span className="text-xs text-gray-400 line-through">{formatPrice(product.regular_price)}</span>
             )}

@@ -189,6 +189,7 @@ export default async function BrandPage({ params, searchParams }: Props) {
                             <span className="text-base font-bold text-gray-900">
                               {formatPrice(product.price)}
                             </span>
+                            {product.unidad_venta && <span className="text-xs text-gray-500">/{product.unidad_venta}</span>}
                             {product.on_sale && product.regular_price && (
                               <span className="text-xs text-gray-400 line-through">
                                 {formatPrice(product.regular_price)}
