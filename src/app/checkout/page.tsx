@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { formatStorePrice } from "@/lib/utils/format";
+import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import { getGclid } from "@/components/analytics/GclidCapture";
@@ -481,7 +482,7 @@ export default function CheckoutPage() {
                   {cart.items.map((item) => (
                     <div key={item.key} className="flex items-center gap-3">
                       <div className="w-10 h-10 relative flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden">
-                        {item.images[0] && <img src={item.images[0].thumbnail || item.images[0].src} alt="" className="w-full h-full object-contain" />}
+                        {item.images[0] && <Image src={item.images[0].thumbnail || item.images[0].src} alt={item.name} fill className="object-contain" sizes="40px" />}
                         <span className="absolute -top-1 -right-1 bg-gray-700 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold">{item.quantity}</span>
                       </div>
                       <p className="text-xs text-gray-700 flex-1 line-clamp-1">{item.name}</p>

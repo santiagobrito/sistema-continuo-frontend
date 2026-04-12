@@ -5,7 +5,10 @@ import { CartProvider } from "@/components/cart/CartProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { WhatsAppFloat } from "@/components/layout/WhatsAppFloat";
+import dynamic from "next/dynamic";
+import Script from "next/script";
+
+const WhatsAppFloat = dynamic(() => import("@/components/layout/WhatsAppFloat").then(m => m.WhatsAppFloat), { ssr: false });
 import { GTMHead, GTMBody } from "@/components/analytics/GTMProvider";
 import { GclidCapture } from "@/components/analytics/GclidCapture";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -61,21 +64,15 @@ export default function RootLayout({
             <WhatsAppFloat />
           </CartProvider>
         </AuthProvider>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              var s = document.createElement('script');
-              s.src = 'https://www.gstatic.com/shopping/merchant/merchantwidget.js';
-              s.defer = true;
-              s.onload = function() {
-                merchantwidget.start({
-                  merchant_id: 115456767,
-                  position: 'BOTTOM_RIGHT',
-                  region: 'AR',
-                });
-              };
-              document.body.appendChild(s);
-            `,
+        <Script
+          src="https://www.gstatic.com/shopping/merchant/merchantwidget.js"
+          strategy="lazyOnload"
+          onLoad={() => {
+            (window as any).merchantwidget.start({
+              merchant_id: 115456767,
+              position: "BOTTOM_RIGHT",
+              region: "AR",
+            });
           }}
         />
       </body>

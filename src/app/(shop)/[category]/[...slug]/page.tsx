@@ -6,15 +6,19 @@ import type { Product, Category } from "@/lib/wordpress/types";
 import { isCatalogProduct } from "@/lib/wordpress/types";
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { ProductActions } from "@/components/product/ProductActions";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { generateProductSchema, generateBreadcrumbSchema } from "@/lib/seo/structured-data";
-import { ProductTabs } from "@/components/product/ProductTabs";
-import { FrequentlyBoughtTogether } from "@/components/product/FrequentlyBoughtTogether";
-import { ReviewSection } from "@/components/product/ReviewSection";
 import { getProductReviews } from "@/lib/wordpress/api";
 import { ProductDetail } from "@/components/product/ProductDetail";
 import { ProductGallery } from "@/components/product/ProductGallery";
+
+const ProductTabs = dynamic(() => import("@/components/product/ProductTabs").then(m => m.ProductTabs));
+const FrequentlyBoughtTogether = dynamic(() => import("@/components/product/FrequentlyBoughtTogether").then(m => m.FrequentlyBoughtTogether));
+const ReviewSection = dynamic(() => import("@/components/product/ReviewSection").then(m => m.ReviewSection));
+
+export const revalidate = 3600;
 
 interface Props {
   params: Promise<{ category: string; slug: string[] }>;

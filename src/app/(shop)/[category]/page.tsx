@@ -6,6 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { FilterSidebar } from "@/components/shop/FilterSidebar";
 
+export const revalidate = 3600;
+
 interface Props {
   params: Promise<{ category: string }>;
   searchParams: Promise<{ page?: string; orderby?: string; order?: string; brand?: string; in_stock?: string; on_sale?: string }>;
@@ -132,7 +134,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
             {products.length > 0 ? (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-                  {products.map((product) => (
+                  {products.map((product, idx) => (
                     <Link
                       key={product.id}
                       href={getProductUrl(product)}
@@ -146,6 +148,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
                             fill
                             className="object-contain p-1 group-hover:scale-105 transition-transform duration-300"
                             sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                            priority={idx < 4}
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">

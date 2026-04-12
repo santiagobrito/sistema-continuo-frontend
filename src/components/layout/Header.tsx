@@ -68,7 +68,7 @@ export function Header() {
 
         {/* Logo */}
         <Link href="/" className="flex-shrink-0">
-          <Image src="/logo.webp" alt="Sistema Continuo" width={180} height={45} className="h-10 w-auto" preload />
+          <Image src="/logo.webp" alt="Sistema Continuo" width={180} height={45} className="h-10 w-auto" priority />
         </Link>
 
         {/* Search */}
