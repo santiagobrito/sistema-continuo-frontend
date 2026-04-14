@@ -44,6 +44,12 @@ ENV MERCADOPAGO_ACCESS_TOKEN=$MERCADOPAGO_ACCESS_TOKEN
 
 RUN npm run build
 
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+RUN chown -R nextjs:nodejs /app
+
+USER nextjs
+
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 EXPOSE 3000
