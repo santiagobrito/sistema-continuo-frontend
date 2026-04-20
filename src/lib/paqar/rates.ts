@@ -1,132 +1,104 @@
 /**
- * Cotización de envío contra el endpoint /v1/rates de PAQ.AR.
+ * Cotización de envío contra grilla local PAQ.AR.
  *
- * IMPORTANTE — background sobre /v1/rates:
- * Este endpoint NO está documentado en el manual oficial PAQ.AR v2 (2023-04).
- * Fue descubierto por ingeniería inversa el 2026-04-20 probando rutas
- * alternativas contra la API de producción. Ver docs/paqar-integration.md §Rates.
+ * Fuente de tarifas: rates-grid.ts (del PDF del acuerdo 20105, vigente 2026-04-01).
  *
- * - NO depende de una grilla local — Correo calcula el precio online
- *   según peso + destino + acuerdo comercial cargado de su lado.
- * - El payload aceptado fue inferido de los mensajes de error del API,
- *   los campos válidos del root son: agreement, senderData ({zipCode}),
- *   shippingData ({zipCode}), parcels, deliveryType, serviceType.
+ * ¿Por qué grilla local y no /v1/rates?
+ * Probado 2026-04-20: el endpoint /v1/rates del acuerdo 20105 devuelve
+ * tarifas dummy (500/400/300/200 ARS) independientes de peso y destino —
+ * Correo no carga la grilla comercial en su API. La grilla real viene en PDF.
+ * Por eso cotizamos local y solo usamos el API para crear órdenes + rótulos.
  *
- * Estrategia TIER:
- * - "cheap" (default): devuelve, por cada `deliveryType` solicitado, la rate
- *   más barata de las que devuelva el API.
- * - "premium": devuelve la rate más cara (mayor SLA, p.ej. Correo Argentino 01).
- * Controlado por env `PAQAR_TIER`. Permite cambiar de nivel sin redeploy.
+ * Estrategia TIER (controlada por PAQAR_TIER):
+ * - "cheap" (default): CLASICO. Más barato, despacho 3-7 días.
+ * - "premium": EXPRESO. Más caro, despacho prioritario.
+ * Ambos se facturan a Correo con su serviceCode correspondiente: CP / EP.
  *
- * FALLBACK: si el endpoint falla (timeout, 5xx), usa una estimación conservadora
- * basada en peso + zona para no romper el checkout. Se loguea la caída para
- * revisión. El fallback NO refleja precios reales del acuerdo — es un "piso".
+ * Precio al cliente: SIEMPRE con IVA incluido (21%), sin desglose.
+ *
+ * Peso volumétrico: se compara peso_real vs peso_volumétrico (cm³/6000) y
+ * se usa el mayor para elegir bracket (regla del tarifario, pág 3).
  */
 
 import type { Bundle } from "./split";
-import type { ProvinceCode, DeliveryType, PaqarRate } from "./types";
-import { paqarClient } from "./client";
+import type { ProvinceCode, DeliveryType } from "./types";
+import {
+  lookupPrice,
+  IVA_RATE,
+  VOLUMETRIC_COEFFICIENT,
+  RATES_GRID_VERSION,
+  type PaqarRatesService,
+  type PaqarRatesMode,
+} from "./rates-grid";
+import { resolveZone } from "./zone-resolver";
 
 export interface QuoteInput {
   bundles: Bundle[];
   destState: ProvinceCode;
   destZip: string;
-  /** Qué tipos queremos cotizar. Default: ambos (para mostrar 2 opciones en checkout). */
+  /** Default: ["homeDelivery", "agency"] — devuelve las 2 opciones para el checkout. */
   deliveryTypes?: DeliveryType[];
 }
 
 export interface QuoteOption {
   deliveryType: DeliveryType;
-  /** Total ARS sumando los N bultos. */
+  /** Total ARS con IVA incluido, sumando los N bultos. */
   total: number;
-  /** Detalle por bulto (debug interno, no mostrar al cliente). */
-  breakdown: Array<{ bundleIndex: number; weightGrams: number; price: number; rate: PaqarRate }>;
-  /** "rates-api" | "fallback" — para distinguir cotización real de estimada. */
-  source: "rates-api" | "fallback";
-  /** Descripción legible del servicio elegido (p.ej. "Correo Argentino 03"). */
-  serviceName: string;
-  serviceCode: string;
+  /** Servicio usado: clasico | expreso (según PAQAR_TIER). */
+  service: PaqarRatesService;
+  /** Zona de facturación 1-4. */
+  zone: number;
+  /** Detalle por bulto — interno, no mostrar al cliente. */
+  breakdown: Array<{
+    bundleIndex: number;
+    weightGrams: number;
+    chargeableWeightGrams: number; // el mayor entre real y volumétrico
+    priceNoIva: number;
+    priceWithIva: number;
+  }>;
+  /** Advertencia si algún bulto supera el máximo del tarifario (50kg). */
+  warning?: string;
 }
 
 export interface QuoteOutput {
   options: QuoteOption[];
-  /** Tier aplicado (cheap/premium). */
   tier: "cheap" | "premium";
+  service: PaqarRatesService;
+  gridVersion: string;
 }
 
-const FALLBACK_BASE_PRICE = 3500;
-const FALLBACK_PRICE_PER_KG = 450;
-
-const FALLBACK_ZONE_MULTIPLIER: Record<ProvinceCode, number> = {
-  C: 1.0,
-  B: 1.1,
-  S: 1.3, E: 1.3, X: 1.3, L: 1.3,
-  M: 1.5, J: 1.5, D: 1.5, F: 1.5, K: 1.5, G: 1.5, T: 1.5, H: 1.5, P: 1.5, N: 1.5, W: 1.5, Y: 1.5, A: 1.5,
-  R: 1.7, Q: 1.7, U: 1.7,
-  Z: 2.0, V: 2.0,
-};
-
-const FALLBACK_AGENCY_DISCOUNT = 0.85;
-
-function fallbackPerBundle(
-  bundle: Bundle,
-  destState: ProvinceCode,
-  deliveryType: DeliveryType
-): number {
-  const kg = Math.max(bundle.weightGrams / 1000, 0.1);
-  const zoneMult = FALLBACK_ZONE_MULTIPLIER[destState] ?? 1.5;
-  let price = (FALLBACK_BASE_PRICE + kg * FALLBACK_PRICE_PER_KG) * zoneMult;
-  if (deliveryType === "agency" || deliveryType === "locker") {
-    price *= FALLBACK_AGENCY_DISCOUNT;
-  }
-  return Math.round(price);
+function volumetricGrams(b: Bundle): number {
+  const cm3 = (b.height || 10) * (b.width || 10) * (b.depth || 10);
+  return Math.round((cm3 / VOLUMETRIC_COEFFICIENT) * 1000);
 }
 
-function pickRate(rates: PaqarRate[], tier: "cheap" | "premium"): PaqarRate | null {
-  if (rates.length === 0) return null;
-  const sorted = [...rates].sort((a, b) => Number(a.totalPrice) - Number(b.totalPrice));
-  return tier === "cheap" ? sorted[0] : sorted[sorted.length - 1];
+function chargeableGrams(b: Bundle): number {
+  return Math.max(b.weightGrams || 0, volumetricGrams(b));
 }
 
-async function quoteBundle(
-  bundle: Bundle,
-  destZip: string,
-  deliveryType: DeliveryType,
-  serviceType: string,
-  tier: "cheap" | "premium"
-): Promise<{ price: number; rate: PaqarRate; source: "rates-api" }> {
-  const rates = await paqarClient.getRates({
-    senderData: { zipCode: process.env.PAQAR_SENDER_ZIP || "1706" },
-    shippingData: { zipCode: destZip },
-    parcels: [
-      {
-        weight: bundle.weightGrams,
-        dimensions: {
-          height: Math.min(Math.max(Math.round(bundle.height), 1), 999),
-          width: Math.min(Math.max(Math.round(bundle.width), 1), 999),
-          depth: Math.min(Math.max(Math.round(bundle.depth), 1), 999),
-        },
-        declaredValue: Math.max(Math.round(bundle.declaredValue), 1),
-      },
-    ],
-    deliveryType,
-    serviceType,
-  });
-
-  const filtered = deliveryType === "homeDelivery"
-    ? rates.filter((r) => /domicilio/i.test(r.description))
-    : rates.filter((r) => /sucursal/i.test(r.description));
-
-  const pool = filtered.length > 0 ? filtered : rates;
-  const chosen = pickRate(pool, tier);
-  if (!chosen) throw new Error(`Sin rates para deliveryType=${deliveryType}`);
-  return { price: Number(chosen.totalPrice), rate: chosen, source: "rates-api" };
+function toMode(dt: DeliveryType): PaqarRatesMode {
+  return dt === "homeDelivery" ? "homeDelivery" : "agency";
 }
 
-export async function quoteShipment(input: QuoteInput): Promise<QuoteOutput> {
+function withIva(price: number): number {
+  return Math.round(price * (1 + IVA_RATE));
+}
+
+const SENDER_CP = process.env.PAQAR_SENDER_ZIP || "1706";
+const SENDER_STATE = (process.env.PAQAR_SENDER_STATE || "B") as ProvinceCode;
+
+export function quoteShipment(input: QuoteInput): QuoteOutput {
   const tier: "cheap" | "premium" =
     process.env.PAQAR_TIER === "premium" ? "premium" : "cheap";
-  const serviceType = process.env.PAQAR_SERVICE_TYPE || "EP";
+  const service: PaqarRatesService = tier === "premium" ? "expreso" : "clasico";
+
+  const zone = resolveZone({
+    originCp: SENDER_CP,
+    originState: SENDER_STATE,
+    destCp: input.destZip,
+    destState: input.destState,
+  });
+
   const deliveryTypes: DeliveryType[] =
     input.deliveryTypes && input.deliveryTypes.length > 0
       ? input.deliveryTypes
@@ -135,51 +107,47 @@ export async function quoteShipment(input: QuoteInput): Promise<QuoteOutput> {
   const options: QuoteOption[] = [];
 
   for (const dt of deliveryTypes) {
+    const mode = toMode(dt);
     const breakdown: QuoteOption["breakdown"] = [];
     let total = 0;
-    let usedFallback = false;
-    let serviceName = "";
-    let serviceCode = "";
+    let warning: string | undefined;
+
+    if (!zone) {
+      warning = `No se pudo resolver zona para destino ${input.destState} ${input.destZip}`;
+      options.push({ deliveryType: dt, total: 0, service, zone: 0, breakdown: [], warning });
+      continue;
+    }
 
     for (let i = 0; i < input.bundles.length; i++) {
       const b = input.bundles[i];
-      try {
-        const { price, rate } = await quoteBundle(b, input.destZip, dt, serviceType, tier);
-        breakdown.push({ bundleIndex: i, weightGrams: b.weightGrams, price, rate });
-        total += price;
-        serviceName = rate.serviceName;
-        serviceCode = rate.serviceCode;
-      } catch (err) {
-        console.warn(
-          `[paqar/rates] fallback para bulto ${i} (dt=${dt}): ${(err as Error).message}`
-        );
-        usedFallback = true;
-        const price = fallbackPerBundle(b, input.destState, dt);
-        breakdown.push({
-          bundleIndex: i,
-          weightGrams: b.weightGrams,
-          price,
-          rate: {
-            serviceName: "Estimado",
-            description: dt === "homeDelivery" ? "Envío a domicilio" : "Envío a sucursal",
-            serviceCode: "FALLBACK",
-            currency: "ARS",
-            totalPrice: String(price),
-          },
-        });
-        total += price;
+      const chargeable = chargeableGrams(b);
+      const noIva = lookupPrice(service, mode, zone, chargeable);
+
+      if (noIva === null) {
+        warning = `Bulto ${i + 1} (${(chargeable / 1000).toFixed(1)}kg) supera el máximo 50kg del tarifario`;
+        continue;
       }
+
+      const ivaPrice = withIva(noIva);
+      breakdown.push({
+        bundleIndex: i,
+        weightGrams: b.weightGrams,
+        chargeableWeightGrams: chargeable,
+        priceNoIva: noIva,
+        priceWithIva: ivaPrice,
+      });
+      total += ivaPrice;
     }
 
     options.push({
       deliveryType: dt,
       total,
+      service,
+      zone,
       breakdown,
-      source: usedFallback ? "fallback" : "rates-api",
-      serviceName: serviceName || "Estimado",
-      serviceCode: serviceCode || "FALLBACK",
+      warning,
     });
   }
 
-  return { options, tier };
+  return { options, tier, service, gridVersion: RATES_GRID_VERSION };
 }

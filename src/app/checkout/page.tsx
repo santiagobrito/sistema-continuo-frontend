@@ -122,8 +122,9 @@ export default function CheckoutPage() {
     | { loading: true }
     | {
         loading: false;
-        domicilio?: { total: number; source: string; serviceName: string };
-        sucursal?: { total: number; source: string; serviceName: string };
+        domicilio?: { total: number; warning?: string };
+        sucursal?: { total: number; warning?: string };
+        service?: string;
         error?: string;
       }
   >(null);
@@ -219,8 +220,9 @@ export default function CheckoutPage() {
         const suc = data.options.find((o: { deliveryType: string }) => o.deliveryType === "agency");
         setPaqarQuote({
           loading: false,
-          domicilio: dom ? { total: dom.total, source: dom.source, serviceName: dom.serviceName } : undefined,
-          sucursal: suc ? { total: suc.total, source: suc.source, serviceName: suc.serviceName } : undefined,
+          domicilio: dom ? { total: dom.total, warning: dom.warning } : undefined,
+          sucursal: suc ? { total: suc.total, warning: suc.warning } : undefined,
+          service: data.service,
         });
       } catch (err) {
         setPaqarQuote({
@@ -491,12 +493,11 @@ export default function CheckoutPage() {
                         const livePrice = getShippingPrice(opt.id, opt.price);
                         const quoteLoading = isCorreo && paqarQuote && "loading" in paqarQuote && paqarQuote.loading;
                         const needsCp = isCorreo && (!formData.postcode || formData.postcode.length < 4);
-                        const fallbackUsed =
-                          isCorreo &&
-                          paqarQuote &&
-                          !("loading" in paqarQuote && paqarQuote.loading) &&
-                          ((opt.id === "correo_domicilio" && paqarQuote && "domicilio" in paqarQuote && paqarQuote.domicilio?.source === "fallback") ||
-                            (opt.id === "correo_sucursal" && paqarQuote && "sucursal" in paqarQuote && paqarQuote.sucursal?.source === "fallback"));
+                        const quoteWarning =
+                          isCorreo && paqarQuote && !("loading" in paqarQuote && paqarQuote.loading)
+                            ? (opt.id === "correo_domicilio" && "domicilio" in paqarQuote ? paqarQuote.domicilio?.warning :
+                               opt.id === "correo_sucursal" && "sucursal" in paqarQuote ? paqarQuote.sucursal?.warning : undefined)
+                            : undefined;
 
                         let priceLabel: React.ReactNode;
                         if (livePrice > 0) {
@@ -541,8 +542,8 @@ export default function CheckoutPage() {
                                 </div>
                                 <p className="text-xs text-gray-500 mt-1 leading-relaxed">{opt.desc}</p>
                                 <p className="text-[10px] text-[#013d5a] font-medium mt-1">{opt.time}</p>
-                                {fallbackUsed && (
-                                  <p className="text-[10px] text-amber-600 mt-1">Precio estimado (no pudimos conectar con Correo, se ajusta al despachar)</p>
+                                {quoteWarning && (
+                                  <p className="text-[10px] text-amber-600 mt-1">{quoteWarning}</p>
                                 )}
                                 {opt.minOrder && !meetsMinimum && (
                                   <p className="text-[10px] text-red-500 mt-1">Monto mínimo: ${opt.minOrder.toLocaleString("es-AR")}</p>

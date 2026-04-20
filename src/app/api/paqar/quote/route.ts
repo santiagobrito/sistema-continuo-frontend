@@ -2,26 +2,27 @@
  * POST /api/paqar/quote
  *
  * Cotización de envío para el checkout. Público.
- * Llama al endpoint /v1/rates de PAQ.AR (online) y devuelve las 2 opciones
- * consolidadas (domicilio + sucursal), cada una con el precio del acuerdo.
- *
- * Si el API falla, cae a un estimado conservador (lib/paqar/rates.ts fallback).
+ * Usa grilla local (lib/paqar/rates-grid.ts) — NO llama al API de CA.
+ * Precio devuelto YA incluye IVA 21%, sin desglose.
  *
  * Body:
  *   {
- *     items: SplitItem[],           // line items del carrito
- *     destState: ProvinceCode,      // "B", "C", ...
- *     destZip: string,              // CP destino
- *     deliveryTypes?: DeliveryType[]  // opcional; default ["homeDelivery","agency"]
+ *     items: SplitItem[],
+ *     destState: ProvinceCode,
+ *     destZip: string,
+ *     deliveryTypes?: DeliveryType[]
  *   }
  *
  * Response:
  *   {
  *     ok: true,
  *     tier: "cheap" | "premium",
+ *     service: "clasico" | "expreso",
+ *     zone: 1-4,
  *     bundles: number,
+ *     gridVersion: string,
  *     options: [
- *       { deliveryType, total, source, serviceName, serviceCode }, ...
+ *       { deliveryType, total, warning? }, ...
  *     ]
  *   }
  */
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     const bundles = splitIntoBundles(items);
-    const quote = await quoteShipment({
+    const quote = quoteShipment({
       bundles,
       destState: destState as ProvinceCode,
       destZip,
@@ -76,13 +77,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       tier: quote.tier,
+      service: quote.service,
+      gridVersion: quote.gridVersion,
       bundles: bundles.length,
       options: quote.options.map((o) => ({
         deliveryType: o.deliveryType,
         total: o.total,
-        source: o.source,
-        serviceName: o.serviceName,
-        serviceCode: o.serviceCode,
+        zone: o.zone,
+        warning: o.warning,
       })),
     });
   } catch (err) {
