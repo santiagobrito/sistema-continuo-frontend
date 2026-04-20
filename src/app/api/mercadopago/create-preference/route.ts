@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createPreference } from "@/lib/mercadopago/sdk";
 import { markCartRecovered, subscribeNewsletter } from "@/lib/brevo/client";
 import { getSession } from "@/lib/auth/session";
-import { getCustomerByEmail } from "@/lib/auth/wc-api";
+import { getCustomerByEmail, syncCustomerFromCheckout } from "@/lib/auth/wc-api";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
@@ -143,6 +143,21 @@ export async function POST(request: NextRequest) {
 
     // 1. Create WC order
     const order = await createWCOrder(body, customerId);
+
+    // 1b. Sincronizar datos al perfil del customer (fire-and-forget, no bloquea pago)
+    if (customerId) {
+      syncCustomerFromCheckout(customerId, {
+        first_name: body.billing.first_name,
+        last_name: body.billing.last_name,
+        email: body.billing.email,
+        phone: body.billing.phone,
+        dni_cuit: body.billing.dni_cuit,
+        address_1: body.billing.address_1,
+        city: body.billing.city,
+        state: body.billing.state,
+        postcode: body.billing.postcode,
+      }).catch(() => {});
+    }
 
     // Mark abandoned cart as recovered + auto-subscribe to newsletter
     markCartRecovered(body.billing.email).catch(() => {});

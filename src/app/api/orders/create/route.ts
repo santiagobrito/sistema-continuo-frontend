@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { markCartRecovered, subscribeNewsletter } from "@/lib/brevo/client";
 import { getSession } from "@/lib/auth/session";
-import { getCustomerByEmail } from "@/lib/auth/wc-api";
+import { getCustomerByEmail, syncCustomerFromCheckout } from "@/lib/auth/wc-api";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
@@ -126,6 +126,21 @@ export async function POST(request: NextRequest) {
     }
 
     const order = await res.json();
+
+    // Sincronizar datos al perfil del customer (para auto-fill en próximas compras)
+    if (customerId) {
+      syncCustomerFromCheckout(customerId, {
+        first_name: body.billing.first_name,
+        last_name: body.billing.last_name,
+        email: body.billing.email,
+        phone: body.billing.phone,
+        dni_cuit: body.billing.dni_cuit,
+        address_1: body.billing.address_1,
+        city: body.billing.city,
+        state: body.billing.state,
+        postcode: body.billing.postcode,
+      }).catch(() => {});
+    }
 
     // Auto-subscribe + mark cart recovered
     markCartRecovered(body.billing.email).catch(() => {});

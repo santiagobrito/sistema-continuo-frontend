@@ -96,6 +96,62 @@ export async function getCustomerOrderById(customerId: number, orderId: number):
   return order;
 }
 
+/**
+ * Sincroniza los datos del checkout al perfil del customer. Se llama después
+ * de crear una order para que la próxima compra auto-fill con los mismos datos.
+ *
+ * Solo actualiza campos que llegaron; no pisa con vacío.
+ */
+export async function syncCustomerFromCheckout(
+  customerId: number,
+  data: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+    dni_cuit?: string;
+    address_1?: string;
+    city?: string;
+    state?: string;
+    postcode?: string;
+  }
+): Promise<void> {
+  if (!customerId) return;
+
+  const billing: Record<string, string> = {};
+  const shipping: Record<string, string> = {};
+
+  if (data.first_name) billing.first_name = shipping.first_name = data.first_name;
+  if (data.last_name) billing.last_name = shipping.last_name = data.last_name;
+  if (data.email) billing.email = data.email;
+  if (data.phone) billing.phone = data.phone;
+  if (data.address_1) billing.address_1 = shipping.address_1 = data.address_1;
+  if (data.city) billing.city = shipping.city = data.city;
+  if (data.state) billing.state = shipping.state = data.state;
+  if (data.postcode) billing.postcode = shipping.postcode = data.postcode;
+  billing.country = "AR";
+  shipping.country = "AR";
+
+  const body: Record<string, unknown> = {};
+  if (Object.keys(billing).length > 1) body.billing = billing;
+  if (Object.keys(shipping).length > 1) body.shipping = shipping;
+  if (data.dni_cuit) {
+    // Usar la misma key que lee /api/auth/profile → auto-fill checkout.
+    body.meta_data = [{ key: "billing_dni_cuit", value: data.dni_cuit }];
+  }
+
+  if (Object.keys(body).length === 0) return;
+
+  try {
+    await wcFetch(`customers/${customerId}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    console.warn("[wc-api] syncCustomerFromCheckout failed:", err);
+  }
+}
+
 export async function updateCustomer(customerId: number, data: Record<string, unknown>): Promise<WCCustomer | null> {
   const res = await wcFetch(`customers/${customerId}`, {
     method: "PUT",
