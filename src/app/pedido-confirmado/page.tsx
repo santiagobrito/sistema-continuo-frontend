@@ -1,12 +1,20 @@
 import Link from "next/link";
 import { GoogleCustomerReviews } from "./GoogleCustomerReviews";
 
+// MP manda algunos query params duplicados (ej. status=approved dos veces)
+// en back_urls, lo que Next.js entrega como string[]. Normalizamos a string.
+type MaybeMulti = string | string[] | undefined;
 interface Props {
-  searchParams: Promise<{ order?: string; status?: string; payment?: string; email?: string; shipping?: string }>;
+  searchParams: Promise<Record<string, MaybeMulti>>;
 }
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
+
+function first(v: MaybeMulti): string | undefined {
+  if (Array.isArray(v)) return v[0];
+  return v;
+}
 
 async function fetchWcOrderStatus(orderId: string): Promise<string | null> {
   if (!orderId || !WP_URL || !WC_API_AUTH) return null;
@@ -24,7 +32,12 @@ async function fetchWcOrderStatus(orderId: string): Promise<string | null> {
 }
 
 export default async function OrderConfirmedPage({ searchParams }: Props) {
-  const { order, status, payment, email, shipping } = await searchParams;
+  const sp = await searchParams;
+  const order = first(sp.order);
+  const status = first(sp.status);
+  const payment = first(sp.payment);
+  const email = first(sp.email);
+  const shipping = first(sp.shipping);
 
   // Si no vino status en la URL pero sí tenemos order_id, consultamos WC
   // (el modal MP a veces no transmite back_urls params al "Volver al sitio").
