@@ -236,12 +236,17 @@ export default function CheckoutPage() {
   }, [cart, formData.state, formData.postcode]);
 
   // Cargar sucursales cuando eligen "correo_sucursal" y hay provincia.
+  // Si hay CP del cliente, el endpoint ordena por proximidad (más cercanas primero).
   useEffect(() => {
     if (shippingMethod !== "correo_sucursal" || !formData.state) {
       return;
     }
     setAgenciesLoading(true);
-    fetch(`/api/paqar/agencies?state=${encodeURIComponent(formData.state)}`)
+    const qs = new URLSearchParams({ state: formData.state });
+    if (formData.postcode && formData.postcode.length >= 4) {
+      qs.set("cp", formData.postcode);
+    }
+    fetch(`/api/paqar/agencies?${qs.toString()}`)
       .then((r) => r.json())
       .then((d) => {
         setAgencies(d.ok ? d.agencies : []);
@@ -251,7 +256,7 @@ export default function CheckoutPage() {
         setAgencies([]);
         setAgenciesLoading(false);
       });
-  }, [shippingMethod, formData.state]);
+  }, [shippingMethod, formData.state, formData.postcode]);
 
   // Si cambia el método, limpiar sucursal elegida.
   useEffect(() => {
