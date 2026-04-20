@@ -8,6 +8,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createPreference } from "@/lib/mercadopago/sdk";
 import { markCartRecovered, subscribeNewsletter } from "@/lib/brevo/client";
+import { getSession } from "@/lib/auth/session";
+import { getCustomerByEmail } from "@/lib/auth/wc-api";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
@@ -32,6 +34,7 @@ interface CheckoutBody {
     last_name: string;
     email: string;
     phone: string;
+    dni_cuit?: string;
     address_1?: string;
     city?: string;
     state?: string;
@@ -44,15 +47,16 @@ interface CheckoutBody {
   coupon_code?: string;
 }
 
-async function createWCOrder(body: CheckoutBody): Promise<{ id: number; number: string }> {
+async function createWCOrder(body: CheckoutBody, customerId?: number): Promise<{ id: number; number: string }> {
   const lineItems = body.items.map((item) => ({
     product_id: item.product_id,
     variation_id: item.variation_id || undefined,
     quantity: item.quantity,
   }));
 
-  const orderData = {
+  const orderData: Record<string, unknown> = {
     status: "pending",
+    customer_id: customerId || 0,
     billing: {
       first_name: body.billing.first_name,
       last_name: body.billing.last_name,
@@ -82,6 +86,7 @@ async function createWCOrder(body: CheckoutBody): Promise<{ id: number; number: 
       ...(body.gclid ? [{ key: "_gclid", value: body.gclid }] : []),
       ...(body.paqar_agency_id ? [{ key: "_sc_paqar_agency_id", value: body.paqar_agency_id }] : []),
       ...(body.shipping_method ? [{ key: "_sc_shipping_method_id", value: body.shipping_method }] : []),
+      ...(body.billing.dni_cuit ? [{ key: "_dni_cuit", value: body.billing.dni_cuit }] : []),
     ],
   };
 
@@ -126,8 +131,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
 
+    // Asociar al customer WC si hay sesión activa, o si el email matchea un cliente existente.
+    let customerId: number | undefined;
+    const session = await getSession();
+    if (session?.id) {
+      customerId = session.id;
+    } else if (body.billing?.email) {
+      const existing = await getCustomerByEmail(body.billing.email);
+      if (existing?.id) customerId = existing.id;
+    }
+
     // 1. Create WC order
-    const order = await createWCOrder(body);
+    const order = await createWCOrder(body, customerId);
 
     // Mark abandoned cart as recovered + auto-subscribe to newsletter
     markCartRecovered(body.billing.email).catch(() => {});

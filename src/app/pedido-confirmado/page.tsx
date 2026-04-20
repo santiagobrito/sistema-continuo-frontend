@@ -5,11 +5,45 @@ interface Props {
   searchParams: Promise<{ order?: string; status?: string; payment?: string; email?: string; shipping?: string }>;
 }
 
+const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
+const WC_API_AUTH = process.env.WC_API_AUTH || "";
+
+async function fetchWcOrderStatus(orderId: string): Promise<string | null> {
+  if (!orderId || !WP_URL || !WC_API_AUTH) return null;
+  try {
+    const res = await fetch(`${WP_URL}/wp-json/wc/v3/orders/${orderId}`, {
+      headers: { Authorization: `Basic ${WC_API_AUTH}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.status || null;
+  } catch {
+    return null;
+  }
+}
+
 export default async function OrderConfirmedPage({ searchParams }: Props) {
   const { order, status, payment, email, shipping } = await searchParams;
 
-  const isApproved = status === "approved";
-  const isPending = status === "pending";
+  // Si no vino status en la URL pero sí tenemos order_id, consultamos WC
+  // (el modal MP a veces no transmite back_urls params al "Volver al sitio").
+  let effectiveStatus = status;
+  if (order && !effectiveStatus) {
+    const wcStatus = await fetchWcOrderStatus(order);
+    if (wcStatus === "processing" || wcStatus === "completed" || wcStatus === "preparing" || wcStatus === "sent-to-tactica" || wcStatus === "shipped" || wcStatus === "at-branch") {
+      effectiveStatus = "approved";
+    } else if (wcStatus === "on-hold") {
+      effectiveStatus = "pending";
+    } else if (wcStatus === "failed" || wcStatus === "cancelled") {
+      effectiveStatus = "rejected";
+    } else if (wcStatus === "pending") {
+      effectiveStatus = "pending";
+    }
+  }
+
+  const isApproved = effectiveStatus === "approved";
+  const isPending = effectiveStatus === "pending";
   const isTransferencia = payment === "transferencia";
   const isEfectivo = payment === "efectivo";
 

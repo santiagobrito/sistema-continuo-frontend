@@ -376,7 +376,7 @@ export default function CheckoutPage() {
 
       const orderPayload = {
         items,
-        billing: formData,
+        billing: formData,  // incluye dni_cuit; los endpoints lo persisten como meta _dni_cuit
         shipping_method: shippingMethod,
         shipping_cost: shippingCost,
         paqar_agency_id: shippingMethod === "correo_sucursal" ? selectedAgencyId : undefined,

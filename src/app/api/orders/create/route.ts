@@ -8,6 +8,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { markCartRecovered, subscribeNewsletter } from "@/lib/brevo/client";
+import { getSession } from "@/lib/auth/session";
+import { getCustomerByEmail } from "@/lib/auth/wc-api";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
@@ -19,6 +21,7 @@ interface OrderBody {
     last_name: string;
     email: string;
     phone: string;
+    dni_cuit?: string;
     address_1?: string;
     city?: string;
     state?: string;
@@ -48,8 +51,19 @@ export async function POST(request: NextRequest) {
       efectivo: "Efectivo en Local",
     };
 
+    // Asociar al customer WC si hay sesión, o por email si ya existe.
+    let customerId: number | undefined;
+    const session = await getSession();
+    if (session?.id) {
+      customerId = session.id;
+    } else if (body.billing?.email) {
+      const existing = await getCustomerByEmail(body.billing.email);
+      if (existing?.id) customerId = existing.id;
+    }
+
     const orderData: Record<string, unknown> = {
       status: body.payment_method === "efectivo" ? "on-hold" : "on-hold",
+      customer_id: customerId || 0,
       billing: {
         first_name: body.billing.first_name,
         last_name: body.billing.last_name,
@@ -83,6 +97,7 @@ export async function POST(request: NextRequest) {
         ...(body.gclid ? [{ key: "_gclid", value: body.gclid }] : []),
         ...(body.paqar_agency_id ? [{ key: "_sc_paqar_agency_id", value: body.paqar_agency_id }] : []),
         ...(body.shipping_method ? [{ key: "_sc_shipping_method_id", value: body.shipping_method }] : []),
+        ...(body.billing.dni_cuit ? [{ key: "_dni_cuit", value: body.billing.dni_cuit }] : []),
       ],
     };
 

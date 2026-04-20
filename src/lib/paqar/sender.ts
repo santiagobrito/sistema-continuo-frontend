@@ -8,7 +8,6 @@ import type { PaqarPerson, ProvinceCode } from "./types";
 export function getSenderData(): PaqarPerson {
   return {
     businessName: process.env.PAQAR_SENDER_NAME || "Sistema Continuo",
-    name: process.env.PAQAR_SENDER_NAME || "Sistema Continuo",
     areaCodePhone: process.env.PAQAR_SENDER_PHONE_AREA || "011",
     phoneNumber: process.env.PAQAR_SENDER_PHONE || "46501592",
     areaCodeCellphone: process.env.PAQAR_SENDER_CEL_AREA || "011",

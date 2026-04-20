@@ -112,9 +112,11 @@ export function buildShippingData(order: WcOrderLike): PaqarPerson {
 
   const { streetName, streetNumber } = splitStreetAndNumber(order.shipping.address_1);
   const phone = splitPhone(order.shipping.phone || order.billing.phone);
+  const dniCuit = order.meta_data?.find((m) => m.key === "_dni_cuit" || m.key === "dni_cuit")?.value as string | undefined;
 
   return {
-    name: `${order.shipping.first_name} ${order.shipping.last_name}`.trim(),
+    businessName: `${order.shipping.first_name} ${order.shipping.last_name}`.trim(),
+    id: dniCuit || undefined,
     email: order.billing.email || "",
     areaCodePhone: phone.area,
     phoneNumber: phone.number,

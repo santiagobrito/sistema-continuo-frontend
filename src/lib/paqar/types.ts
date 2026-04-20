@@ -23,7 +23,6 @@ export interface PaqarAddress {
 export interface PaqarPerson {
   id?: string;
   businessName?: string;
-  name?: string;
   areaCodePhone?: string;
   phoneNumber?: string;
   areaCodeCellphone?: string;
