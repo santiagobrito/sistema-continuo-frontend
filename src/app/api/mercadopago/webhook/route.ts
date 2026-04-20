@@ -17,11 +17,77 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getPayment } from "@/lib/mercadopago/sdk";
+import crypto from "crypto";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "";
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET || "";
+const MP_WEBHOOK_SECRET = process.env.MP_WEBHOOK_SECRET || "";
+
+/**
+ * Valida la firma HMAC del webhook de MercadoPago.
+ *
+ * MP manda dos headers:
+ *   x-signature: "ts=<timestamp>,v1=<hash_hex>"
+ *   x-request-id: <uuid>
+ *
+ * Template que firma MP (documentado en Checkout Pro → Webhooks):
+ *   id:<data.id>;request-id:<x-request-id>;ts:<ts>;
+ *
+ * HMAC-SHA256(template, MP_WEBHOOK_SECRET).hex() === v1
+ *
+ * data.id viene del QUERY STRING de la request (MP siempre lo manda ahí para
+ * este propósito), caemos al body si no está.
+ *
+ * Si MP_WEBHOOK_SECRET no está configurado, loguea warning y acepta (útil en
+ * dev, pero en prod DEBE estar).
+ */
+function validateMpSignature(
+  request: NextRequest,
+  body: { data?: { id?: string | number } }
+): { ok: boolean; reason?: string } {
+  if (!MP_WEBHOOK_SECRET) {
+    console.warn("[MP webhook] MP_WEBHOOK_SECRET no configurado — saltando validación");
+    return { ok: true, reason: "no-secret" };
+  }
+
+  const xSignature = request.headers.get("x-signature") || "";
+  const xRequestId = request.headers.get("x-request-id") || "";
+  if (!xSignature || !xRequestId) {
+    return { ok: false, reason: "missing-headers" };
+  }
+
+  let ts = "";
+  let v1 = "";
+  for (const part of xSignature.split(",")) {
+    const [k, v] = part.split("=").map((s) => s.trim());
+    if (k === "ts") ts = v;
+    if (k === "v1") v1 = v;
+  }
+  if (!ts || !v1) return { ok: false, reason: "malformed-signature" };
+
+  const dataId =
+    request.nextUrl.searchParams.get("data.id") ||
+    (body?.data?.id ? String(body.data.id) : "");
+
+  const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+  const expected = crypto
+    .createHmac("sha256", MP_WEBHOOK_SECRET)
+    .update(manifest)
+    .digest("hex");
+
+  try {
+    const a = Buffer.from(expected, "hex");
+    const b = Buffer.from(v1, "hex");
+    if (a.length !== b.length) return { ok: false, reason: "length-mismatch" };
+    return crypto.timingSafeEqual(a, b)
+      ? { ok: true }
+      : { ok: false, reason: "hmac-mismatch" };
+  } catch {
+    return { ok: false, reason: "hex-parse-error" };
+  }
+}
 
 async function updateOrderStatus(orderId: string, status: string, transactionId?: string) {
   const body: Record<string, unknown> = { status };
@@ -89,6 +155,12 @@ async function triggerPaqarCreate(orderId: string, shippingMethod: string, agenc
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
+    const sig = validateMpSignature(request, body);
+    if (!sig.ok) {
+      console.warn(`[MP webhook] firma inválida (${sig.reason})`);
+      return NextResponse.json({ error: "invalid signature" }, { status: 401 });
+    }
 
     if (body.type === "payment" && body.data?.id) {
       const payment = await getPayment(String(body.data.id));
