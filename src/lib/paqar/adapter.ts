@@ -116,6 +116,8 @@ export function buildShippingData(
     phoneNumber: phone.number,
     areaCodeCellphone: phone.area,
     cellphoneNumber: phone.number,
+    // Evitar que CA renderice literal "null" debajo del destinatario.
+    observation: "",
   };
 
   // Cuando el envío es a sucursal/locker, el manual dice que solo se requieren
@@ -139,7 +141,10 @@ export function buildShippingData(
     cityName: order.shipping.city,
     state: stateCode,
     zipCode: order.shipping.postcode,
-    department: order.shipping.address_2 || undefined,
+    // CA renderiza literal "null" en el rótulo cuando floor/department vienen
+    // ausentes — mandamos string vacío explícito para evitarlo.
+    floor: "",
+    department: order.shipping.address_2 || "",
   };
   return base;
 }

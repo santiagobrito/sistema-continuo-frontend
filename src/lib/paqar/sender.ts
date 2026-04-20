@@ -17,12 +17,17 @@ export function getSenderData(): PaqarPerson {
     areaCodeCellphone: process.env.PAQAR_SENDER_CEL_AREA || "011",
     cellphoneNumber: process.env.PAQAR_SENDER_CEL || "30793862",
     email: process.env.PAQAR_SENDER_EMAIL || "ventas@sistemacontinuo.com.ar",
+    observation: "",
     address: {
       streetName: process.env.PAQAR_SENDER_STREET || "Av. Rivadavia",
       streetNumber: process.env.PAQAR_SENDER_NUMBER || "17002",
       cityName: process.env.PAQAR_SENDER_CITY || "Haedo",
       state: (process.env.PAQAR_SENDER_STATE || "B") as ProvinceCode,
       zipCode: process.env.PAQAR_SENDER_ZIP || "1706",
+      // CA renderiza literal "null" en el rótulo cuando floor/department vienen
+      // ausentes — mandamos string vacío explícito para que no aparezca.
+      floor: "",
+      department: "",
     },
   };
 }
