@@ -116,7 +116,7 @@ export default function MiCuentaPage() {
               {orders.map((order) => {
                 const status = STATUS_LABELS[order.status] || { label: order.status, color: "bg-gray-100 text-gray-600" };
                 return (
-                  <div key={order.id} className="px-6 py-4 hover:bg-gray-50/50 transition-colors">
+                  <Link key={order.id} href={`/mi-cuenta/pedidos/${order.id}`} className="block px-6 py-4 hover:bg-gray-50/50 transition-colors cursor-pointer">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-bold text-gray-900">#{order.number}</span>
@@ -135,7 +135,7 @@ export default function MiCuentaPage() {
                         {new Date(order.date_created).toLocaleDateString("es-AR")}
                       </span>
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>

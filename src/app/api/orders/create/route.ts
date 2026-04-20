@@ -26,6 +26,7 @@ interface OrderBody {
   };
   shipping_method?: string;
   shipping_cost?: number;
+  paqar_agency_id?: string;
   payment_method: "transferencia" | "efectivo";
   gclid?: string;
   coupon_code?: string;
@@ -80,6 +81,8 @@ export async function POST(request: NextRequest) {
       coupon_lines: body.coupon_code ? [{ code: body.coupon_code }] : [],
       meta_data: [
         ...(body.gclid ? [{ key: "_gclid", value: body.gclid }] : []),
+        ...(body.paqar_agency_id ? [{ key: "_sc_paqar_agency_id", value: body.paqar_agency_id }] : []),
+        ...(body.shipping_method ? [{ key: "_sc_shipping_method_id", value: body.shipping_method }] : []),
       ],
     };
 

@@ -88,6 +88,14 @@ export async function getCustomerOrders(customerId: number): Promise<unknown[]> 
   return res.json();
 }
 
+export async function getCustomerOrderById(customerId: number, orderId: number): Promise<unknown | null> {
+  const res = await wcFetch(`orders/${orderId}`);
+  if (!res.ok) return null;
+  const order = await res.json();
+  if (order.customer_id !== customerId) return null;
+  return order;
+}
+
 export async function updateCustomer(customerId: number, data: Record<string, unknown>): Promise<WCCustomer | null> {
   const res = await wcFetch(`customers/${customerId}`, {
     method: "PUT",

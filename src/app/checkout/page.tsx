@@ -94,6 +94,12 @@ export default function CheckoutPage() {
     address_1: "", city: "", state: "", postcode: "",
   });
   const [shippingMethod, setShippingMethod] = useState("");
+  const [selectedAgencyId, setSelectedAgencyId] = useState("");
+  const [agencyQuery, setAgencyQuery] = useState("");
+  const [agencies, setAgencies] = useState<
+    Array<{ id: string; name: string; address: string; city: string; zip: string; schedule: string }>
+  >([]);
+  const [agenciesLoading, setAgenciesLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"mercadopago" | "transferencia" | "efectivo">("mercadopago");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -108,6 +114,19 @@ export default function CheckoutPage() {
     label: string;
     free_shipping: boolean;
   } | null>(null);
+
+  // PAQ.AR online quote — se recalcula cuando cambia CP/provincia/cart.
+  // null: no cotizado aún; {loading:true}: en vuelo; {domicilio,sucursal}: precios firmes (o fallback).
+  const [paqarQuote, setPaqarQuote] = useState<
+    | null
+    | { loading: true }
+    | {
+        loading: false;
+        domicilio?: { total: number; source: string; serviceName: string };
+        sucursal?: { total: number; source: string; serviceName: string };
+        error?: string;
+      }
+  >(null);
   const mpCheckoutRef = useRef<HTMLDivElement>(null);
   const [mpSdkReady, setMpSdkReady] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
@@ -157,6 +176,109 @@ export default function CheckoutPage() {
     return () => clearTimeout(timer);
   }, [formData.email, formData.first_name, formData.last_name, formData.phone, cart, cartTracked]);
 
+  // Cotización online contra /api/paqar/quote cuando cambia CP/provincia/carrito.
+  // Debounced 500ms para no pegar en cada keystroke del CP.
+  useEffect(() => {
+    if (!cart || cart.items.length === 0) return;
+    if (!formData.state || !formData.postcode || formData.postcode.length < 4) {
+      setPaqarQuote(null);
+      return;
+    }
+
+    setPaqarQuote({ loading: true });
+    const timer = setTimeout(async () => {
+      try {
+        const items = cart.items.map((it) => ({
+          id: String(it.id),
+          name: it.name,
+          quantity: it.quantity,
+          weight: Number((it as unknown as { weight?: string }).weight || 500),
+          height: 10,
+          width: 10,
+          depth: 10,
+          price: parseInt(it.prices.price) / 100,
+          category: "general",
+        }));
+
+        const res = await fetch("/api/paqar/quote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items,
+            destState: formData.state,
+            destZip: formData.postcode,
+            deliveryTypes: ["homeDelivery", "agency"],
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          setPaqarQuote({ loading: false, error: data.error || "No se pudo cotizar" });
+          return;
+        }
+        const dom = data.options.find((o: { deliveryType: string }) => o.deliveryType === "homeDelivery");
+        const suc = data.options.find((o: { deliveryType: string }) => o.deliveryType === "agency");
+        setPaqarQuote({
+          loading: false,
+          domicilio: dom ? { total: dom.total, source: dom.source, serviceName: dom.serviceName } : undefined,
+          sucursal: suc ? { total: suc.total, source: suc.source, serviceName: suc.serviceName } : undefined,
+        });
+      } catch (err) {
+        setPaqarQuote({
+          loading: false,
+          error: err instanceof Error ? err.message : "Error de cotización",
+        });
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [cart, formData.state, formData.postcode]);
+
+  // Cargar sucursales cuando eligen "correo_sucursal" y hay provincia.
+  useEffect(() => {
+    if (shippingMethod !== "correo_sucursal" || !formData.state) {
+      return;
+    }
+    setAgenciesLoading(true);
+    fetch(`/api/paqar/agencies?state=${encodeURIComponent(formData.state)}`)
+      .then((r) => r.json())
+      .then((d) => {
+        setAgencies(d.ok ? d.agencies : []);
+        setAgenciesLoading(false);
+      })
+      .catch(() => {
+        setAgencies([]);
+        setAgenciesLoading(false);
+      });
+  }, [shippingMethod, formData.state]);
+
+  // Si cambia el método, limpiar sucursal elegida.
+  useEffect(() => {
+    if (shippingMethod !== "correo_sucursal") setSelectedAgencyId("");
+  }, [shippingMethod]);
+
+  const filteredAgencies = useMemo(() => {
+    const q = agencyQuery.trim().toLowerCase();
+    if (!q) return agencies.slice(0, 50);
+    return agencies
+      .filter((a) => `${a.name} ${a.address} ${a.city} ${a.zip}`.toLowerCase().includes(q))
+      .slice(0, 50);
+  }, [agencies, agencyQuery]);
+
+  // Precio efectivo por opción de envío (incluye cotización online de Correo cuando aplica).
+  function getShippingPrice(optId: string, basePrice: number): number {
+    if (optId === "correo_domicilio") {
+      return paqarQuote && "domicilio" in paqarQuote && paqarQuote.domicilio
+        ? paqarQuote.domicilio.total
+        : 0;
+    }
+    if (optId === "correo_sucursal") {
+      return paqarQuote && "sucursal" in paqarQuote && paqarQuote.sucursal
+        ? paqarQuote.sucursal.total
+        : 0;
+    }
+    return basePrice;
+  }
+
   // Filter shipping options based on selected province
   const availableShipping = useMemo(() => {
     const province = formData.state;
@@ -190,7 +312,10 @@ export default function CheckoutPage() {
 
   const selectedShipping = ALL_SHIPPING_OPTIONS.find((o) => o.id === shippingMethod);
   const needsAddress = shippingMethod !== "local_pickup" && shippingMethod !== "";
-  const shippingCost = (appliedCoupon?.free_shipping && shippingMethod) ? 0 : (selectedShipping?.price || 0);
+  const selectedShippingPrice = selectedShipping
+    ? getShippingPrice(selectedShipping.id, selectedShipping.price)
+    : 0;
+  const shippingCost = (appliedCoupon?.free_shipping && shippingMethod) ? 0 : selectedShippingPrice;
   const subtotal = parseInt(cart.totals.total_items || "0");
   const couponDiscount = appliedCoupon?.discount_amount || 0;
   const total = Math.max(0, subtotal - couponDiscount + shippingCost);
@@ -252,6 +377,7 @@ export default function CheckoutPage() {
         billing: formData,
         shipping_method: shippingMethod,
         shipping_cost: shippingCost,
+        paqar_agency_id: shippingMethod === "correo_sucursal" ? selectedAgencyId : undefined,
         gclid: getGclid() || undefined,
         coupon_code: appliedCoupon?.code || undefined,
       };
@@ -361,6 +487,31 @@ export default function CheckoutPage() {
                       {availableShipping.map((opt) => {
                         const isSelected = shippingMethod === opt.id;
                         const meetsMinimum = !opt.minOrder || subtotal >= opt.minOrder;
+                        const isCorreo = opt.id === "correo_domicilio" || opt.id === "correo_sucursal";
+                        const livePrice = getShippingPrice(opt.id, opt.price);
+                        const quoteLoading = isCorreo && paqarQuote && "loading" in paqarQuote && paqarQuote.loading;
+                        const needsCp = isCorreo && (!formData.postcode || formData.postcode.length < 4);
+                        const fallbackUsed =
+                          isCorreo &&
+                          paqarQuote &&
+                          !("loading" in paqarQuote && paqarQuote.loading) &&
+                          ((opt.id === "correo_domicilio" && paqarQuote && "domicilio" in paqarQuote && paqarQuote.domicilio?.source === "fallback") ||
+                            (opt.id === "correo_sucursal" && paqarQuote && "sucursal" in paqarQuote && paqarQuote.sucursal?.source === "fallback"));
+
+                        let priceLabel: React.ReactNode;
+                        if (livePrice > 0) {
+                          priceLabel = `$${livePrice.toLocaleString("es-AR")}`;
+                        } else if (opt.id === "local_pickup") {
+                          priceLabel = "Gratis";
+                        } else if (needsCp) {
+                          priceLabel = <span className="text-xs text-gray-400">Ingresá el CP</span>;
+                        } else if (quoteLoading) {
+                          priceLabel = <span className="text-xs text-gray-400">Cotizando…</span>;
+                        } else if (opt.price === 0) {
+                          priceLabel = "A cotizar";
+                        } else {
+                          priceLabel = `$${opt.price.toLocaleString("es-AR")}`;
+                        }
 
                         return (
                           <label
@@ -386,12 +537,13 @@ export default function CheckoutPage() {
                               <div className="flex-1">
                                 <div className="flex items-center justify-between">
                                   <p className="text-sm font-semibold text-gray-900">{opt.label}</p>
-                                  <span className="text-sm font-bold text-gray-900 flex-shrink-0 ml-2">
-                                    {opt.price === 0 ? (opt.id === "local_pickup" ? "Gratis" : "A cotizar") : `$${opt.price.toLocaleString("es-AR")}`}
-                                  </span>
+                                  <span className="text-sm font-bold text-gray-900 flex-shrink-0 ml-2">{priceLabel}</span>
                                 </div>
                                 <p className="text-xs text-gray-500 mt-1 leading-relaxed">{opt.desc}</p>
                                 <p className="text-[10px] text-[#013d5a] font-medium mt-1">{opt.time}</p>
+                                {fallbackUsed && (
+                                  <p className="text-[10px] text-amber-600 mt-1">Precio estimado (no pudimos conectar con Correo, se ajusta al despachar)</p>
+                                )}
                                 {opt.minOrder && !meetsMinimum && (
                                   <p className="text-[10px] text-red-500 mt-1">Monto mínimo: ${opt.minOrder.toLocaleString("es-AR")}</p>
                                 )}
@@ -405,6 +557,60 @@ export default function CheckoutPage() {
                 ) : (
                   <div className="bg-gray-50 rounded-lg p-4 text-center">
                     <p className="text-sm text-gray-400">Selecciona tu provincia para ver los métodos de envío disponibles</p>
+                  </div>
+                )}
+
+                {/* Selector de sucursal de Correo Argentino (solo si eligió "a sucursal") */}
+                {shippingMethod === "correo_sucursal" && (
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <label className="block text-xs font-semibold text-gray-700 mb-2">
+                      Sucursal de Correo Argentino *
+                    </label>
+                    <input
+                      type="text"
+                      value={agencyQuery}
+                      onChange={(e) => setAgencyQuery(e.target.value)}
+                      placeholder="Buscar por ciudad, barrio, dirección o CP"
+                      className={`${inputClass} mb-2`}
+                    />
+                    {agenciesLoading ? (
+                      <p className="text-xs text-gray-400 py-3 text-center">Cargando sucursales…</p>
+                    ) : agencies.length === 0 ? (
+                      <p className="text-xs text-red-500 py-3 text-center">No se pudieron cargar las sucursales. Probá recargar.</p>
+                    ) : (
+                      <div className="max-h-64 overflow-y-auto border border-gray-100 rounded-lg divide-y divide-gray-50">
+                        {filteredAgencies.length === 0 ? (
+                          <p className="text-xs text-gray-400 py-4 text-center">Sin resultados — probá otra búsqueda</p>
+                        ) : (
+                          filteredAgencies.map((a) => {
+                            const sel = selectedAgencyId === a.id;
+                            return (
+                              <label
+                                key={a.id}
+                                className={`flex items-start gap-2 p-2.5 cursor-pointer transition-colors ${sel ? "bg-[#013d5a]/5" : "hover:bg-gray-50"}`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="agency"
+                                  value={a.id}
+                                  checked={sel}
+                                  onChange={() => setSelectedAgencyId(a.id)}
+                                  className="mt-0.5 text-[#013d5a]"
+                                />
+                                <div className="text-xs">
+                                  <p className="font-semibold text-gray-900">{a.name}</p>
+                                  <p className="text-gray-500">{a.address} — {a.city} ({a.zip})</p>
+                                  <p className="text-gray-400 text-[10px] mt-0.5">{a.schedule}</p>
+                                </div>
+                              </label>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+                    {agencies.length > 50 && !agencyQuery && (
+                      <p className="text-[10px] text-gray-400 mt-1">Mostrando 50 de {agencies.length} sucursales — usá el buscador para filtrar.</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -538,7 +744,17 @@ export default function CheckoutPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-500">Envío</span>
                     <span className="font-medium">
-                      {!shippingMethod ? "—" : appliedCoupon?.free_shipping ? <span className="text-green-600">Gratis (cupón)</span> : shippingCost > 0 ? `$${shippingCost.toLocaleString("es-AR")}` : selectedShipping?.id === "local_pickup" ? "Gratis" : "A cotizar"}
+                      {!shippingMethod
+                        ? "—"
+                        : appliedCoupon?.free_shipping
+                        ? <span className="text-green-600">Gratis (cupón)</span>
+                        : shippingCost > 0
+                        ? `$${shippingCost.toLocaleString("es-AR")}`
+                        : selectedShipping?.id === "local_pickup"
+                        ? "Gratis"
+                        : (selectedShipping?.id === "correo_domicilio" || selectedShipping?.id === "correo_sucursal")
+                        ? (paqarQuote && "loading" in paqarQuote && paqarQuote.loading ? "Cotizando…" : "A cotizar")
+                        : "A cotizar"}
                     </span>
                   </div>
                   <div className="border-t border-gray-100 pt-3 flex justify-between items-baseline">
@@ -553,7 +769,12 @@ export default function CheckoutPage() {
 
                 <button
                   type="submit"
-                  disabled={submitting || !shippingMethod}
+                  disabled={
+                    submitting ||
+                    !shippingMethod ||
+                    ((shippingMethod === "correo_domicilio" || shippingMethod === "correo_sucursal") && selectedShippingPrice <= 0) ||
+                    (shippingMethod === "correo_sucursal" && !selectedAgencyId)
+                  }
                   className={`mt-5 w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-base transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                     paymentMethod === "mercadopago"
                       ? "bg-[#009ee3] hover:bg-[#0087c9] text-white"
@@ -579,6 +800,20 @@ export default function CheckoutPage() {
                     {!formData.state
                       ? "Selecciona tu provincia para elegir el método de envío"
                       : "Selecciona un método de envío para continuar"}
+                  </p>
+                )}
+                {(shippingMethod === "correo_domicilio" || shippingMethod === "correo_sucursal") && selectedShippingPrice <= 0 && !submitting && (
+                  <p className="mt-2 text-center text-xs text-amber-600 font-medium">
+                    {!formData.postcode || formData.postcode.length < 4
+                      ? "Ingresá tu código postal para cotizar el envío"
+                      : paqarQuote && "loading" in paqarQuote && paqarQuote.loading
+                      ? "Cotizando envío…"
+                      : "No pudimos cotizar el envío, probá otro método o contactanos"}
+                  </p>
+                )}
+                {shippingMethod === "correo_sucursal" && selectedShippingPrice > 0 && !selectedAgencyId && !submitting && (
+                  <p className="mt-2 text-center text-xs text-amber-600 font-medium">
+                    Elegí una sucursal de Correo Argentino para continuar
                   </p>
                 )}
 
