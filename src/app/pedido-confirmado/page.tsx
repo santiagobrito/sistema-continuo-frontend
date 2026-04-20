@@ -28,22 +28,27 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
 
   // Si no vino status en la URL pero sí tenemos order_id, consultamos WC
   // (el modal MP a veces no transmite back_urls params al "Volver al sitio").
+  // Si no pudimos derivar un status pero la order EXISTE, preferimos mostrar
+  // "pendiente" (amarillo) antes que "rechazado" (rojo) — la order real vive
+  // en WC, nunca mostrar error si la compra quedó registrada.
   let effectiveStatus = status;
   if (order && !effectiveStatus) {
     const wcStatus = await fetchWcOrderStatus(order);
     if (wcStatus === "processing" || wcStatus === "completed" || wcStatus === "preparing" || wcStatus === "sent-to-tactica" || wcStatus === "shipped" || wcStatus === "at-branch") {
       effectiveStatus = "approved";
-    } else if (wcStatus === "on-hold") {
-      effectiveStatus = "pending";
     } else if (wcStatus === "failed" || wcStatus === "cancelled") {
       effectiveStatus = "rejected";
-    } else if (wcStatus === "pending") {
+    } else if (wcStatus === "refunded") {
+      effectiveStatus = "refunded";
+    } else if (wcStatus) {
+      // pending, on-hold, o cualquier estado desconocido → asumir pendiente
       effectiveStatus = "pending";
     }
   }
 
   const isApproved = effectiveStatus === "approved";
   const isPending = effectiveStatus === "pending";
+  const isRefunded = effectiveStatus === "refunded";
   const isTransferencia = payment === "transferencia";
   const isEfectivo = payment === "efectivo";
 
@@ -105,6 +110,21 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
             <p className="text-gray-400 text-sm mb-8">
               Te enviamos un email de confirmación con los detalles de tu compra.
               Nuestro equipo te contactará para coordinar el envío.
+            </p>
+          </>
+        ) : isRefunded ? (
+          <>
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+              </svg>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-3">Pedido reembolsado</h1>
+            <p className="text-gray-500 text-lg mb-2">
+              Tu pedido #{order} fue reembolsado. El dinero vuelve a tu cuenta en 5-10 días hábiles.
+            </p>
+            <p className="text-gray-400 text-sm mb-8">
+              Cualquier consulta, contactanos por WhatsApp.
             </p>
           </>
         ) : isPending ? (

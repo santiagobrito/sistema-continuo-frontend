@@ -20,9 +20,19 @@ export interface PaqarAddress {
   zipCode: string;
 }
 
+/**
+ * IMPORTANTE: senderData y shippingData usan schemas DISTINTOS del lado de CA:
+ * - senderData acepta: businessName, id, email, teléfonos, address, observation
+ *   (NO acepta `name`).
+ * - shippingData acepta: name, email, teléfonos, address, observation
+ *   (NO acepta `businessName` ni `id`).
+ * Ambos comparten este interface con todos opcionales; el adapter rellena según
+ * el contexto. Ver adapter.ts:buildShippingData() y sender.ts:getSenderData().
+ */
 export interface PaqarPerson {
   id?: string;
   businessName?: string;
+  name?: string;
   areaCodePhone?: string;
   phoneNumber?: string;
   areaCodeCellphone?: string;
