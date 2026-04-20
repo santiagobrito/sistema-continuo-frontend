@@ -39,7 +39,8 @@ export interface PaqarPerson {
   cellphoneNumber?: string;
   email?: string;
   observation?: string;
-  address: PaqarAddress;
+  /** Obligatorio para homeDelivery; opcional para agency/locker (manual pág 14). */
+  address?: PaqarAddress;
 }
 
 export interface PaqarParcel {

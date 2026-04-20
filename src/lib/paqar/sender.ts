@@ -8,6 +8,9 @@ import type { PaqarPerson, ProvinceCode } from "./types";
 export function getSenderData(): PaqarPerson {
   return {
     businessName: process.env.PAQAR_SENDER_NAME || "Sistema Continuo",
+    // CUIT del remitente sin guiones. El manual no aclara si es obligatorio
+    // pero CA puede requerirlo internamente para validar la pieza.
+    id: process.env.PAQAR_SENDER_CUIT || "30711265917",
     areaCodePhone: process.env.PAQAR_SENDER_PHONE_AREA || "011",
     phoneNumber: process.env.PAQAR_SENDER_PHONE || "46501592",
     areaCodeCellphone: process.env.PAQAR_SENDER_CEL_AREA || "011",

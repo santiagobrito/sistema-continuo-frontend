@@ -102,7 +102,29 @@ function splitPhone(phone?: string): { area: string; number: string } {
 /**
  * Construye el shippingData para el payload a partir del shipping de WC.
  */
-export function buildShippingData(order: WcOrderLike): PaqarPerson {
+export function buildShippingData(
+  order: WcOrderLike,
+  deliveryType: DeliveryType
+): PaqarPerson {
+  const phone = splitPhone(order.shipping.phone || order.billing.phone);
+
+  // shippingData NO acepta businessName ni id — solo name.
+  const base: PaqarPerson = {
+    name: `${order.shipping.first_name} ${order.shipping.last_name}`.trim(),
+    email: order.billing.email || "",
+    areaCodePhone: phone.area,
+    phoneNumber: phone.number,
+    areaCodeCellphone: phone.area,
+    cellphoneNumber: phone.number,
+  };
+
+  // Cuando el envío es a sucursal/locker, el manual dice que solo se requieren
+  // los datos personales del destinatario. Omitir address evita conflicto entre
+  // "ir a sucursal X" vs "dirección del cliente Y", que CA marca como inválido.
+  if (deliveryType !== "homeDelivery") {
+    return base;
+  }
+
   const stateCode = provinceNameToCode(order.shipping.state);
   if (!stateCode) {
     throw new Error(
@@ -111,25 +133,15 @@ export function buildShippingData(order: WcOrderLike): PaqarPerson {
   }
 
   const { streetName, streetNumber } = splitStreetAndNumber(order.shipping.address_1);
-  const phone = splitPhone(order.shipping.phone || order.billing.phone);
-
-  // shippingData NO acepta businessName ni id — solo name.
-  return {
-    name: `${order.shipping.first_name} ${order.shipping.last_name}`.trim(),
-    email: order.billing.email || "",
-    areaCodePhone: phone.area,
-    phoneNumber: phone.number,
-    areaCodeCellphone: phone.area,
-    cellphoneNumber: phone.number,
-    address: {
-      streetName,
-      streetNumber,
-      cityName: order.shipping.city,
-      state: stateCode,
-      zipCode: order.shipping.postcode,
-      department: order.shipping.address_2 || undefined,
-    },
+  base.address = {
+    streetName,
+    streetNumber,
+    cityName: order.shipping.city,
+    state: stateCode,
+    zipCode: order.shipping.postcode,
+    department: order.shipping.address_2 || undefined,
   };
+  return base;
 }
 
 /**
@@ -167,7 +179,7 @@ export function buildPaqarPayloads(
   }
 
   const senderData = getSenderData();
-  const shippingData = buildShippingData(order);
+  const shippingData = buildShippingData(order, opts.deliveryType);
   const bundles = splitIntoBundles(wcItemsToSplitItems(order));
 
   if (bundles.length === 0) {
