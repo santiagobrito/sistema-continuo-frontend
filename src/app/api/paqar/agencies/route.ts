@@ -19,7 +19,8 @@ import type { PaqarAgency } from "@/lib/paqar/types";
 
 export const revalidate = 3600;
 
-function extractCpDigits(cp: string): number | null {
+function extractCpDigits(cp: string | null | undefined): number | null {
+  if (!cp || typeof cp !== "string") return null;
   const m = cp.match(/\d{4}/);
   return m ? parseInt(m[0], 10) : null;
 }
