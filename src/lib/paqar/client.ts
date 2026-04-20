@@ -175,18 +175,45 @@ export class PaqarClient {
     return data;
   }
 
-  /** GET /tracking — historial de uno o más trackings. */
+  /**
+   * GET /tracking — historial de uno o más trackings.
+   *
+   * CA espera los TNs como query param `trackingNumbers` (no body), aunque
+   * el manual muestra un ejemplo con array en body que fetch no permite en
+   * GET. La forma que funciona es `?trackingNumbers=tn1&trackingNumbers=tn2`.
+   */
   async getTracking(
     trackingNumbers: string[],
     extClient?: string
   ): Promise<PaqarTrackingResponse[]> {
-    const body = trackingNumbers.map((tn) => ({ trackingNumber: tn }));
-    const { data } = await this.request<PaqarTrackingResponse[]>(
-      "GET",
-      "/tracking",
-      body,
-      extClient ? { extClient } : undefined
-    );
+    if (!this.isConfigured()) {
+      throw new Error(
+        "PAQ.AR no está configurado. Faltan PAQAR_API_KEY o PAQAR_AGREEMENT en env."
+      );
+    }
+    const url = new URL(`${this.config.baseUrl}/tracking`);
+    for (const tn of trackingNumbers) {
+      url.searchParams.append("trackingNumbers", tn);
+    }
+    if (extClient) url.searchParams.set("extClient", extClient);
+
+    const res = await fetch(url.toString(), {
+      method: "GET",
+      headers: {
+        authorization: `Apikey ${this.config.apiKey}`,
+        agreement: this.config.agreement,
+      },
+      cache: "no-store",
+    });
+    const text = await res.text();
+    let parsed: unknown = null;
+    if (text) {
+      try { parsed = JSON.parse(text); } catch { parsed = text; }
+    }
+    if (!res.ok) {
+      throw new PaqarApiException(res.status, (parsed as PaqarApiError) ?? text, "/tracking");
+    }
+    const data = parsed as PaqarTrackingResponse[];
     if (!data) throw new Error("PAQ.AR getTracking: respuesta vacía");
     return data;
   }
