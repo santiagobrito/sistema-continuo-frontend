@@ -14,6 +14,19 @@ import { getCustomerByEmail, syncCustomerFromCheckout } from "@/lib/auth/wc-api"
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
 
+function shippingMethodTitle(method: string | undefined): string {
+  switch (method) {
+    case "local_pickup":       return "Retiro en local";
+    case "correo_domicilio":   return "Correo Argentino a domicilio";
+    case "correo_sucursal":    return "Correo Argentino a sucursal";
+    case "moto_caba":          return "Moto CABA";
+    case "moto_gba1":          return "Moto GBA Zona 1";
+    case "moto_gba2":          return "Moto GBA Zona 2";
+    case "transporte":         return "Transporte al interior";
+    default:                   return "Envío";
+  }
+}
+
 interface OrderBody {
   items: { product_id: number; variation_id?: number; name: string; quantity: number; price: number }[];
   billing: {
