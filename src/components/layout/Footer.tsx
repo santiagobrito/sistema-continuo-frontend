@@ -61,6 +61,7 @@ export function Footer() {
             <li><Link href="/como-comprar" className="hover:text-white">Cómo comprar</Link></li>
             <li><Link href="/formas-de-pago" className="hover:text-white">Formas de pago</Link></li>
             <li><Link href="/envios" className="hover:text-white">Envíos</Link></li>
+            <li><Link href="/devoluciones" className="hover:text-white">Cambios y devoluciones</Link></li>
             <li><Link href="/contacto" className="hover:text-white">Contacto</Link></li>
             <li><Link href="/blog" className="hover:text-white">Blog</Link></li>
           </ul>
@@ -91,8 +92,15 @@ export function Footer() {
       </div>
 
       <div className="border-t border-blue-800">
-        <div className="max-w-7xl mx-auto px-4 py-4 text-center text-xs text-blue-200">
-          &copy; {new Date().getFullYear()} Sistema Continuo. Todos los derechos reservados.
+        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-blue-200">
+          <div>
+            &copy; {new Date().getFullYear()} Sistema Continuo SH · CUIT 30-71126591-7 · Todos los derechos reservados.
+          </div>
+          <div className="flex gap-4">
+            <Link href="/terminos-y-condiciones" className="hover:text-white">Términos y condiciones</Link>
+            <Link href="/politica-de-privacidad" className="hover:text-white">Privacidad</Link>
+            <Link href="/devoluciones" className="hover:text-white">Devoluciones</Link>
+          </div>
         </div>
       </div>
     </footer>

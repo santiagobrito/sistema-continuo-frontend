@@ -15,6 +15,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/como-comprar`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/formas-de-pago`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/envios`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${SITE_URL}/devoluciones`, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${SITE_URL}/terminos-y-condiciones`, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${SITE_URL}/politica-de-privacidad`, changeFrequency: "yearly", priority: 0.3 },
   ];
 
   try {
