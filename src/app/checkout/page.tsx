@@ -50,7 +50,7 @@ const ALL_SHIPPING_OPTIONS = [
     label: "Correo Argentino a domicilio",
     price: 0,
     zones: ["all"],
-    desc: "Envío a domicilio por Correo Argentino. El costo se cotiza al confirmar el pedido y se informa por email/WhatsApp.",
+    desc: "Envío a domicilio por Correo Argentino. Costo calculado según peso y destino.",
     time: "Despacho en 3 días hábiles. Entrega 3-7 días hábiles según destino",
   },
   {
@@ -58,7 +58,7 @@ const ALL_SHIPPING_OPTIONS = [
     label: "Correo Argentino a sucursal",
     price: 0,
     zones: ["all"],
-    desc: "Envío a sucursal de Correo Argentino más cercana. Más económico que a domicilio. Costo a cotizar.",
+    desc: "Retiro en sucursal de Correo Argentino más cercana. Más económico que a domicilio.",
     time: "Despacho en 3 días hábiles",
   },
   {
