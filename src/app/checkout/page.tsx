@@ -549,42 +549,99 @@ export default function CheckoutPage() {
                         }
 
                         return (
-                          <label
-                            key={opt.id}
-                            className={`block rounded-xl border cursor-pointer transition-all ${
-                              !meetsMinimum
-                                ? "border-gray-100 opacity-50 cursor-not-allowed"
-                                : isSelected
-                                ? "border-[#013d5a] bg-[#013d5a]/5"
-                                : "border-gray-100 hover:border-gray-200"
-                            }`}
-                          >
-                            <div className="flex items-start gap-3 p-3.5">
-                              <input
-                                type="radio"
-                                name="shipping"
-                                value={opt.id}
-                                checked={isSelected}
-                                onChange={() => setShippingMethod(opt.id)}
-                                disabled={!meetsMinimum}
-                                className="w-4 h-4 mt-0.5 text-[#013d5a] cursor-pointer"
-                              />
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between">
-                                  <p className="text-sm font-semibold text-gray-900">{opt.label}</p>
-                                  <span className="text-sm font-bold text-gray-900 flex-shrink-0 ml-2">{priceLabel}</span>
+                          <div key={opt.id}>
+                            <label
+                              className={`block rounded-xl border cursor-pointer transition-all ${
+                                !meetsMinimum
+                                  ? "border-gray-100 opacity-50 cursor-not-allowed"
+                                  : isSelected
+                                  ? "border-[#013d5a] bg-[#013d5a]/5"
+                                  : "border-gray-100 hover:border-gray-200"
+                              } ${opt.id === "correo_sucursal" && isSelected ? "rounded-b-none border-b-0" : ""}`}
+                            >
+                              <div className="flex items-start gap-3 p-3.5">
+                                <input
+                                  type="radio"
+                                  name="shipping"
+                                  value={opt.id}
+                                  checked={isSelected}
+                                  onChange={() => setShippingMethod(opt.id)}
+                                  disabled={!meetsMinimum}
+                                  className="w-4 h-4 mt-0.5 text-[#013d5a] cursor-pointer"
+                                />
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between">
+                                    <p className="text-sm font-semibold text-gray-900">{opt.label}</p>
+                                    <span className="text-sm font-bold text-gray-900 flex-shrink-0 ml-2">{priceLabel}</span>
+                                  </div>
+                                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">{opt.desc}</p>
+                                  <p className="text-[10px] text-[#013d5a] font-medium mt-1">{opt.time}</p>
+                                  {quoteWarning && (
+                                    <p className="text-[10px] text-amber-600 mt-1">{quoteWarning}</p>
+                                  )}
+                                  {opt.minOrder && !meetsMinimum && (
+                                    <p className="text-[10px] text-red-500 mt-1">Monto mínimo: ${opt.minOrder.toLocaleString("es-AR")}</p>
+                                  )}
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1 leading-relaxed">{opt.desc}</p>
-                                <p className="text-[10px] text-[#013d5a] font-medium mt-1">{opt.time}</p>
-                                {quoteWarning && (
-                                  <p className="text-[10px] text-amber-600 mt-1">{quoteWarning}</p>
-                                )}
-                                {opt.minOrder && !meetsMinimum && (
-                                  <p className="text-[10px] text-red-500 mt-1">Monto mínimo: ${opt.minOrder.toLocaleString("es-AR")}</p>
-                                )}
                               </div>
-                            </div>
-                          </label>
+                            </label>
+
+                            {/* Selector de sucursal — inline dentro del radio seleccionado */}
+                            {opt.id === "correo_sucursal" && isSelected && (
+                              <div className="border border-t-0 border-[#013d5a] bg-[#013d5a]/5 rounded-b-xl px-3.5 pb-3.5">
+                                <div className="pl-7">
+                                  <label className="block text-xs font-semibold text-gray-700 mb-2 mt-1">
+                                    Elegí tu sucursal *
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={agencyQuery}
+                                    onChange={(e) => setAgencyQuery(e.target.value)}
+                                    placeholder="Buscar por ciudad, barrio, dirección o CP"
+                                    className={`${inputClass} mb-2 bg-white`}
+                                  />
+                                  {agenciesLoading ? (
+                                    <p className="text-xs text-gray-400 py-3 text-center">Cargando sucursales…</p>
+                                  ) : agencies.length === 0 ? (
+                                    <p className="text-xs text-red-500 py-3 text-center">No se pudieron cargar las sucursales. Probá recargar.</p>
+                                  ) : (
+                                    <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-100 bg-white">
+                                      {filteredAgencies.length === 0 ? (
+                                        <p className="text-xs text-gray-400 py-4 text-center">Sin resultados — probá otra búsqueda</p>
+                                      ) : (
+                                        filteredAgencies.map((a) => {
+                                          const sel = selectedAgencyId === a.id;
+                                          return (
+                                            <label
+                                              key={a.id}
+                                              className={`flex items-start gap-2 p-2.5 cursor-pointer transition-colors ${sel ? "bg-[#013d5a]/10" : "hover:bg-gray-50"}`}
+                                            >
+                                              <input
+                                                type="radio"
+                                                name="agency"
+                                                value={a.id}
+                                                checked={sel}
+                                                onChange={() => setSelectedAgencyId(a.id)}
+                                                className="mt-0.5 text-[#013d5a]"
+                                              />
+                                              <div className="text-xs">
+                                                <p className="font-semibold text-gray-900">{a.name}</p>
+                                                <p className="text-gray-500">{a.address} — {a.city} ({a.zip})</p>
+                                                <p className="text-gray-400 text-[10px] mt-0.5">{a.schedule}</p>
+                                              </div>
+                                            </label>
+                                          );
+                                        })
+                                      )}
+                                    </div>
+                                  )}
+                                  {agencies.length > 50 && !agencyQuery && (
+                                    <p className="text-[10px] text-gray-400 mt-1">Mostrando 50 de {agencies.length} sucursales — usá el buscador para filtrar.</p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
                     </div>
@@ -592,60 +649,6 @@ export default function CheckoutPage() {
                 ) : (
                   <div className="bg-gray-50 rounded-lg p-4 text-center">
                     <p className="text-sm text-gray-400">Selecciona tu provincia para ver los métodos de envío disponibles</p>
-                  </div>
-                )}
-
-                {/* Selector de sucursal de Correo Argentino (solo si eligió "a sucursal") */}
-                {shippingMethod === "correo_sucursal" && (
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <label className="block text-xs font-semibold text-gray-700 mb-2">
-                      Sucursal de Correo Argentino *
-                    </label>
-                    <input
-                      type="text"
-                      value={agencyQuery}
-                      onChange={(e) => setAgencyQuery(e.target.value)}
-                      placeholder="Buscar por ciudad, barrio, dirección o CP"
-                      className={`${inputClass} mb-2`}
-                    />
-                    {agenciesLoading ? (
-                      <p className="text-xs text-gray-400 py-3 text-center">Cargando sucursales…</p>
-                    ) : agencies.length === 0 ? (
-                      <p className="text-xs text-red-500 py-3 text-center">No se pudieron cargar las sucursales. Probá recargar.</p>
-                    ) : (
-                      <div className="max-h-64 overflow-y-auto border border-gray-100 rounded-lg divide-y divide-gray-50">
-                        {filteredAgencies.length === 0 ? (
-                          <p className="text-xs text-gray-400 py-4 text-center">Sin resultados — probá otra búsqueda</p>
-                        ) : (
-                          filteredAgencies.map((a) => {
-                            const sel = selectedAgencyId === a.id;
-                            return (
-                              <label
-                                key={a.id}
-                                className={`flex items-start gap-2 p-2.5 cursor-pointer transition-colors ${sel ? "bg-[#013d5a]/5" : "hover:bg-gray-50"}`}
-                              >
-                                <input
-                                  type="radio"
-                                  name="agency"
-                                  value={a.id}
-                                  checked={sel}
-                                  onChange={() => setSelectedAgencyId(a.id)}
-                                  className="mt-0.5 text-[#013d5a]"
-                                />
-                                <div className="text-xs">
-                                  <p className="font-semibold text-gray-900">{a.name}</p>
-                                  <p className="text-gray-500">{a.address} — {a.city} ({a.zip})</p>
-                                  <p className="text-gray-400 text-[10px] mt-0.5">{a.schedule}</p>
-                                </div>
-                              </label>
-                            );
-                          })
-                        )}
-                      </div>
-                    )}
-                    {agencies.length > 50 && !agencyQuery && (
-                      <p className="text-[10px] text-gray-400 mt-1">Mostrando 50 de {agencies.length} sucursales — usá el buscador para filtrar.</p>
-                    )}
                   </div>
                 )}
               </div>
