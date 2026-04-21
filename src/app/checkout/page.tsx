@@ -519,6 +519,26 @@ export default function CheckoutPage() {
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
                       Métodos de envío disponibles para {PROVINCIAS.find(p => p.code === formData.state)?.name}
                     </p>
+
+                    {/* Aviso si Correo no es viable por peso de algún bulto */}
+                    {(() => {
+                      const w = paqarQuote && !("loading" in paqarQuote && paqarQuote.loading)
+                        ? ((paqarQuote as { domicilio?: { warning?: string } }).domicilio?.warning ||
+                           (paqarQuote as { sucursal?: { warning?: string } }).sucursal?.warning)
+                        : undefined;
+                      if (w && /supera|m.ximo/i.test(w)) {
+                        return (
+                          <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                            <strong>Pedido pesado:</strong> uno o más productos superan el máximo de Correo Argentino (50 kg/bulto).
+                            Para envíos a domicilio o sucursal con productos de este peso, contactanos por{" "}
+                            <a href="https://wa.me/5491133466497" target="_blank" rel="noopener noreferrer" className="underline font-semibold">WhatsApp</a>{" "}
+                            y coordinamos el flete. Mientras tanto podés elegir <strong>Retiro en local</strong>, <strong>Moto CABA/GBA</strong> o <strong>Transporte al interior</strong>.
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
                     <div className="space-y-2">
                       {availableShipping.map((opt) => {
                         const isSelected = shippingMethod === opt.id;
@@ -532,6 +552,11 @@ export default function CheckoutPage() {
                             ? (opt.id === "correo_domicilio" && "domicilio" in paqarQuote ? paqarQuote.domicilio?.warning :
                                opt.id === "correo_sucursal" && "sucursal" in paqarQuote ? paqarQuote.sucursal?.warning : undefined)
                             : undefined;
+
+                        // Si el bulto excede el máximo del tarifario, Correo Argentino no es viable.
+                        // Marcamos la opción como no disponible (ocultamos del listado).
+                        const exceedsMaxWeight = isCorreo && quoteWarning && /supera|m.ximo/i.test(quoteWarning);
+                        if (exceedsMaxWeight) return null;
 
                         let priceLabel: React.ReactNode;
                         if (livePrice > 0) {
