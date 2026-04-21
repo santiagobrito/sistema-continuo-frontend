@@ -35,8 +35,8 @@ export const metadata: Metadata = {
     siteName: "Sistema Continuo",
   },
   robots: {
-    index: false,
-    follow: false,
+    index: true,
+    follow: true,
   },
 };
 
