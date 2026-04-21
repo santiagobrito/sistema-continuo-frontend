@@ -9,15 +9,24 @@ import Link from "next/link";
 import Script from "next/script";
 import { getGclid } from "@/components/analytics/GclidCapture";
 
-// All shipping options with zone restrictions and descriptions
+// All shipping options with zone restrictions and descriptions.
+// Orden: opciones a domicilio/sucursal primero (mayor uso), retiro y transporte al final.
 const ALL_SHIPPING_OPTIONS = [
   {
-    id: "local_pickup",
-    label: "Retiro en local",
+    id: "correo_domicilio",
+    label: "Correo Argentino a domicilio",
     price: 0,
     zones: ["all"],
-    desc: "Av. Rivadavia 17002, Haedo. Te avisamos cuando tu pedido esté listo. Lunes a viernes 9-13 y 14-18hs.",
-    time: "Disponible en 24-48hs hábiles",
+    desc: "Envío a domicilio por Correo Argentino. Costo calculado según peso y destino.",
+    time: "Despacho en 3 días hábiles. Entrega 3-7 días hábiles según destino",
+  },
+  {
+    id: "correo_sucursal",
+    label: "Correo Argentino a sucursal",
+    price: 0,
+    zones: ["all"],
+    desc: "Retiro en sucursal de Correo Argentino más cercana. Más económico que a domicilio.",
+    time: "Despacho en 3 días hábiles",
   },
   {
     id: "moto_caba",
@@ -47,28 +56,20 @@ const ALL_SHIPPING_OPTIONS = [
     minOrder: 25000,
   },
   {
-    id: "correo_domicilio",
-    label: "Correo Argentino a domicilio",
-    price: 0,
-    zones: ["all"],
-    desc: "Envío a domicilio por Correo Argentino. Costo calculado según peso y destino.",
-    time: "Despacho en 3 días hábiles. Entrega 3-7 días hábiles según destino",
-  },
-  {
-    id: "correo_sucursal",
-    label: "Correo Argentino a sucursal",
-    price: 0,
-    zones: ["all"],
-    desc: "Retiro en sucursal de Correo Argentino más cercana. Más económico que a domicilio.",
-    time: "Despacho en 3 días hábiles",
-  },
-  {
     id: "transporte",
     label: "Transporte al interior",
     price: 3061,
     zones: ["interior"],
     desc: "Se cobra costo de despacho ($3.061). El flete del transporte se abona al retirar en destino (terminal o sucursal). Indicar transporte de preferencia.",
     time: "Despacho en 3 días hábiles",
+  },
+  {
+    id: "local_pickup",
+    label: "Retiro en local",
+    price: 0,
+    zones: ["all"],
+    desc: "Av. Rivadavia 17002, Haedo. Te avisamos cuando tu pedido esté listo. Lunes a viernes 9-13 y 14-18hs.",
+    time: "Disponible en 24-48hs hábiles",
   },
 ];
 
