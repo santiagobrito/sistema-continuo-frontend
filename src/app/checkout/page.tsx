@@ -22,7 +22,7 @@ const ALL_SHIPPING_OPTIONS = [
   },
   {
     id: "correo_sucursal",
-    label: "Correo Argentino a sucursal",
+    label: "Correo Argentino a sucursal o puntos de recogida",
     price: 0,
     zones: ["all"],
     desc: "Retiro en sucursal de Correo Argentino más cercana. Más económico que a domicilio.",
