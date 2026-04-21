@@ -13,6 +13,7 @@ import {
   addToCart as apiAddToCart,
   updateCartItem as apiUpdateCartItem,
   removeCartItem as apiRemoveCartItem,
+  clearCart as apiClearCart,
   type Cart,
 } from "@/lib/woocommerce/cart";
 import { CartDrawer } from "./CartDrawer";
@@ -32,6 +33,7 @@ interface CartContextType {
   ) => Promise<void>;
   updateItem: (key: string, quantity: number) => Promise<void>;
   removeItem: (key: string) => Promise<void>;
+  clearCart: () => Promise<void>;
   refreshCart: () => Promise<void>;
 }
 
@@ -97,6 +99,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const clearCart = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await apiClearCart();
+      setCart(data);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const itemCount = cart?.items_count ?? 0;
 
   return (
@@ -110,6 +122,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       addToCart,
       updateItem,
       removeItem,
+      clearCart,
       refreshCart,
     }}>
       {children}

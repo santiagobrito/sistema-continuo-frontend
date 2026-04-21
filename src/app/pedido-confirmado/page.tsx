@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { GoogleCustomerReviews } from "./GoogleCustomerReviews";
+import { ClearCartOnSuccess } from "./ClearCartOnSuccess";
 
 // MP manda algunos query params duplicados (ej. status=approved dos veces)
 // en back_urls, lo que Next.js entrega como string[]. Normalizamos a string.
@@ -65,8 +66,13 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
   const isTransferencia = payment === "transferencia";
   const isEfectivo = payment === "efectivo";
 
+  // Vaciar el carrito si el pedido es válido. NO vaciar si el pago fue rechazado
+  // (isRefunded / sin order): el user puede querer reintentar.
+  const shouldClearCart = Boolean(order) && (isApproved || isPending || isTransferencia || isEfectivo);
+
   return (
     <main className="bg-gray-50 min-h-screen">
+      <ClearCartOnSuccess shouldClear={shouldClearCart} />
       <div className="max-w-xl mx-auto px-4 py-20 text-center">
         {isTransferencia ? (
           <>
