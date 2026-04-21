@@ -548,17 +548,22 @@ export default function CheckoutPage() {
                           priceLabel = `$${opt.price.toLocaleString("es-AR")}`;
                         }
 
+                        const isExpanded = opt.id === "correo_sucursal" && isSelected;
+
+                        // Clases del contenedor externo. Cuando está expanded (sucursal seleccionada),
+                        // el border/rounded/bg viven en el contenedor y los hijos (label + selector)
+                        // quedan sin border propio. Así evitamos cualquier gap entre ambos bloques.
+                        const wrapperClass = isExpanded
+                          ? "rounded-xl border border-[#013d5a] bg-[#013d5a]/5 overflow-hidden"
+                          : !meetsMinimum
+                          ? "rounded-xl border border-gray-100 opacity-50"
+                          : isSelected
+                          ? "rounded-xl border border-[#013d5a] bg-[#013d5a]/5"
+                          : "rounded-xl border border-gray-100 hover:border-gray-200";
+
                         return (
-                          <div key={opt.id}>
-                            <label
-                              className={`block rounded-xl border cursor-pointer transition-all ${
-                                !meetsMinimum
-                                  ? "border-gray-100 opacity-50 cursor-not-allowed"
-                                  : isSelected
-                                  ? "border-[#013d5a] bg-[#013d5a]/5"
-                                  : "border-gray-100 hover:border-gray-200"
-                              } ${opt.id === "correo_sucursal" && isSelected ? "rounded-b-none border-b-0" : ""}`}
-                            >
+                          <div key={opt.id} className={wrapperClass}>
+                            <label className={`block ${!meetsMinimum ? "cursor-not-allowed" : "cursor-pointer"} transition-all`}>
                               <div className="flex items-start gap-3 p-3.5">
                                 <input
                                   type="radio"
@@ -586,11 +591,11 @@ export default function CheckoutPage() {
                               </div>
                             </label>
 
-                            {/* Selector de sucursal — inline dentro del radio seleccionado */}
-                            {opt.id === "correo_sucursal" && isSelected && (
-                              <div className="border border-t-0 border-[#013d5a] bg-[#013d5a]/5 rounded-b-xl px-3.5 pb-3.5">
+                            {/* Selector de sucursal inline cuando está expanded */}
+                            {isExpanded && (
+                              <div className="border-t border-[#013d5a]/30 px-3.5 pb-3.5 pt-3">
                                 <div className="pl-7">
-                                  <label className="block text-xs font-semibold text-gray-700 mb-2 mt-1">
+                                  <label className="block text-xs font-semibold text-gray-700 mb-2">
                                     Elegí tu sucursal *
                                   </label>
                                   <input
