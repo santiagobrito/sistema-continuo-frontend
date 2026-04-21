@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { paqarClient } from "@/lib/paqar/client";
 
 const ALLOWED_ORIGINS = new Set([
+  "https://api.sistemacontinuo.com.ar",
   "https://sistema-continuo-wp.a7lflv.easypanel.host",
   "https://sistemacontinuo.com.ar",
   "https://www.sistemacontinuo.com.ar",

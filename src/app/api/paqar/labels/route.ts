@@ -18,6 +18,7 @@ const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET || "";
 // El header x-internal-secret requiere preflight CORS; sin esto los botones
 // "Imprimir rótulos" / "Actualizar estado" del metabox quedan colgados.
 const ALLOWED_ORIGINS = new Set([
+  "https://api.sistemacontinuo.com.ar",
   "https://sistema-continuo-wp.a7lflv.easypanel.host",
   "https://sistemacontinuo.com.ar",
   "https://www.sistemacontinuo.com.ar",
