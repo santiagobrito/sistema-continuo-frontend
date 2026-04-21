@@ -148,7 +148,7 @@ export default function PedidoDetallePage({
                 <span className="text-gray-700">
                   {li.quantity} × {li.name}
                 </span>
-                <span className="font-semibold text-gray-900">{formatPrice(Number(li.total) * 100)}</span>
+                <span className="font-semibold text-gray-900">{formatPrice(Number(li.total))}</span>
               </div>
             ))}
           </div>
@@ -156,13 +156,13 @@ export default function PedidoDetallePage({
           {order.shipping_lines?.[0] && (
             <div className="flex justify-between mt-3 text-sm">
               <span className="text-gray-500">Envío — {order.shipping_lines[0].method_title}</span>
-              <span className="text-gray-900">{formatPrice(Number(order.shipping_lines[0].total) * 100)}</span>
+              <span className="text-gray-900">{formatPrice(Number(order.shipping_lines[0].total))}</span>
             </div>
           )}
 
           <div className="flex justify-between mt-3 pt-3 border-t border-gray-100 font-bold">
             <span>Total</span>
-            <span>{formatPrice(Number(order.total) * 100)}</span>
+            <span>{formatPrice(Number(order.total))}</span>
           </div>
         </div>
 
