@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useCart } from "@/components/cart/CartProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { formatStorePrice } from "@/lib/utils/format";
 import Image from "next/image";
 import Link from "next/link";
@@ -89,6 +90,7 @@ const PROVINCIAS = [
 
 export default function CheckoutPage() {
   const { cart } = useCart();
+  const { user, loading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
     first_name: "", last_name: "", email: "", phone: "", dni_cuit: "",
     address_1: "", city: "", state: "", postcode: "",
@@ -440,6 +442,32 @@ export default function CheckoutPage() {
           <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           <span className="text-sm font-semibold text-gray-900">Finalizar compra</span>
         </div>
+
+        {/* Login / guest banner */}
+        {!authLoading && (
+          user ? (
+            <div className="mb-5 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm flex items-center justify-between flex-wrap gap-2">
+              <span className="text-green-800">
+                Hola <strong>{user.name || user.email}</strong>, tus datos se completaron automáticamente.
+              </span>
+              <Link href="/mi-cuenta/perfil" className="text-green-700 hover:text-green-900 underline font-medium">
+                Editar datos
+              </Link>
+            </div>
+          ) : (
+            <div className="mb-5 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm flex items-center justify-between flex-wrap gap-2">
+              <span className="text-gray-700">
+                ¿Ya tenés cuenta? Iniciá sesión para completar tus datos automáticamente.
+              </span>
+              <Link
+                href={`/iniciar-sesion?redirect=${encodeURIComponent("/checkout")}`}
+                className="bg-[#013d5a] text-white px-4 py-1.5 rounded-md font-semibold hover:bg-[#012a42] transition-colors"
+              >
+                Iniciar sesión
+              </Link>
+            </div>
+          )
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

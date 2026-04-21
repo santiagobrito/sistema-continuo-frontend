@@ -3,12 +3,21 @@
 import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+
+// Whitelist de rutas a las que aceptamos redirect — evita open-redirect a dominios externos.
+function safeRedirect(raw: string | null): string | null {
+  if (!raw) return null;
+  if (!raw.startsWith("/") || raw.startsWith("//")) return null;
+  return raw;
+}
 
 export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = safeRedirect(searchParams.get("redirect"));
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,7 +32,7 @@ export default function LoginPage() {
       setError(result.error);
       setLoading(false);
     } else {
-      router.push("/mi-cuenta");
+      router.push(redirectTo || "/mi-cuenta");
     }
   }
 
@@ -32,7 +41,7 @@ export default function LoginPage() {
     if (isNew) {
       window.location.href = "/mi-cuenta/perfil?bienvenida=1";
     } else {
-      window.location.href = "/mi-cuenta";
+      window.location.href = redirectTo || "/mi-cuenta";
     }
   }
 
