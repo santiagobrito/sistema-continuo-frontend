@@ -38,7 +38,7 @@ export function Header() {
           <div className="flex items-center gap-4 ml-auto">
             <a href="tel:+541146501592" className="hover:text-white transition-colors">(011) 4650-1592</a>
             <a
-              href="https://wa.me/5491133466497"
+              href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_GENERAL || "5491130793862"}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 hover:text-white transition-colors"

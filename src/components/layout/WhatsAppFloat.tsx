@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 
-const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5491133466497";
+// "product" va al WhatsApp de ventas (consultas sobre un producto específico).
+// "general" va al WhatsApp general (consultas no asociadas a un producto).
+const WA_PRODUCT = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5491133466497";
+const WA_GENERAL = process.env.NEXT_PUBLIC_WHATSAPP_GENERAL || "5491130793862";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sistemacontinuo.com.ar";
 
 // Páginas que NO son de producto (home, checkout, account, contenido estático).
@@ -51,16 +54,19 @@ export function WhatsAppFloat() {
 
   function buildUrl(context: "product" | "general"): string {
     let text: string;
+    let number: string;
     if (context === "product") {
       const name = productNameFromTitle();
       const url = `${SITE_URL}${pathname}`;
       text = name
         ? `Hola! Tengo una consulta sobre este producto:\n\n${name}\n${url}`
         : `Hola! Tengo una consulta sobre este producto:\n\n${url}`;
+      number = WA_PRODUCT;
     } else {
       text = "Hola! Tengo una consulta.";
+      number = WA_GENERAL;
     }
-    return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`;
+    return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
   }
 
   return (

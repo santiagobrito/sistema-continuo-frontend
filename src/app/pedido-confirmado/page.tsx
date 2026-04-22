@@ -187,7 +187,7 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
             Seguir comprando
           </Link>
           <a
-            href="https://wa.me/5491133466497"
+            href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_GENERAL || "5491130793862"}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 bg-green-500 text-white px-8 py-3.5 rounded-xl font-semibold hover:bg-green-600 transition-colors cursor-pointer"

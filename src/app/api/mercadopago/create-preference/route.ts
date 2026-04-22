@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createPreference } from "@/lib/mercadopago/sdk";
 import { markCartRecovered, subscribeNewsletter } from "@/lib/brevo/client";
 import { getSession } from "@/lib/auth/session";
-import { getCustomerByEmail, syncCustomerFromCheckout } from "@/lib/auth/wc-api";
+import { getCustomerByEmail, createCustomer, syncCustomerFromCheckout } from "@/lib/auth/wc-api";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
@@ -108,7 +108,7 @@ async function createWCOrder(body: CheckoutBody, customerId?: number): Promise<{
     (orderData as Record<string, unknown>).shipping_lines = [
       {
         method_id: body.shipping_method,
-        method_title: body.shipping_method === "local_pickup" ? "Retiro en local" : "Envio",
+        method_title: shippingMethodTitle(body.shipping_method),
         total: String(body.shipping_cost),
       },
     ];
@@ -144,14 +144,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
 
-    // Asociar al customer WC si hay sesión activa, o si el email matchea un cliente existente.
+    // Asociar al customer WC si hay sesión; sino buscar por email; sino crear uno.
+    // Política: todo pedido debe quedar asociado a un customer, nada de guest orders.
     let customerId: number | undefined;
     const session = await getSession();
     if (session?.id) {
       customerId = session.id;
     } else if (body.billing?.email) {
       const existing = await getCustomerByEmail(body.billing.email);
-      if (existing?.id) customerId = existing.id;
+      if (existing?.id) {
+        customerId = existing.id;
+      } else {
+        const created = await createCustomer({
+          email: body.billing.email,
+          first_name: body.billing.first_name,
+          last_name: body.billing.last_name,
+        });
+        if (created?.id) customerId = created.id;
+      }
     }
 
     // 1. Create WC order

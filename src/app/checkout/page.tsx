@@ -537,7 +537,7 @@ export default function CheckoutPage() {
                       <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
                         <strong>Envío por Correo Argentino no disponible:</strong> por dimensiones y peso, alguno de los productos de tu pedido no se puede enviar por Correo Argentino.
                         Para coordinar el envío contactanos por{" "}
-                        <a href="https://wa.me/5491133466497" target="_blank" rel="noopener noreferrer" className="underline font-semibold">WhatsApp</a>.
+                        <a href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_GENERAL || "5491130793862"}`} target="_blank" rel="noopener noreferrer" className="underline font-semibold">WhatsApp</a>.
                         Mientras tanto podés elegir <strong>Retiro en local</strong>, <strong>Moto CABA/GBA</strong> o <strong>Transporte al interior (micro)</strong>.
                       </div>
                     )}
@@ -553,7 +553,7 @@ export default function CheckoutPage() {
                           <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
                             <strong>Pedido pesado:</strong> uno o más productos superan el máximo de Correo Argentino (50 kg/bulto).
                             Para envíos a domicilio o sucursal con productos de este peso, contactanos por{" "}
-                            <a href="https://wa.me/5491133466497" target="_blank" rel="noopener noreferrer" className="underline font-semibold">WhatsApp</a>{" "}
+                            <a href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_GENERAL || "5491130793862"}`} target="_blank" rel="noopener noreferrer" className="underline font-semibold">WhatsApp</a>{" "}
                             y coordinamos el flete. Mientras tanto podés elegir <strong>Retiro en local</strong>, <strong>Moto CABA/GBA</strong> o <strong>Transporte al interior</strong>.
                           </div>
                         );

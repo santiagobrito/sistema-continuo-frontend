@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { NewsletterForm } from "./NewsletterForm";
 
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5491133466497";
+// Footer: WhatsApp general (no asociado a un producto específico).
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_GENERAL || "5491130793862";
 
 export function Footer() {
   return (

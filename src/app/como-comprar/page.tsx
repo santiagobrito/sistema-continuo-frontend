@@ -41,7 +41,7 @@ export default function ComoComprarPage() {
         </div>
 
         <div className="mt-8 bg-green-50 border border-green-100 rounded-xl p-5 text-center">
-          <p className="text-sm text-green-800">¿Dudas? Escribinos por <a href="https://wa.me/5491133466497" target="_blank" rel="noopener noreferrer" className="font-semibold underline">WhatsApp</a> y te ayudamos en el momento.</p>
+          <p className="text-sm text-green-800">¿Dudas? Escribinos por <a href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_GENERAL || "5491130793862"}`} target="_blank" rel="noopener noreferrer" className="font-semibold underline">WhatsApp</a> y te ayudamos en el momento.</p>
         </div>
       </div>
     </main>
