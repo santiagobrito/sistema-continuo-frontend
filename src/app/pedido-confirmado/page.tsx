@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { GoogleCustomerReviews } from "./GoogleCustomerReviews";
 import { ClearCartOnSuccess } from "./ClearCartOnSuccess";
+import { PurchaseTracker } from "./PurchaseTracker";
 
 // MP manda algunos query params duplicados (ej. status=approved dos veces)
 // en back_urls, lo que Next.js entrega como string[]. Normalizamos a string.
@@ -32,6 +33,27 @@ async function fetchWcOrderStatus(orderId: string): Promise<string | null> {
   }
 }
 
+interface WcOrderSlim {
+  status: string;
+  total: string;
+  line_items: { product_id: number; variation_id?: number; quantity: number; total: string; name: string }[];
+  billing: { first_name?: string; last_name?: string; email?: string; phone?: string };
+}
+
+async function fetchWcOrderFull(orderId: string): Promise<WcOrderSlim | null> {
+  if (!orderId || !WP_URL || !WC_API_AUTH) return null;
+  try {
+    const res = await fetch(`${WP_URL}/wp-json/wc/v3/orders/${orderId}`, {
+      headers: { Authorization: `Basic ${WC_API_AUTH}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as WcOrderSlim;
+  } catch {
+    return null;
+  }
+}
+
 export default async function OrderConfirmedPage({ searchParams }: Props) {
   const sp = await searchParams;
   const order = first(sp.order);
@@ -46,17 +68,20 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
   // "pendiente" (amarillo) antes que "rechazado" (rojo) — la order real vive
   // en WC, nunca mostrar error si la compra quedó registrada.
   let effectiveStatus = status;
-  if (order && !effectiveStatus) {
-    const wcStatus = await fetchWcOrderStatus(order);
-    if (wcStatus === "processing" || wcStatus === "completed" || wcStatus === "preparing" || wcStatus === "sent-to-tactica" || wcStatus === "shipped" || wcStatus === "at-branch") {
-      effectiveStatus = "approved";
-    } else if (wcStatus === "failed" || wcStatus === "cancelled") {
-      effectiveStatus = "rejected";
-    } else if (wcStatus === "refunded") {
-      effectiveStatus = "refunded";
-    } else if (wcStatus) {
-      // pending, on-hold, o cualquier estado desconocido → asumir pendiente
-      effectiveStatus = "pending";
+  let orderFull: WcOrderSlim | null = null;
+  if (order) {
+    orderFull = await fetchWcOrderFull(order);
+    if (!effectiveStatus && orderFull) {
+      const wcStatus = orderFull.status;
+      if (wcStatus === "processing" || wcStatus === "completed" || wcStatus === "preparing" || wcStatus === "sent-to-tactica" || wcStatus === "shipped" || wcStatus === "at-branch") {
+        effectiveStatus = "approved";
+      } else if (wcStatus === "failed" || wcStatus === "cancelled") {
+        effectiveStatus = "rejected";
+      } else if (wcStatus === "refunded") {
+        effectiveStatus = "refunded";
+      } else if (wcStatus) {
+        effectiveStatus = "pending";
+      }
     }
   }
 
@@ -73,6 +98,22 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
   return (
     <main className="bg-gray-50 min-h-screen">
       <ClearCartOnSuccess shouldClear={shouldClearCart} />
+      {order && orderFull && (isApproved || isPending || isTransferencia || isEfectivo) && (
+        <PurchaseTracker
+          orderId={order}
+          total={parseFloat(orderFull.total) || 0}
+          items={orderFull.line_items.map((i) => ({
+            id: i.variation_id || i.product_id,
+            quantity: i.quantity,
+            price: parseFloat(i.total) / Math.max(1, i.quantity),
+            name: i.name,
+          }))}
+          email={orderFull.billing?.email}
+          firstName={orderFull.billing?.first_name}
+          lastName={orderFull.billing?.last_name}
+          phone={orderFull.billing?.phone}
+        />
+      )}
       <div className="max-w-xl mx-auto px-4 py-20 text-center">
         {isTransferencia ? (
           <>

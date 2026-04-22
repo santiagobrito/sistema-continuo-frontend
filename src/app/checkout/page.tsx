@@ -8,6 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import { getGclid } from "@/components/analytics/GclidCapture";
+import { fbPixelTrack } from "@/lib/fbpixel/client";
 
 // All shipping options with zone restrictions and descriptions.
 // Orden: opciones a domicilio/sucursal primero (mayor uso), retiro y transporte al final.
@@ -162,6 +163,20 @@ export default function CheckoutPage() {
 
   // Track abandoned cart when email is filled (fire once)
   const [cartTracked, setCartTracked] = useState(false);
+  // Meta Pixel InitiateCheckout — se dispara una vez al entrar al checkout con cart cargado.
+  const [checkoutFired, setCheckoutFired] = useState(false);
+  useEffect(() => {
+    if (checkoutFired || !cart || cart.items.length === 0) return;
+    fbPixelTrack("InitiateCheckout", {
+      content_ids: cart.items.map((i) => String(i.id)),
+      num_items: cart.items.reduce((s, i) => s + i.quantity, 0),
+      value: parseInt(cart.totals.total_items || "0"),
+      currency: "ARS",
+      contents: cart.items.map((i) => ({ id: i.id, quantity: i.quantity, item_price: parseInt(i.prices.price) })),
+    });
+    setCheckoutFired(true);
+  }, [cart, checkoutFired]);
+
   useEffect(() => {
     if (cartTracked || !formData.email || !formData.email.includes("@") || !cart) return;
     const timer = setTimeout(() => {

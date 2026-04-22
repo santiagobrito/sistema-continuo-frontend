@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProductGallery } from "./ProductGallery";
 import { ProductActions } from "./ProductActions";
 import { ShortDescription } from "./ShortDescription";
 import type { Product, ProductVariation, SCImage } from "@/lib/wordpress/types";
 import Link from "next/link";
+import { fbPixelTrack } from "@/lib/fbpixel/client";
 
 /**
  * Client wrapper that connects the gallery and variation selector.
@@ -20,6 +21,17 @@ export function ProductDetail({
   productUrl: string;
 }) {
   const [variationImage, setVariationImage] = useState<SCImage | null>(null);
+
+  useEffect(() => {
+    fbPixelTrack("ViewContent", {
+      content_ids: [String(product.id)],
+      content_name: product.name,
+      content_type: "product",
+      value: Number(product.price) || 0,
+      currency: "ARS",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id]);
 
   function handleVariationChange(variation: ProductVariation | null) {
     if (variation?.image) {

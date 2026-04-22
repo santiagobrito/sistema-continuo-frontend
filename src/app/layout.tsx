@@ -8,6 +8,7 @@ import { Footer } from "@/components/layout/Footer";
 import { WhatsAppFloat } from "@/components/layout/WhatsAppFloat";
 import { MerchantWidget } from "@/components/analytics/MerchantWidget";
 import { GTMHead, GTMBody } from "@/components/analytics/GTMProvider";
+import { FBPixel } from "@/components/analytics/FBPixelProvider";
 import { GclidCapture } from "@/components/analytics/GclidCapture";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { generateOrganizationSchema, generateWebSiteSchema } from "@/lib/seo/structured-data";
@@ -52,6 +53,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col font-sans">
         <GTMBody />
+        <FBPixel />
         <GclidCapture />
         <JsonLd data={[generateOrganizationSchema(), generateWebSiteSchema()]} />
         <AuthProvider>
