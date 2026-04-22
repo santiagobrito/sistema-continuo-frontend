@@ -10,6 +10,68 @@ import { NextRequest, NextResponse } from "next/server";
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const STORE_API_BASE = `${WP_URL}/wp-json/wc/store/v1`;
 
+// WC Store API devuelve títulos con HTML entities sin decodificar (ej "40&#215;60"
+// en nombres de productos). El sidecart y otros consumers los muestran tal cual.
+// Decodificamos acá para normalizar antes de que lleguen al cliente.
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: " ",
+  ndash: "–",
+  mdash: "—",
+  hellip: "…",
+  laquo: "«",
+  raquo: "»",
+  copy: "©",
+  reg: "®",
+  trade: "™",
+  times: "×",
+  divide: "÷",
+  deg: "°",
+};
+
+function decodeHtmlEntities(str: string): string {
+  return str
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&([a-zA-Z]+);/g, (m, name) => NAMED_ENTITIES[name.toLowerCase()] ?? m);
+}
+
+// Campos de texto legible donde las entities molestan visualmente.
+// No tocamos HTML real (descriptions largas en body) salvo en short_description
+// y name/title que son plain-text para el UI.
+const DECODE_FIELDS = new Set([
+  "name",
+  "title",
+  "label",
+  "sku",
+  "short_description",
+  "permalink",
+]);
+
+function decodeInPlace(node: unknown): unknown {
+  if (Array.isArray(node)) {
+    for (let i = 0; i < node.length; i++) node[i] = decodeInPlace(node[i]);
+    return node;
+  }
+  if (node && typeof node === "object") {
+    const obj = node as Record<string, unknown>;
+    for (const k of Object.keys(obj)) {
+      const v = obj[k];
+      if (typeof v === "string" && DECODE_FIELDS.has(k)) {
+        obj[k] = decodeHtmlEntities(v);
+      } else if (v && typeof v === "object") {
+        obj[k] = decodeInPlace(v);
+      }
+    }
+    return obj;
+  }
+  return node;
+}
+
 async function proxyRequest(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
@@ -47,7 +109,19 @@ async function proxyRequest(
   }
 
   const res = await fetch(targetUrl, fetchOptions);
-  const data = await res.text();
+  let data = await res.text();
+
+  // Decodificar HTML entities en fields de texto legible antes de responder.
+  // Solo intentamos parsear/decodificar si parece JSON (content-type o primer char).
+  const contentType = res.headers.get("content-type") || "";
+  if (contentType.includes("application/json") || data.trim().startsWith("{") || data.trim().startsWith("[")) {
+    try {
+      const parsed = JSON.parse(data);
+      data = JSON.stringify(decodeInPlace(parsed));
+    } catch {
+      // Si no es JSON válido, devolver el body crudo intacto.
+    }
+  }
 
   const responseHeaders = new Headers();
 
