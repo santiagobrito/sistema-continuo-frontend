@@ -31,36 +31,36 @@ const ALL_SHIPPING_OPTIONS = [
   {
     id: "moto_caba",
     label: "Moto CABA",
-    price: 4836,
+    price: 4836.85,
     zones: ["C"],
-    desc: "Envío en moto a domicilio dentro de CABA. Costo por 1 bulto. Si no entra en moto, tendrá recargo.",
+    desc: "Envío en moto a domicilio dentro de CABA. Precio por bulto — según el tamaño/peso real del pedido podemos ajustar el valor. Si no entra en moto, tendrá recargo.",
     time: "Despacho en 24-48hs hábiles",
     minOrder: 25000,
   },
   {
     id: "moto_gba1",
     label: "Moto GBA Zona 1",
-    price: 7728,
+    price: 7728.45,
     zones: ["B"],
-    desc: "San Fernando, San Isidro, San Martín, Vicente López, Hurlingham, Ituzaingó, Morón, 3 de Febrero, La Matanza Norte, Lomas de Zamora, Lanús, Avellaneda.",
+    desc: "San Fernando, San Isidro, San Martín, Vicente López, Hurlingham, Ituzaingó, Morón, 3 de Febrero, La Matanza Norte, Lomas de Zamora, Lanús, Avellaneda. Precio por bulto — según el pedido puede ajustarse.",
     time: "Despacho en 24-48hs hábiles",
     minOrder: 25000,
   },
   {
     id: "moto_gba2",
     label: "Moto GBA Zona 2",
-    price: 10725,
+    price: 10725.20,
     zones: ["B"],
-    desc: "Tigre, Malvinas Argentinas, José C. Paz, San Miguel, Moreno, Merlo, Ezeiza, Esteban Echeverría, Almirante Brown, Florencio Varela, Berazategui, Quilmes, Escobar, Pilar, La Plata, Berisso.",
+    desc: "Tigre, Malvinas Argentinas, José C. Paz, San Miguel, Moreno, Merlo, Ezeiza, Esteban Echeverría, Almirante Brown, Florencio Varela, Berazategui, Quilmes, Escobar, Pilar, La Plata, Berisso. Precio por bulto — según el pedido puede ajustarse.",
     time: "Despacho en 24-48hs hábiles",
     minOrder: 25000,
   },
   {
     id: "transporte",
-    label: "Transporte al interior",
-    price: 3061,
+    label: "Transporte al interior (micro)",
+    price: 3300,
     zones: ["interior"],
-    desc: "Se cobra costo de despacho ($3.061). El flete del transporte se abona al retirar en destino (terminal o sucursal). Indicar transporte de preferencia.",
+    desc: "Se cobra costo de despacho ($3.300) por bulto — según el pedido puede ajustarse. El flete del transporte se abona al retirar en destino (terminal o sucursal). Indicar transporte de preferencia.",
     time: "Despacho en 3 días hábiles",
   },
   {
@@ -129,6 +129,7 @@ export default function CheckoutPage() {
         sucursal?: { total: number; warning?: string };
         service?: string;
         error?: string;
+        hasZeroWeight?: boolean;
       }
   >(null);
   const mpCheckoutRef = useRef<HTMLDivElement>(null);
@@ -226,6 +227,7 @@ export default function CheckoutPage() {
           domicilio: dom ? { total: dom.total, warning: dom.warning } : undefined,
           sucursal: suc ? { total: suc.total, warning: suc.warning } : undefined,
           service: data.service,
+          hasZeroWeight: Boolean(data.hasZeroWeight),
         });
       } catch (err) {
         setPaqarQuote({
@@ -289,18 +291,27 @@ export default function CheckoutPage() {
     return basePrice;
   }
 
-  // Filter shipping options based on selected province
+  // Si PAQ.AR detectó que algún ítem no tiene peso cargado, Correo no es viable
+  // (producto demasiado pesado/grande para envío estándar — requiere coordinación manual).
+  const hasZeroWeightItem =
+    paqarQuote && !("loading" in paqarQuote && paqarQuote.loading)
+      ? Boolean((paqarQuote as { hasZeroWeight?: boolean }).hasZeroWeight)
+      : false;
+
+  // Filter shipping options based on selected province + product constraints.
   const availableShipping = useMemo(() => {
     const province = formData.state;
     if (!province) return [];
 
     return ALL_SHIPPING_OPTIONS.filter((opt) => {
+      const isCorreo = opt.id === "correo_domicilio" || opt.id === "correo_sucursal";
+      if (isCorreo && hasZeroWeightItem) return false;
       if (opt.zones.includes("all")) return true;
       if (opt.zones.includes(province)) return true;
       if (opt.zones.includes("interior") && !["C", "B"].includes(province)) return true;
       return false;
     });
-  }, [formData.state]);
+  }, [formData.state, hasZeroWeightItem]);
 
   // Auto-select first available shipping when province changes
   useMemo(() => {
@@ -520,13 +531,24 @@ export default function CheckoutPage() {
                       Métodos de envío disponibles para {PROVINCIAS.find(p => p.code === formData.state)?.name}
                     </p>
 
-                    {/* Aviso si Correo no es viable por peso de algún bulto */}
+                    {/* Aviso cuando hay productos sin peso cargado (demasiado grandes/pesados
+                        para Correo Argentino — requieren coordinación manual). */}
+                    {hasZeroWeightItem && (
+                      <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                        <strong>Envío por Correo Argentino no disponible:</strong> por dimensiones y peso, alguno de los productos de tu pedido no se puede enviar por Correo Argentino.
+                        Para coordinar el envío contactanos por{" "}
+                        <a href="https://wa.me/5491133466497" target="_blank" rel="noopener noreferrer" className="underline font-semibold">WhatsApp</a>.
+                        Mientras tanto podés elegir <strong>Retiro en local</strong>, <strong>Moto CABA/GBA</strong> o <strong>Transporte al interior (micro)</strong>.
+                      </div>
+                    )}
+
+                    {/* Aviso si Correo no es viable por peso de algún bulto (>50kg reportado por el grid) */}
                     {(() => {
                       const w = paqarQuote && !("loading" in paqarQuote && paqarQuote.loading)
                         ? ((paqarQuote as { domicilio?: { warning?: string } }).domicilio?.warning ||
                            (paqarQuote as { sucursal?: { warning?: string } }).sucursal?.warning)
                         : undefined;
-                      if (w && /supera|m.ximo/i.test(w)) {
+                      if (w && /supera|m.ximo/i.test(w) && !hasZeroWeightItem) {
                         return (
                           <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
                             <strong>Pedido pesado:</strong> uno o más productos superan el máximo de Correo Argentino (50 kg/bulto).

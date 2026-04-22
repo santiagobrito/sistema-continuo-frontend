@@ -47,11 +47,13 @@ interface DimsResponse {
  * Si un item no tiene datos en WP (o el endpoint falla), se mantienen los
  * valores que vinieron del cliente (que normalmente son fallbacks).
  */
-async function enrichItemsWithDims(items: SplitItem[]): Promise<SplitItem[]> {
-  if (!WP_URL || items.length === 0) return items;
+async function enrichItemsWithDims(
+  items: SplitItem[]
+): Promise<{ items: SplitItem[]; zeroWeightIds: string[] }> {
+  if (!WP_URL || items.length === 0) return { items, zeroWeightIds: [] };
 
   const ids = Array.from(new Set(items.map((it) => it.id).filter(Boolean)));
-  if (ids.length === 0) return items;
+  if (ids.length === 0) return { items, zeroWeightIds: [] };
 
   try {
     const res = await fetch(
@@ -60,26 +62,33 @@ async function enrichItemsWithDims(items: SplitItem[]): Promise<SplitItem[]> {
     );
     if (!res.ok) {
       console.warn("[paqar/quote] product-dims fetch failed:", res.status);
-      return items;
+      return { items, zeroWeightIds: [] };
     }
     const data = (await res.json()) as DimsResponse;
     const dims = data.dims || {};
 
-    return items.map((it) => {
+    const zeroWeightIds: string[] = [];
+    const enriched = items.map((it) => {
       const d = dims[it.id];
       if (!d) return it;
+      const wp_weight_kg = Number(d.weight || 0);
+      // Si WP no tiene peso cargado (null/0), marcamos el item — no podemos
+      // enviar por Correo Argentino en esta condición.
+      if (!wp_weight_kg) zeroWeightIds.push(it.id);
       return {
         ...it,
-        // WC guarda peso en kg → convertir a gramos. Si null/0, dejar fallback.
-        weight: d.weight ? Number(d.weight) * 1000 : it.weight,
+        // WC guarda peso en kg → convertir a gramos. Si null/0, dejar fallback
+        // para que el resto del flow (moto, transporte) siga pudiendo cotizar.
+        weight: wp_weight_kg ? wp_weight_kg * 1000 : it.weight,
         height: d.height ? Number(d.height) : it.height,
         width:  d.width  ? Number(d.width)  : it.width,
         depth:  d.length ? Number(d.length) : it.depth,
       };
     });
+    return { items: enriched, zeroWeightIds };
   } catch (err) {
     console.warn("[paqar/quote] enrich error:", err);
-    return items;
+    return { items, zeroWeightIds: [] };
   }
 }
 
@@ -116,7 +125,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const enrichedItems = await enrichItemsWithDims(items);
+    const { items: enrichedItems, zeroWeightIds } = await enrichItemsWithDims(items);
     const bundles = splitIntoBundles(enrichedItems);
     const quote = quoteShipment({
       bundles,
@@ -131,6 +140,8 @@ export async function POST(request: NextRequest) {
       service: quote.service,
       gridVersion: quote.gridVersion,
       bundles: bundles.length,
+      hasZeroWeight: zeroWeightIds.length > 0,
+      zeroWeightIds,
       options: quote.options.map((o) => ({
         deliveryType: o.deliveryType,
         total: o.total,
