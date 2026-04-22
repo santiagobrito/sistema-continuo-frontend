@@ -172,7 +172,7 @@ export default function CheckoutPage() {
           email: formData.email,
           name: `${formData.first_name} ${formData.last_name}`.trim(),
           phone: formData.phone,
-          items: cart.items.map((i) => ({ name: i.name, quantity: i.quantity, price: parseInt(i.prices.price) })),
+          items: cart.items.map((i) => ({ id: i.id, sku: i.sku, name: i.name, quantity: i.quantity, price: parseInt(i.prices.price) })),
           total: parseInt(cart.totals.total_items || "0"),
         }),
       }).catch(() => {});

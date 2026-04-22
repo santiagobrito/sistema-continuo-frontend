@@ -35,8 +35,8 @@ export async function subscribeNewsletter(email: string, name?: string) {
     body: JSON.stringify({
       email,
       attributes: {
-        FIRSTNAME: firstName || "",
-        LASTNAME: rest.join(" ") || "",
+        NOMBRE: firstName || "",
+        APELLIDOS: rest.join(" ") || "",
       },
       listIds: [NEWSLETTER_LIST_ID],
       updateEnabled: true,
@@ -63,6 +63,7 @@ export async function trackAbandonedCart(
   phone: string,
   cartItems: { name: string; quantity: number; price: number }[],
   cartTotal: number,
+  cartUrl?: string,
 ) {
   const [firstName, ...rest] = name.split(" ");
 
@@ -72,12 +73,13 @@ export async function trackAbandonedCart(
     body: JSON.stringify({
       email,
       attributes: {
-        FIRSTNAME: firstName || "",
-        LASTNAME: rest.join(" ") || "",
+        NOMBRE: firstName || "",
+        APELLIDOS: rest.join(" ") || "",
         SMS: phone || "",
         CART_TOTAL: cartTotal,
         CART_ITEMS: cartItems.map((i) => `${i.name} x${i.quantity}`).join(", "),
-        CART_DATE: new Date().toISOString(),
+        CART_DAT: new Date().toISOString(),
+        ...(cartUrl ? { CART_URL: cartUrl } : {}),
       },
       listIds: [ABANDONED_CART_LIST_ID],
       updateEnabled: true,
@@ -115,8 +117,8 @@ export async function updateBrevoContact(
   },
 ) {
   const attributes: Record<string, string | number> = {};
-  if (data.firstName !== undefined) attributes.FIRSTNAME = data.firstName;
-  if (data.lastName !== undefined) attributes.LASTNAME = data.lastName;
+  if (data.firstName !== undefined) attributes.NOMBRE = data.firstName;
+  if (data.lastName !== undefined) attributes.APELLIDOS = data.lastName;
   if (data.phone !== undefined) attributes.SMS = data.phone;
   if (data.birthday !== undefined) attributes.BIRTHDAY = data.birthday;
 
