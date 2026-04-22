@@ -196,8 +196,27 @@ async function ProductView({ product, parentSlug }: { product: Product; parentSl
           {product.sku && <div className="flex justify-between py-2.5 px-3 bg-gray-50 rounded-lg"><span className="text-sm text-gray-500">SKU</span><span className="text-sm font-medium text-gray-900">{product.sku}</span></div>}
           {product.barcode && <div className="flex justify-between py-2.5 px-3 bg-gray-50 rounded-lg"><span className="text-sm text-gray-500">EAN</span><span className="text-sm font-medium text-gray-900">{product.barcode}</span></div>}
           {product.marca && <div className="flex justify-between py-2.5 px-3 bg-gray-50 rounded-lg"><span className="text-sm text-gray-500">Marca</span><span className="text-sm font-medium text-gray-900">{product.marca}</span></div>}
-          {product.weight && <div className="flex justify-between py-2.5 px-3 bg-gray-50 rounded-lg"><span className="text-sm text-gray-500">Peso</span><span className="text-sm font-medium text-gray-900">{product.weight} kg</span></div>}
-          {product.dimensions?.length && <div className="flex justify-between py-2.5 px-3 bg-gray-50 rounded-lg"><span className="text-sm text-gray-500">Dimensiones</span><span className="text-sm font-medium text-gray-900">{product.dimensions.length} x {product.dimensions.width} x {product.dimensions.height} cm</span></div>}
+          {(() => {
+            const w = Number(product.weight || 0);
+            return (
+              <div className="flex justify-between py-2.5 px-3 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-500">Peso</span>
+                <span className="text-sm font-medium text-gray-900">{w > 0 ? `${product.weight} kg` : "Sin especificar"}</span>
+              </div>
+            );
+          })()}
+          {(() => {
+            const l = Number(product.dimensions?.length || 0);
+            const w = Number(product.dimensions?.width  || 0);
+            const h = Number(product.dimensions?.height || 0);
+            const allSet = l > 0 && w > 0 && h > 0;
+            return (
+              <div className="flex justify-between py-2.5 px-3 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-500">Dimensiones</span>
+                <span className="text-sm font-medium text-gray-900">{allSet ? `${l} x ${w} x ${h} cm` : "Sin especificar"}</span>
+              </div>
+            );
+          })()}
           {product.attributes?.filter(a => !a.variation).map((attr) => (
             <div key={attr.slug} className="flex justify-between py-2.5 px-3 bg-gray-50 rounded-lg">
               <span className="text-sm text-gray-500">{attr.name}</span>
