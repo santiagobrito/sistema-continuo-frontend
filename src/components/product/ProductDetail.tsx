@@ -7,6 +7,7 @@ import { ShortDescription } from "./ShortDescription";
 import type { Product, ProductVariation, SCImage } from "@/lib/wordpress/types";
 import Link from "next/link";
 import { fbPixelTrack } from "@/lib/fbpixel/client";
+import { trackViewItem } from "@/lib/analytics/gtm";
 
 /**
  * Client wrapper that connects the gallery and variation selector.
@@ -23,12 +24,20 @@ export function ProductDetail({
   const [variationImage, setVariationImage] = useState<SCImage | null>(null);
 
   useEffect(() => {
+    const price = Number(product.price) || 0;
     fbPixelTrack("ViewContent", {
       content_ids: [String(product.id)],
       content_name: product.name,
       content_type: "product",
-      value: Number(product.price) || 0,
+      value: price,
       currency: "ARS",
+    });
+    trackViewItem({
+      item_id: String(product.id),
+      item_name: product.name,
+      item_brand: product.marca,
+      price,
+      quantity: 1,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);

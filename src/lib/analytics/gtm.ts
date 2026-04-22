@@ -98,7 +98,33 @@ export function trackAddShippingInfo(items: GTMItem[], shippingTier: string, val
   });
 }
 
-export function trackPurchase(transactionId: string, items: GTMItem[], value: number, shipping: number) {
+export interface PurchaseUserData {
+  email?: string;
+  phone?: string;
+  first_name?: string;
+  last_name?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    region?: string;
+    postal_code?: string;
+    country?: string;
+  };
+}
+
+/**
+ * Purchase event con user_data para Enhanced Conversions (Google Ads).
+ * El tag de Ads Conversion en GTM lee `user_data.*` y lo pasa como
+ * "User-Provided Data" (Google hashea server-side; no necesitamos hashear acá).
+ */
+export function trackPurchase(
+  transactionId: string,
+  items: GTMItem[],
+  value: number,
+  shipping: number,
+  userData?: PurchaseUserData,
+  coupon?: string,
+) {
   push({
     event: "purchase",
     ecommerce: {
@@ -106,8 +132,10 @@ export function trackPurchase(transactionId: string, items: GTMItem[], value: nu
       currency: "ARS",
       value,
       shipping,
+      coupon: coupon || "",
       items,
     },
+    user_data: userData || {},
   });
 }
 

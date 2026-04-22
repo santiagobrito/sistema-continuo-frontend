@@ -9,6 +9,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { getGclid } from "@/components/analytics/GclidCapture";
 import { fbPixelTrack } from "@/lib/fbpixel/client";
+import { trackBeginCheckout } from "@/lib/analytics/gtm";
 
 // All shipping options with zone restrictions and descriptions.
 // Orden: opciones a domicilio/sucursal primero (mayor uso), retiro y transporte al final.
@@ -167,13 +168,23 @@ export default function CheckoutPage() {
   const [checkoutFired, setCheckoutFired] = useState(false);
   useEffect(() => {
     if (checkoutFired || !cart || cart.items.length === 0) return;
+    const totalValue = parseInt(cart.totals.total_items || "0");
     fbPixelTrack("InitiateCheckout", {
       content_ids: cart.items.map((i) => String(i.id)),
       num_items: cart.items.reduce((s, i) => s + i.quantity, 0),
-      value: parseInt(cart.totals.total_items || "0"),
+      value: totalValue,
       currency: "ARS",
       contents: cart.items.map((i) => ({ id: i.id, quantity: i.quantity, item_price: parseInt(i.prices.price) })),
     });
+    trackBeginCheckout(
+      cart.items.map((i) => ({
+        item_id: String(i.id),
+        item_name: i.name,
+        price: parseInt(i.prices.price),
+        quantity: i.quantity,
+      })),
+      totalValue,
+    );
     setCheckoutFired(true);
   }, [cart, checkoutFired]);
 

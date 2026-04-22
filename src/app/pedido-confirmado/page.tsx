@@ -36,8 +36,20 @@ async function fetchWcOrderStatus(orderId: string): Promise<string | null> {
 interface WcOrderSlim {
   status: string;
   total: string;
+  shipping_total?: string;
   line_items: { product_id: number; variation_id?: number; quantity: number; total: string; name: string }[];
-  billing: { first_name?: string; last_name?: string; email?: string; phone?: string };
+  billing: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+    address_1?: string;
+    city?: string;
+    state?: string;
+    postcode?: string;
+    country?: string;
+  };
+  coupon_lines?: { code: string }[];
 }
 
 async function fetchWcOrderFull(orderId: string): Promise<WcOrderSlim | null> {
@@ -102,6 +114,8 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
         <PurchaseTracker
           orderId={order}
           total={parseFloat(orderFull.total) || 0}
+          shipping={parseFloat(orderFull.shipping_total || "0") || 0}
+          coupon={orderFull.coupon_lines?.[0]?.code}
           items={orderFull.line_items.map((i) => ({
             id: i.variation_id || i.product_id,
             quantity: i.quantity,
@@ -112,6 +126,13 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
           firstName={orderFull.billing?.first_name}
           lastName={orderFull.billing?.last_name}
           phone={orderFull.billing?.phone}
+          address={{
+            street: orderFull.billing?.address_1,
+            city: orderFull.billing?.city,
+            region: orderFull.billing?.state,
+            postal_code: orderFull.billing?.postcode,
+            country: orderFull.billing?.country,
+          }}
         />
       )}
       <div className="max-w-xl mx-auto px-4 py-20 text-center">

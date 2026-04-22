@@ -18,6 +18,7 @@ import {
 } from "@/lib/woocommerce/cart";
 import { CartDrawer } from "./CartDrawer";
 import { fbPixelTrack } from "@/lib/fbpixel/client";
+import { trackAddToCart } from "@/lib/analytics/gtm";
 
 interface CartContextType {
   cart: Cart | null;
@@ -76,13 +77,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
         // Meta Pixel — AddToCart (el item recién agregado es el último en data.items)
         const added = data.items.find((i) => i.id === (variationId || productId)) || data.items[data.items.length - 1];
         if (added) {
+          const price = Number(added.prices?.price || 0);
           fbPixelTrack("AddToCart", {
             content_ids: [String(added.id)],
             content_name: added.name,
             content_type: variationId ? "product_group" : "product",
-            value: Number(added.prices?.price || 0) * quantity,
+            value: price * quantity,
             currency: "ARS",
-            contents: [{ id: added.id, quantity, item_price: Number(added.prices?.price || 0) }],
+            contents: [{ id: added.id, quantity, item_price: price }],
+          });
+          trackAddToCart({
+            item_id: String(added.id),
+            item_name: added.name,
+            price,
+            quantity,
           });
         }
       } finally {

@@ -2,15 +2,25 @@
 
 import { useEffect } from "react";
 import { fbPixelTrack } from "@/lib/fbpixel/client";
+import { trackPurchase } from "@/lib/analytics/gtm";
 
 interface Props {
   orderId: string;
   total: number;
+  shipping?: number;
+  coupon?: string;
   items: { id: number; quantity: number; price: number; name: string }[];
   email?: string;
   firstName?: string;
   lastName?: string;
   phone?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    region?: string;
+    postal_code?: string;
+    country?: string;
+  };
 }
 
 /**
@@ -50,7 +60,29 @@ export function PurchaseTracker(props: Props) {
         last_name: props.lastName,
       },
     );
-  }, [props.orderId, props.total, props.items, props.email, props.phone, props.firstName, props.lastName]);
+
+    // GA4 / Google Ads — dataLayer push para que GTM dispare las conversiones
+    // (incluye user_data para Enhanced Conversions).
+    trackPurchase(
+      props.orderId,
+      props.items.map((i) => ({
+        item_id: String(i.id),
+        item_name: i.name,
+        price: i.price,
+        quantity: i.quantity,
+      })),
+      props.total,
+      props.shipping || 0,
+      {
+        email: props.email,
+        phone: props.phone,
+        first_name: props.firstName,
+        last_name: props.lastName,
+        address: props.address,
+      },
+      props.coupon,
+    );
+  }, [props.orderId, props.total, props.items, props.email, props.phone, props.firstName, props.lastName, props.shipping, props.coupon, props.address]);
 
   return null;
 }
