@@ -7,8 +7,13 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+// Fuerza handler dinámico — sin esto Next.js puede cachear respuestas GET.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const STORE_API_BASE = `${WP_URL}/wp-json/wc/store/v1`;
+const DECODE_VERSION = "v1-2026-04-22";
 
 // WC Store API devuelve títulos con HTML entities sin decodificar (ej "40&#215;60"
 // en nombres de productos). El sidecart y otros consumers los muestran tal cual.
@@ -138,6 +143,7 @@ async function proxyRequest(
   }
 
   responseHeaders.set("Content-Type", "application/json");
+  responseHeaders.set("X-SC-Decode", DECODE_VERSION);
 
   return new NextResponse(data, {
     status: res.status,
