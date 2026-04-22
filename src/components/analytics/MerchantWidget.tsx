@@ -1,5 +1,6 @@
 "use client";
 
+// Deferred load of Google Customer Reviews badge — 2026-04-22 perf pass.
 import Script from "next/script";
 import { useEffect, useState } from "react";
 
