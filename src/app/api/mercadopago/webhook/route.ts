@@ -16,7 +16,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getPayment } from "@/lib/mercadopago/sdk";
+import { getPayment, type MPPayment } from "@/lib/mercadopago/sdk";
 import crypto from "crypto";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
@@ -89,11 +89,140 @@ function validateMpSignature(
   }
 }
 
-async function updateOrderStatus(orderId: string, status: string, transactionId?: string) {
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  visa: "Visa",
+  master: "Mastercard",
+  amex: "American Express",
+  cabal: "Cabal",
+  naranja: "Naranja",
+  argencard: "Argencard",
+  diners: "Diners",
+  maestro: "Maestro",
+  debvisa: "Visa Débito",
+  debmaster: "Mastercard Débito",
+  debcabal: "Cabal Débito",
+  account_money: "Dinero en cuenta MP",
+  rapipago: "Rapipago",
+  pagofacil: "Pago Fácil",
+};
+
+const PAYMENT_TYPE_LABELS: Record<string, string> = {
+  credit_card: "Tarjeta de crédito",
+  debit_card: "Tarjeta de débito",
+  ticket: "Efectivo",
+  bank_transfer: "Transferencia",
+  atm: "Cajero",
+  account_money: "Dinero en cuenta",
+  digital_wallet: "Billetera digital",
+};
+
+function formatArs(amount: number | undefined): string {
+  if (amount === undefined || amount === null) return "—";
+  return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 2 }).format(amount);
+}
+
+function buildMpMeta(payment: MPPayment): Array<{ key: string; value: string }> {
+  const meta: Array<{ key: string; value: string }> = [
+    { key: "_mp_payment_id", value: String(payment.id) },
+    { key: "_mp_status", value: payment.status || "" },
+    { key: "_mp_status_detail", value: payment.status_detail || "" },
+    { key: "_mp_payment_method", value: payment.payment_method_id || "" },
+    { key: "_mp_payment_type", value: payment.payment_type_id || "" },
+    { key: "_mp_installments", value: String(payment.installments ?? 1) },
+    { key: "_mp_transaction_amount", value: String(payment.transaction_amount ?? 0) },
+    { key: "_mp_net_amount", value: String(payment.net_amount ?? payment.transaction_details?.net_received_amount ?? payment.transaction_amount ?? 0) },
+    { key: "_mp_currency", value: payment.currency_id || "ARS" },
+    { key: "_mp_date_approved", value: payment.date_approved || "" },
+    { key: "_mp_date_created", value: payment.date_created || "" },
+    { key: "_mp_authorization_code", value: payment.authorization_code || "" },
+    { key: "_mp_statement_descriptor", value: payment.statement_descriptor || "" },
+  ];
+
+  if (payment.card) {
+    if (payment.card.last_four_digits) meta.push({ key: "_mp_card_last_four", value: payment.card.last_four_digits });
+    if (payment.card.first_six_digits) meta.push({ key: "_mp_card_first_six", value: payment.card.first_six_digits });
+    if (payment.card.cardholder?.name) meta.push({ key: "_mp_cardholder_name", value: payment.card.cardholder.name });
+    if (payment.card.cardholder?.identification?.number) {
+      meta.push({ key: "_mp_cardholder_doc", value: `${payment.card.cardholder.identification.type || ""} ${payment.card.cardholder.identification.number}`.trim() });
+    }
+  }
+
+  if (payment.fee_details?.length) {
+    const totalFees = payment.fee_details.reduce((s, f) => s + (f.amount || 0), 0);
+    meta.push({ key: "_mp_fee_total", value: String(totalFees) });
+  }
+
+  if (payment.transaction_details?.installment_amount) {
+    meta.push({ key: "_mp_installment_amount", value: String(payment.transaction_details.installment_amount) });
+  }
+
+  return meta;
+}
+
+function buildMpNote(payment: MPPayment): string {
+  const lines: string[] = [];
+  lines.push(`MercadoPago — Transacción #${payment.id}`);
+  lines.push(`Estado: ${payment.status}${payment.status_detail ? ` (${payment.status_detail})` : ""}`);
+
+  const methodLabel = PAYMENT_METHOD_LABELS[payment.payment_method_id || ""] || payment.payment_method_id || "—";
+  const typeLabel = PAYMENT_TYPE_LABELS[payment.payment_type_id || ""] || payment.payment_type_id || "";
+  lines.push(`Método: ${methodLabel}${typeLabel ? ` (${typeLabel})` : ""}`);
+
+  if (payment.card?.last_four_digits) {
+    const holder = payment.card.cardholder?.name ? ` — titular ${payment.card.cardholder.name}` : "";
+    lines.push(`Tarjeta: •••• ${payment.card.last_four_digits}${holder}`);
+  }
+
+  if ((payment.installments ?? 1) > 1) {
+    const instAmt = payment.transaction_details?.installment_amount;
+    lines.push(`Cuotas: ${payment.installments}${instAmt ? ` × ${formatArs(instAmt)}` : ""}`);
+  }
+
+  lines.push(`Monto cobrado: ${formatArs(payment.transaction_amount)}`);
+
+  const fees = payment.fee_details?.reduce((s, f) => s + (f.amount || 0), 0) || 0;
+  if (fees > 0) {
+    lines.push(`Comisión MP: ${formatArs(fees)}`);
+  }
+  const net = payment.net_amount ?? payment.transaction_details?.net_received_amount;
+  if (net !== undefined) {
+    lines.push(`Neto recibido: ${formatArs(net)}`);
+  }
+
+  if (payment.authorization_code) {
+    lines.push(`Código autorización: ${payment.authorization_code}`);
+  }
+  if (payment.date_approved) {
+    lines.push(`Aprobado: ${new Date(payment.date_approved).toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" })}`);
+  }
+
+  return lines.join("\n");
+}
+
+async function addOrderNote(orderId: string, note: string): Promise<void> {
+  try {
+    await fetch(`${WP_URL}/wp-json/wc/v3/orders/${orderId}/notes`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${WC_API_AUTH}`,
+      },
+      body: JSON.stringify({ note, customer_note: false }),
+    });
+  } catch (err) {
+    console.error("[MP webhook] failed to add order note:", err);
+  }
+}
+
+async function updateOrderStatus(orderId: string, status: string, payment?: MPPayment): Promise<void> {
   const body: Record<string, unknown> = { status };
-  if (transactionId) {
-    body.transaction_id = transactionId;
-    body.meta_data = [{ key: "_mp_payment_id", value: transactionId }];
+
+  if (payment) {
+    body.transaction_id = String(payment.id);
+    body.meta_data = buildMpMeta(payment);
+    if (payment.payment_method_id) {
+      body.payment_method_title = PAYMENT_METHOD_LABELS[payment.payment_method_id] || payment.payment_method_id;
+    }
   }
 
   await fetch(`${WP_URL}/wp-json/wc/v3/orders/${orderId}`, {
@@ -104,6 +233,12 @@ async function updateOrderStatus(orderId: string, status: string, transactionId?
     },
     body: JSON.stringify(body),
   });
+
+  // Only add the detailed note when the payment is a terminal state; avoids
+  // spamming notes every time MP sends an update.
+  if (payment && (payment.status === "approved" || payment.status === "rejected" || payment.status === "refunded")) {
+    await addOrderNote(orderId, buildMpNote(payment));
+  }
 }
 
 interface WcOrderMeta {
@@ -168,14 +303,22 @@ export async function POST(request: NextRequest) {
 
       if (!orderId) return NextResponse.json({ ok: true });
 
+      // Idempotencia: MP reintenta webhooks. Si ya registramos este payment_id
+      // con el mismo status, no hacemos nada (ni update, ni nota duplicada).
+      const currentMeta = await getOrderMeta(orderId);
+      const savedPaymentId = readMeta(currentMeta, "_mp_payment_id");
+      const savedStatus = readMeta(currentMeta, "_mp_status");
+      if (savedPaymentId === String(payment.id) && savedStatus === payment.status) {
+        return NextResponse.json({ ok: true, skipped: "duplicate" });
+      }
+
       switch (payment.status) {
         case "approved":
-          await updateOrderStatus(orderId, "processing", String(payment.id));
+          await updateOrderStatus(orderId, "processing", payment);
           {
-            const meta = await getOrderMeta(orderId);
-            const shippingMethod = readMeta(meta, "_sc_shipping_method_id");
-            const agencyId = readMeta(meta, "_sc_paqar_agency_id");
-            const alreadyCreated = readMeta(meta, "_sc_paqar_created_at");
+            const shippingMethod = readMeta(currentMeta, "_sc_shipping_method_id");
+            const agencyId = readMeta(currentMeta, "_sc_paqar_agency_id");
+            const alreadyCreated = readMeta(currentMeta, "_sc_paqar_created_at");
             if (
               !alreadyCreated &&
               shippingMethod &&
@@ -186,14 +329,14 @@ export async function POST(request: NextRequest) {
           }
           break;
         case "rejected":
-          await updateOrderStatus(orderId, "failed", String(payment.id));
+          await updateOrderStatus(orderId, "failed", payment);
           break;
         case "pending":
         case "in_process":
-          await updateOrderStatus(orderId, "on-hold", String(payment.id));
+          await updateOrderStatus(orderId, "on-hold", payment);
           break;
         case "refunded":
-          await updateOrderStatus(orderId, "refunded", String(payment.id));
+          await updateOrderStatus(orderId, "refunded", payment);
           break;
       }
     }

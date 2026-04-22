@@ -53,7 +53,49 @@ export async function createPreference(options: {
   return res.json();
 }
 
-export async function getPayment(paymentId: string) {
+export interface MPPayment {
+  id: number;
+  status: string;
+  status_detail?: string;
+  external_reference?: string;
+  payment_method_id?: string;
+  payment_type_id?: string;
+  operation_type?: string;
+  installments?: number;
+  transaction_amount?: number;
+  net_amount?: number;
+  currency_id?: string;
+  date_created?: string;
+  date_approved?: string;
+  date_last_updated?: string;
+  authorization_code?: string;
+  statement_descriptor?: string;
+  card?: {
+    first_six_digits?: string;
+    last_four_digits?: string;
+    cardholder?: {
+      name?: string;
+      identification?: { type?: string; number?: string };
+    };
+    expiration_month?: number;
+    expiration_year?: number;
+  };
+  payer?: {
+    id?: string | number;
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+    identification?: { type?: string; number?: string };
+  };
+  fee_details?: Array<{ type?: string; amount?: number }>;
+  transaction_details?: {
+    total_paid_amount?: number;
+    net_received_amount?: number;
+    installment_amount?: number;
+  };
+}
+
+export async function getPayment(paymentId: string): Promise<MPPayment> {
   const res = await fetch(`${MP_BASE_URL}/v1/payments/${paymentId}`, {
     headers: { Authorization: `Bearer ${MP_ACCESS_TOKEN}` },
   });
