@@ -53,10 +53,12 @@ export interface Bundle {
 }
 
 export const SPLIT_RULES = {
-  /** Peso máximo en gramos para consolidar en una misma caja. */
-  MAX_CONSOLIDATED_WEIGHT_G: 5000,
-  /** Dimensión máxima (cualquier lado) en cm para consolidar. */
-  MAX_CONSOLIDATED_DIM_CM: 45,
+  /** Peso máximo en gramos para consolidar en una misma caja (15kg realista para carton estándar). */
+  MAX_CONSOLIDATED_WEIGHT_G: 15000,
+  /** Dimensión máxima (cualquier lado) en cm para consolidar. Correo acepta hasta 150cm por lado. */
+  MAX_CONSOLIDATED_DIM_CM: 80,
+  /** Volumen máximo por caja en cm³. Evita que productos "chatos y anchos" se separen innecesariamente. */
+  MAX_CONSOLIDATED_VOLUME_CM3: 80000,
   /**
    * Tope absoluto por bulto del acuerdo (API rechaza por encima).
    * Leer del env PAQAR_MAX_WEIGHT_GRAMS, default 25000.
@@ -75,10 +77,18 @@ function maxDim(item: SplitItem): number {
   return Math.max(item.height || 0, item.width || 0, item.depth || 0);
 }
 
+function itemVolume(item: SplitItem): number {
+  const h = item.height || SPLIT_RULES.FALLBACK_DIM_CM;
+  const w = item.width  || SPLIT_RULES.FALLBACK_DIM_CM;
+  const d = item.depth  || SPLIT_RULES.FALLBACK_DIM_CM;
+  return h * w * d;
+}
+
 function isBulky(item: SplitItem): boolean {
-  const w = item.weight || SPLIT_RULES.FALLBACK_WEIGHT_G;
-  if (w > SPLIT_RULES.MAX_CONSOLIDATED_WEIGHT_G) return true;
+  const weight = item.weight || SPLIT_RULES.FALLBACK_WEIGHT_G;
+  if (weight > SPLIT_RULES.MAX_CONSOLIDATED_WEIGHT_G) return true;
   if (maxDim(item) > SPLIT_RULES.MAX_CONSOLIDATED_DIM_CM) return true;
+  if (itemVolume(item) > SPLIT_RULES.MAX_CONSOLIDATED_VOLUME_CM3) return true;
   return false;
 }
 
@@ -115,6 +125,11 @@ function addToConsolidated(bundle: Bundle, item: SplitItem): void {
   const unitWeight = item.weight || SPLIT_RULES.FALLBACK_WEIGHT_G;
   bundle.weightGrams += unitWeight;
   bundle.declaredValue += item.price;
+  // Nota: max() en cada eje subestima el alto real cuando apilás (ej: 3 resmas
+  // apiladas tienen alto=6 pero acá reportamos 2). Trade-off aceptado: beneficia
+  // la cotización; si un paquete real supera, ajustar manualmente. El control
+  // de volumen acumulado en splitIntoBundles previene cajas físicamente
+  // imposibles (ver MAX_CONSOLIDATED_VOLUME_CM3).
   bundle.height = Math.max(bundle.height, item.height || SPLIT_RULES.FALLBACK_DIM_CM);
   bundle.width = Math.max(bundle.width, item.width || SPLIT_RULES.FALLBACK_DIM_CM);
   bundle.depth = Math.max(bundle.depth, item.depth || SPLIT_RULES.FALLBACK_DIM_CM);
@@ -149,17 +164,23 @@ export function splitIntoBundles(items: SplitItem[]): Bundle[] {
   }
 
   let current = newEmptyBundle();
+  let currentVolume = 0;
   for (const item of small) {
+    const unitVolume = itemVolume(item);
     for (let i = 0; i < item.quantity; i++) {
       const unitWeight = item.weight || SPLIT_RULES.FALLBACK_WEIGHT_G;
-      if (
-        current.items.length > 0 &&
-        current.weightGrams + unitWeight > SPLIT_RULES.MAX_CONSOLIDATED_WEIGHT_G
-      ) {
+      const wouldExceedWeight =
+        current.weightGrams + unitWeight > SPLIT_RULES.MAX_CONSOLIDATED_WEIGHT_G;
+      const wouldExceedVolume =
+        currentVolume + unitVolume > SPLIT_RULES.MAX_CONSOLIDATED_VOLUME_CM3;
+
+      if (current.items.length > 0 && (wouldExceedWeight || wouldExceedVolume)) {
         bundles.push(current);
         current = newEmptyBundle();
+        currentVolume = 0;
       }
       addToConsolidated(current, item);
+      currentVolume += unitVolume;
     }
   }
   if (current.items.length > 0) bundles.push(current);
