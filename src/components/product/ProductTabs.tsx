@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 
 interface Tab {
   id: string;
@@ -11,6 +11,14 @@ interface Tab {
 
 export function ProductTabs({ tabs }: { tabs: Tab[] }) {
   const [active, setActive] = useState(tabs[0]?.id);
+
+  // Activar tab "reviews" al llegar con ?review=1 (desde email post-compra).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("review") === "1" && tabs.some((t) => t.id === "reviews")) {
+      setActive("reviews");
+    }
+  }, [tabs]);
 
   const visibleTabs = tabs.filter((t) => t.content);
 

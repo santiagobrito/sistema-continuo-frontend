@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import type { Review } from "@/lib/wordpress/types";
 
@@ -18,6 +18,44 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [highlight, setHighlight] = useState(false);
+  const [loginRedirect, setLoginRedirect] = useState("/iniciar-sesion");
+  const formRef = useRef<HTMLFormElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const loginCtaRef = useRef<HTMLDivElement>(null);
+
+  // Build login link with redirect al producto actual + ?review=1 para retomar flow post-login.
+  useEffect(() => {
+    const target = `${window.location.pathname}?review=1`;
+    setLoginRedirect(`/iniciar-sesion?redirect=${encodeURIComponent(target)}`);
+  }, []);
+
+  // Desde email post-compra (?review=1): scroll + abrir form + focus + highlight.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("review") !== "1") return;
+
+    if (user) {
+      setShowForm(true);
+    }
+
+    const t = setTimeout(() => {
+      const target = user ? formRef.current : loginCtaRef.current;
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlight(true);
+      if (user) {
+        textareaRef.current?.focus({ preventScroll: true });
+      }
+      setTimeout(() => setHighlight(false), 2400);
+    }, 120);
+
+    // Limpiar query param para que refrescos no re-disparen el efecto.
+    const url = new URL(window.location.href);
+    url.searchParams.delete("review");
+    window.history.replaceState({}, "", url.toString());
+
+    return () => clearTimeout(t);
+  }, [user]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -102,14 +140,23 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
           <p className="text-green-700 font-medium">Gracias por tu opinión. Será publicada luego de ser revisada.</p>
         </div>
       ) : !user ? (
-        <div className="bg-gray-50 rounded-xl p-4 text-center">
+        <div
+          ref={loginCtaRef}
+          className={`bg-gray-50 rounded-xl p-4 text-center transition-all duration-500 ${highlight ? "ring-4 ring-[#013d5a]/30 bg-[#013d5a]/5" : ""}`}
+        >
           <p className="text-sm text-gray-600">
-            <a href="/iniciar-sesion" className="text-[#013d5a] font-semibold hover:underline">Iniciá sesión</a> para dejar tu opinión.
-            Solo los compradores verificados pueden opinar.
+            <a href={loginRedirect} className="text-[#013d5a] font-semibold hover:underline">
+              Iniciá sesión
+            </a>{" "}
+            para dejar tu opinión. Solo los compradores verificados pueden opinar.
           </p>
         </div>
       ) : showForm ? (
-        <form onSubmit={handleSubmit} className="bg-gray-50 rounded-xl p-5 space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          ref={formRef}
+          className={`bg-gray-50 rounded-xl p-5 space-y-4 transition-all duration-500 ${highlight ? "ring-4 ring-[#013d5a]/30 bg-white" : ""}`}
+        >
           <h4 className="font-semibold text-gray-900">Tu opinión como {user.name.split(" ")[0]}</h4>
           <div>
             <label className="block text-sm text-gray-600 mb-1.5">Puntuacion</label>
@@ -123,7 +170,15 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
               ))}
             </div>
           </div>
-          <textarea required placeholder="Conta tu experiencia con el producto..." value={formData.content} onChange={(e) => setFormData(p => ({ ...p, content: e.target.value }))} rows={3} className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#013d5a]" />
+          <textarea
+            ref={textareaRef}
+            required
+            placeholder="Conta tu experiencia con el producto..."
+            value={formData.content}
+            onChange={(e) => setFormData(p => ({ ...p, content: e.target.value }))}
+            rows={3}
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#013d5a]"
+          />
           {error && (
             <div className="bg-red-50 border border-red-100 rounded-lg p-3 text-sm text-red-600">{error}</div>
           )}
