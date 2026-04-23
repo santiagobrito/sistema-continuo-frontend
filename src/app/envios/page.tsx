@@ -21,7 +21,7 @@ export default function EnviosPage() {
         <div className="space-y-4">
           {[
             { title: "Retiro en local", price: "Gratis", time: "Disponible en 24-48hs hábiles", desc: "Av. Rivadavia 17002, Haedo. Te avisamos cuando tu pedido esté listo. Lunes a viernes 9-13 y 14-18hs.", zones: "Todos" },
-            { title: "Moto CABA", price: "$4.836,85", time: "Despacho en 24-48hs hábiles", desc: "Envío en moto a domicilio dentro de CABA. Precio por bulto — según el pedido puede ajustarse. Monto mínimo de compra: $25.000.", zones: "CABA" },
+            { title: "Moto CABA", price: "$4.836,85", time: "Despacho en 24-48hs hábiles", desc: "Envío en moto a domicilio dentro de CABA. Precio por bulto — según el pedido puede ajustarse.", zones: "CABA" },
             { title: "Moto GBA Zona 1", price: "$7.728,45", time: "Despacho en 24-48hs hábiles", desc: "San Fernando, San Isidro, San Martín, Vicente López, Hurlingham, Ituzaingó, Morón, 3 de Febrero, La Matanza Norte, Lomas de Zamora, Lanús, Avellaneda. Precio por bulto — según el pedido puede ajustarse.", zones: "GBA cercano" },
             { title: "Moto GBA Zona 2", price: "$10.725,20", time: "Despacho en 24-48hs hábiles", desc: "Tigre, Malvinas, José C. Paz, San Miguel, Moreno, Merlo, Ezeiza, Echeverría, Almirante Brown, Florencio Varela, Berazategui, Quilmes, Pilar, La Plata. Precio por bulto — según el pedido puede ajustarse.", zones: "GBA ampliado" },
             { title: "Correo Argentino a domicilio", price: "Calculado en checkout", time: "Entrega 3-7 días hábiles", desc: "Envío a domicilio por Correo Argentino. El costo se calcula automáticamente según peso y destino al ingresar el código postal.", zones: "Todo el país" },
@@ -46,7 +46,6 @@ export default function EnviosPage() {
           <h3 className="font-bold text-blue-900 mb-2">Importante</h3>
           <ul className="text-sm text-blue-800 space-y-1">
             <li>Los tiempos de despacho son en días hábiles a partir de la confirmación del pago.</li>
-            <li>Los costos de moto aplican para pedidos con monto mínimo de $25.000.</li>
             <li>Para equipos de gran formato, el envío se cotiza de forma personalizada.</li>
           </ul>
         </div>

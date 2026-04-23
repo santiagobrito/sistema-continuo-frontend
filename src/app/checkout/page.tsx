@@ -38,7 +38,6 @@ const ALL_SHIPPING_OPTIONS = [
     zones: ["C"],
     desc: "Envío en moto a domicilio dentro de CABA. Precio por bulto — según el tamaño/peso real del pedido podemos ajustar el valor. Si no entra en moto, tendrá recargo.",
     time: "Despacho en 24-48hs hábiles",
-    minOrder: 25000,
   },
   {
     id: "moto_gba1",
@@ -47,7 +46,6 @@ const ALL_SHIPPING_OPTIONS = [
     zones: ["B"],
     desc: "San Fernando, San Isidro, San Martín, Vicente López, Hurlingham, Ituzaingó, Morón, 3 de Febrero, La Matanza Norte, Lomas de Zamora, Lanús, Avellaneda. Precio por bulto — según el pedido puede ajustarse.",
     time: "Despacho en 24-48hs hábiles",
-    minOrder: 25000,
   },
   {
     id: "moto_gba2",
@@ -56,7 +54,6 @@ const ALL_SHIPPING_OPTIONS = [
     zones: ["B"],
     desc: "Tigre, Malvinas Argentinas, José C. Paz, San Miguel, Moreno, Merlo, Ezeiza, Esteban Echeverría, Almirante Brown, Florencio Varela, Berazategui, Quilmes, Escobar, Pilar, La Plata, Berisso. Precio por bulto — según el pedido puede ajustarse.",
     time: "Despacho en 24-48hs hábiles",
-    minOrder: 25000,
   },
   {
     id: "transporte",
@@ -592,7 +589,6 @@ export default function CheckoutPage() {
                     <div className="space-y-2">
                       {availableShipping.map((opt) => {
                         const isSelected = shippingMethod === opt.id;
-                        const meetsMinimum = !opt.minOrder || subtotal >= opt.minOrder;
                         const isCorreo = opt.id === "correo_domicilio" || opt.id === "correo_sucursal";
                         const livePrice = getShippingPrice(opt.id, opt.price);
                         const quoteLoading = isCorreo && paqarQuote && "loading" in paqarQuote && paqarQuote.loading;
@@ -630,15 +626,13 @@ export default function CheckoutPage() {
                         // quedan sin border propio. Así evitamos cualquier gap entre ambos bloques.
                         const wrapperClass = isExpanded
                           ? "rounded-xl border border-[#013d5a] bg-[#013d5a]/5 overflow-hidden"
-                          : !meetsMinimum
-                          ? "rounded-xl border border-gray-100 opacity-50"
                           : isSelected
                           ? "rounded-xl border border-[#013d5a] bg-[#013d5a]/5"
                           : "rounded-xl border border-gray-100 hover:border-gray-200";
 
                         return (
                           <div key={opt.id} className={wrapperClass}>
-                            <label className={`block ${!meetsMinimum ? "cursor-not-allowed" : "cursor-pointer"} transition-all`}>
+                            <label className="block cursor-pointer transition-all">
                               <div className="flex items-start gap-3 p-3.5">
                                 <input
                                   type="radio"
@@ -646,7 +640,6 @@ export default function CheckoutPage() {
                                   value={opt.id}
                                   checked={isSelected}
                                   onChange={() => setShippingMethod(opt.id)}
-                                  disabled={!meetsMinimum}
                                   className="w-4 h-4 mt-0.5 text-[#013d5a] cursor-pointer"
                                 />
                                 <div className="flex-1">
@@ -658,9 +651,6 @@ export default function CheckoutPage() {
                                   <p className="text-[10px] text-[#013d5a] font-medium mt-1">{opt.time}</p>
                                   {quoteWarning && (
                                     <p className="text-[10px] text-amber-600 mt-1">{quoteWarning}</p>
-                                  )}
-                                  {opt.minOrder && !meetsMinimum && (
-                                    <p className="text-[10px] text-red-500 mt-1">Monto mínimo: ${opt.minOrder.toLocaleString("es-AR")}</p>
                                   )}
                                 </div>
                               </div>
