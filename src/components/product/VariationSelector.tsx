@@ -76,7 +76,9 @@ const COLOR_MAP: Record<string, string> = {
  * Returns { background, isMixed } or null if not a recognized color.
  */
 function resolveColor(value: string): { background: string; isMixed: boolean } | null {
-  const lower = value.toLowerCase().trim();
+  // Normalizar: lowercase, trim, espacios → guiones (feed usa "Magenta Light"
+  // pero COLOR_MAP tiene keys con guión tipo "magenta-light").
+  const lower = value.toLowerCase().trim().replace(/\s+/g, "-");
 
   // Direct match
   if (COLOR_MAP[lower]) {
@@ -222,7 +224,6 @@ export function VariationSelector({ variations, onSelect }: Props) {
             <div className="flex flex-wrap gap-2">
               {attr.values.map((value) => {
                 const isSelected = selected[attr.key] === value;
-                const hex = COLOR_MAP[value.toLowerCase()];
                 const isAvailable = variations.some((v) =>
                   v.attributes[attr.key] === value && v.stock_status !== "outofstock"
                 );
