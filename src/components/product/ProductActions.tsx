@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useCart } from "@/components/cart/CartProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { VariationSelector } from "./VariationSelector";
 import { formatPrice } from "@/lib/utils/format";
 import type { Product, ProductVariation } from "@/lib/wordpress/types";
@@ -14,6 +15,7 @@ export function ProductActions({
   onVariationChange?: (variation: ProductVariation | null) => void;
 }) {
   const { addToCart, loading } = useCart();
+  const { user } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
   const [added, setAdded] = useState(false);
@@ -48,28 +50,29 @@ export function ProductActions({
     setTimeout(() => setAdded(false), 2500);
   }
 
-  // Back in stock notification
+  // Back in stock notification. Si el usuario está logueado, no le pedimos email
+  // (ya lo tenemos en la sesión); mostramos un solo botón "Avisarme".
   const [notifyEmail, setNotifyEmail] = useState("");
   const [notifyStatus, setNotifyStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
-  async function handleNotifySubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!notifyEmail.includes("@")) return;
+  async function submitNotify(email: string) {
+    if (!email.includes("@")) return;
     setNotifyStatus("loading");
     try {
       const res = await fetch("/api/back-in-stock", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product_id: product.id, email: notifyEmail }),
+        body: JSON.stringify({ product_id: product.id, email }),
       });
-      if (res.ok) {
-        setNotifyStatus("success");
-      } else {
-        setNotifyStatus("error");
-      }
+      setNotifyStatus(res.ok ? "success" : "error");
     } catch {
       setNotifyStatus("error");
     }
+  }
+
+  function handleNotifySubmit(e: React.FormEvent) {
+    e.preventDefault();
+    submitNotify(notifyEmail);
   }
 
   // Don't show buy section for out of stock products
@@ -89,6 +92,22 @@ export function ProductActions({
           </p>
           {notifyStatus === "success" ? (
             <p className="text-sm text-green-600 font-medium mt-3">Te vamos a avisar cuando vuelva a estar disponible.</p>
+          ) : user ? (
+            <>
+              <p className="text-sm text-red-500/80">
+                Te avisamos a <strong>{user.email}</strong> cuando vuelva.
+              </p>
+              <button
+                onClick={() => submitNotify(user.email)}
+                disabled={notifyStatus === "loading"}
+                className="mt-3 w-full px-5 py-2.5 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {notifyStatus === "loading" ? "..." : "Avisarme cuando haya stock"}
+              </button>
+              {notifyStatus === "error" && (
+                <p className="text-xs text-red-400 mt-2">Hubo un error. Intenta de nuevo.</p>
+              )}
+            </>
           ) : (
             <>
               <p className="text-sm text-red-500/80">Dejanos tu email y te avisamos cuando vuelva a estar disponible.</p>
