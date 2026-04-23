@@ -15,7 +15,7 @@ export function FilterSidebar({ slug, products }: Props) {
   const searchParams = useSearchParams();
 
   // Current filter state from URL
-  const currentOrderby = searchParams.get("orderby") || "date";
+  const currentOrderby = searchParams.get("orderby") || "popularity";
   const currentOrder = searchParams.get("order") || "DESC";
   const currentBrands = searchParams.get("brand")?.split(",").filter(Boolean) || [];
   const currentInStock = searchParams.get("in_stock") === "1";
@@ -93,10 +93,10 @@ export function FilterSidebar({ slug, products }: Props) {
         <h3 className="font-semibold text-gray-900 text-sm mb-3">Ordenar por</h3>
         <div className="space-y-1">
           {[
-            { label: "Mas recientes", val: "date", ord: "DESC" },
+            { label: "Mas vendidos", val: "popularity", ord: "DESC" },
             { label: "Menor precio", val: "price", ord: "ASC" },
             { label: "Mayor precio", val: "price", ord: "DESC" },
-            { label: "Mas vendidos", val: "popularity", ord: "DESC" },
+            { label: "Mas recientes", val: "date", ord: "DESC" },
           ].map((opt) => (
             <button
               key={opt.val + opt.ord}

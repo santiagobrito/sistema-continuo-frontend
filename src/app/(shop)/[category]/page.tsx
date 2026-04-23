@@ -46,7 +46,7 @@ export async function generateStaticParams() {
 
 export default async function CategoryPage({ params, searchParams }: Props) {
   const { category: slug } = await params;
-  const { page = "1", orderby = "date", order = "DESC", brand, in_stock, on_sale } = await searchParams;
+  const { page = "1", orderby = "popularity", order = "DESC", brand, in_stock, on_sale } = await searchParams;
 
   let category;
   try {

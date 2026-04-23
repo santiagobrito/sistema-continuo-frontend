@@ -20,7 +20,7 @@ interface Props {
 }
 
 export default async function OfertasPage({ searchParams }: Props) {
-  const { page = "1", orderby = "date", order = "DESC" } = await searchParams;
+  const { page = "1", orderby = "popularity", order = "DESC" } = await searchParams;
   const currentPage = parseInt(page);
 
   const result = await getProducts({

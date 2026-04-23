@@ -43,7 +43,7 @@ export async function generateStaticParams() {
 
 export default async function BrandPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const { page = "1", orderby = "date", order = "DESC" } = await searchParams;
+  const { page = "1", orderby = "popularity", order = "DESC" } = await searchParams;
 
   const brand = await findBrand(slug);
   if (!brand) notFound();
