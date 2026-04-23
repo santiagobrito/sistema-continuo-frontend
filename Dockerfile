@@ -1,3 +1,4 @@
+# cache-bust: 2026-04-23-split-rules
 FROM node:20-alpine
 WORKDIR /app
 
