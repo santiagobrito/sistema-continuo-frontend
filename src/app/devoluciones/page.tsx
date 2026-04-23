@@ -86,7 +86,7 @@ export default function ReturnsPage() {
           <h2>6. Reintegro del importe</h2>
           <p>
             Una vez aceptada la devolución, el reintegro se efectuará dentro de los{" "}
-            <strong>30 (treinta) días hábiles</strong> desde la recepción conforme del producto.
+            <strong>14 (catorce) días hábiles</strong> desde la recepción conforme del producto.
           </p>
           <p>
             El reintegro se realizará por el mismo medio de pago utilizado en la compra siempre que
