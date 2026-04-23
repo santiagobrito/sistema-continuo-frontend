@@ -10,6 +10,7 @@ import { MerchantWidget } from "@/components/analytics/MerchantWidget";
 import { GTMHead, GTMBody } from "@/components/analytics/GTMProvider";
 import { FBPixel } from "@/components/analytics/FBPixelProvider";
 import { GclidCapture } from "@/components/analytics/GclidCapture";
+import { AttributionCapture } from "@/components/analytics/AttributionCapture";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { generateOrganizationSchema, generateWebSiteSchema } from "@/lib/seo/structured-data";
 
@@ -55,6 +56,7 @@ export default function RootLayout({
         <GTMBody />
         <FBPixel />
         <GclidCapture />
+        <AttributionCapture />
         <JsonLd data={[generateOrganizationSchema(), generateWebSiteSchema()]} />
         <AuthProvider>
           <CartProvider>

@@ -10,6 +10,10 @@ import { createPreference } from "@/lib/mercadopago/sdk";
 import { markCartRecovered, subscribeNewsletter } from "@/lib/brevo/client";
 import { getSession } from "@/lib/auth/session";
 import { getCustomerByEmail, createCustomer, syncCustomerFromCheckout } from "@/lib/auth/wc-api";
+import {
+  attributionToOrderMeta,
+  type OrderAttributionInput,
+} from "@/lib/wordpress/order-attribution";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
@@ -58,6 +62,7 @@ interface CheckoutBody {
   paqar_agency_id?: string;
   gclid?: string;
   coupon_code?: string;
+  attribution?: OrderAttributionInput;
 }
 
 async function createWCOrder(body: CheckoutBody, customerId?: number): Promise<{ id: number; number: string }> {
@@ -100,6 +105,7 @@ async function createWCOrder(body: CheckoutBody, customerId?: number): Promise<{
       ...(body.paqar_agency_id ? [{ key: "_sc_paqar_agency_id", value: body.paqar_agency_id }] : []),
       ...(body.shipping_method ? [{ key: "_sc_shipping_method_id", value: body.shipping_method }] : []),
       ...(body.billing.dni_cuit ? [{ key: "_dni_cuit", value: body.billing.dni_cuit }] : []),
+      ...attributionToOrderMeta(body.attribution),
     ],
   };
 

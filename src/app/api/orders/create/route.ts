@@ -10,6 +10,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { markCartRecovered, subscribeNewsletter } from "@/lib/brevo/client";
 import { getSession } from "@/lib/auth/session";
 import { getCustomerByEmail, createCustomer, syncCustomerFromCheckout } from "@/lib/auth/wc-api";
+import {
+  attributionToOrderMeta,
+  type OrderAttributionInput,
+} from "@/lib/wordpress/order-attribution";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
@@ -46,6 +50,7 @@ interface OrderBody {
   payment_method: "transferencia" | "efectivo";
   gclid?: string;
   coupon_code?: string;
+  attribution?: OrderAttributionInput;
 }
 
 export async function POST(request: NextRequest) {
@@ -121,6 +126,7 @@ export async function POST(request: NextRequest) {
         ...(body.paqar_agency_id ? [{ key: "_sc_paqar_agency_id", value: body.paqar_agency_id }] : []),
         ...(body.shipping_method ? [{ key: "_sc_shipping_method_id", value: body.shipping_method }] : []),
         ...(body.billing.dni_cuit ? [{ key: "_dni_cuit", value: body.billing.dni_cuit }] : []),
+        ...attributionToOrderMeta(body.attribution),
       ],
     };
 

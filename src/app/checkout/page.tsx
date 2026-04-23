@@ -8,6 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import { getGclid } from "@/components/analytics/GclidCapture";
+import { getAttribution } from "@/components/analytics/AttributionCapture";
 import { fbPixelTrack } from "@/lib/fbpixel/client";
 import { trackBeginCheckout } from "@/lib/analytics/gtm";
 
@@ -427,6 +428,7 @@ export default function CheckoutPage() {
         paqar_agency_id: shippingMethod === "correo_sucursal" ? selectedAgencyId : undefined,
         gclid: getGclid() || undefined,
         coupon_code: appliedCoupon?.code || undefined,
+        attribution: getAttribution(),
       };
 
       if (paymentMethod === "mercadopago") {
