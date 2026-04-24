@@ -98,6 +98,11 @@ async function fetchOrdersInRange(startIso: string, endIso: string): Promise<Ord
     if (batch.length === 0) break;
     for (const o of batch) {
       const meta = o.meta_data || [];
+      // Las órdenes migradas de Kinsta tienen date_created = día de import (~2026-04-21)
+      // pero no pasan por el frontend y por eso no tienen _wc_order_attribution_source_type.
+      // Filtramos a órdenes reales del nuevo checkout.
+      const hasAttribution = meta.some((m) => m.key === "_wc_order_attribution_source_type");
+      if (!hasAttribution) continue;
       const gclid = meta.find((m) => m.key === "_gclid")?.value || null;
       rows.push({
         id: o.id,
