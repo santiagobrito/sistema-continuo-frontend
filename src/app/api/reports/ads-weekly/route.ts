@@ -49,21 +49,34 @@ interface OrderRow {
 }
 
 function weekRangeUTC(weekParam?: string | null): { start: Date; end: Date } {
-  // weekParam formato YYYY-WW (ISO week) o "previous" (default).
-  // Sin param → semana pasada lun-dom ART. Convertido a UTC ISO.
+  // weekParam:
+  //   "previous" (default) → lunes-domingo de la semana pasada (ART → UTC).
+  //   "current"            → lunes de esta semana hasta ahora.
+  //   "YYYY-MM-DD:YYYY-MM-DD" → rango explícito en ART.
   const now = new Date();
-  // Argentina offset = -3h. Primer tomamos "hoy en ART".
   const artNow = new Date(now.getTime() - 3 * 3600 * 1000);
-  const dayOfWeek = artNow.getUTCDay(); // 0 dom, 1 lun ... 6 sab
-  // Lunes de esta semana
-  const diffToMonday = (dayOfWeek + 6) % 7; // 0 si lun, 6 si dom
+  const dayOfWeek = artNow.getUTCDay();
+  const diffToMonday = (dayOfWeek + 6) % 7;
   const thisMondayArt = new Date(Date.UTC(
     artNow.getUTCFullYear(), artNow.getUTCMonth(), artNow.getUTCDate() - diffToMonday, 0, 0, 0
   ));
-  // Lunes pasado
+
+  if (weekParam === "current") {
+    const start = new Date(thisMondayArt.getTime() + 3 * 3600 * 1000);
+    return { start, end: now };
+  }
+
+  if (weekParam && /^\d{4}-\d{2}-\d{2}:\d{4}-\d{2}-\d{2}$/.test(weekParam)) {
+    const [s, e] = weekParam.split(":");
+    // Interpretar en ART, convertir a UTC.
+    const start = new Date(`${s}T00:00:00-03:00`);
+    const end = new Date(`${e}T23:59:59-03:00`);
+    return { start, end };
+  }
+
+  // Default: previous
   const prevMonday = new Date(thisMondayArt.getTime() - 7 * 86400 * 1000);
   const prevSundayEnd = new Date(thisMondayArt.getTime() - 1);
-  // Volver a UTC real
   const start = new Date(prevMonday.getTime() + 3 * 3600 * 1000);
   const end = new Date(prevSundayEnd.getTime() + 3 * 3600 * 1000);
   return { start, end };
