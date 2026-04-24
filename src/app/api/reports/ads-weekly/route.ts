@@ -83,39 +83,25 @@ function weekRangeUTC(weekParam?: string | null): { start: Date; end: Date } {
 }
 
 async function fetchOrdersInRange(startIso: string, endIso: string): Promise<OrderRow[]> {
-  const rows: OrderRow[] = [];
-  let page = 1;
-  while (true) {
-    const url = `${WP_URL}/wp-json/wc/v3/orders?status=processing,completed&after=${encodeURIComponent(
-      startIso
-    )}&before=${encodeURIComponent(endIso)}&per_page=50&page=${page}`;
-    const res = await fetch(url, {
-      headers: { Authorization: wcAuth() },
-      cache: "no-store",
-    });
-    if (!res.ok) throw new Error(`WC ${res.status}`);
-    const batch: WCOrder[] = await res.json();
-    if (batch.length === 0) break;
-    for (const o of batch) {
-      const meta = o.meta_data || [];
-      // Las órdenes migradas de Kinsta tienen date_created = día de import (~2026-04-21)
-      // pero no pasan por el frontend y por eso no tienen _wc_order_attribution_source_type.
-      // Filtramos a órdenes reales del nuevo checkout.
-      const hasAttribution = meta.some((m) => m.key === "_wc_order_attribution_source_type");
-      if (!hasAttribution) continue;
-      const gclid = meta.find((m) => m.key === "_gclid")?.value || null;
-      rows.push({
-        id: o.id,
-        number: o.number,
-        total: parseFloat(o.total),
-        date: o.date_completed || o.date_modified || o.date_created,
-        gclid,
-      });
-    }
-    if (batch.length < 50) break;
-    page++;
-  }
-  return rows;
+  // Usamos el endpoint custom del plugin que filtra por meta_query
+  // (_wc_order_attribution_source_type EXISTS). Evita traer las miles de
+  // órdenes migradas de Kinsta que tienen la misma date_created del día de import.
+  const url = `${WP_URL}/wp-json/sistema-continuo/v1/orders/real?after=${encodeURIComponent(
+    startIso
+  )}&before=${encodeURIComponent(endIso)}`;
+  const res = await fetch(url, {
+    headers: { Authorization: wcAuth() },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`custom orders ${res.status}`);
+  const list = (await res.json()) as Array<{
+    id: number;
+    number: string;
+    total: number;
+    date: string;
+    gclid: string | null;
+  }>;
+  return list;
 }
 
 async function getAdsAccessToken() {
