@@ -135,7 +135,7 @@ async function adsSearch(accessToken: string, gaql: string) {
       "login-customer-id": GADS_LOGIN_CUSTOMER_ID,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ query: gaql, pageSize: 10000 }),
+    body: JSON.stringify({ query: gaql }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(`Ads search ${res.status}: ${JSON.stringify(data).slice(0, 300)}`);
