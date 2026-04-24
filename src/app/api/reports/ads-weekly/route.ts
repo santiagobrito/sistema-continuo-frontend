@@ -191,10 +191,11 @@ async function resolveGclidsToCampaign(
   const result = new Map<string, { campaignId: string; campaignName: string; date: string }>();
   if (gclids.length === 0) return result;
 
-  // click_view requires single-day filter. Lookback 30d (default attribution window de Ads).
-  // Paralelizamos queries en tandas de 10 para acelerar.
+  // click_view requires single-day filter. Lookback 15d es más que suficiente
+  // (casi todas las conversiones llegan dentro de 7 días del click).
+  // Paralelizamos TODOS los días en un solo Promise.all.
   const end = new Date(endDate + "T23:59:59Z");
-  const lookbackStart = new Date(end.getTime() - 30 * 86400 * 1000);
+  const lookbackStart = new Date(end.getTime() - 15 * 86400 * 1000);
   const days: string[] = [];
   for (let d = new Date(lookbackStart); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
     days.push(fmtDateYMD(d));
@@ -214,20 +215,14 @@ async function resolveGclidsToCampaign(
     }
   };
 
-  // Procesar en tandas de 10 días en paralelo.
-  const chunkSize = 10;
-  for (let i = 0; i < days.length; i += chunkSize) {
-    if (result.size === gclids.length) break;
-    const chunk = days.slice(i, i + chunkSize);
-    const batches = await Promise.all(chunk.map(queryDay));
-    for (const rows of batches) {
-      for (const r of rows) {
-        result.set(r.clickView.gclid, {
-          campaignId: String(r.campaign.id),
-          campaignName: r.campaign.name,
-          date: r.segments.date,
-        });
-      }
+  const all = await Promise.all(days.map(queryDay));
+  for (const rows of all) {
+    for (const r of rows) {
+      result.set(r.clickView.gclid, {
+        campaignId: String(r.campaign.id),
+        campaignName: r.campaign.name,
+        date: r.segments.date,
+      });
     }
   }
   return result;
