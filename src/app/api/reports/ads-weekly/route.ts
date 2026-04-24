@@ -191,26 +191,36 @@ async function resolveGclidsToCampaign(
   const result = new Map<string, { campaignId: string; campaignName: string; date: string }>();
   if (gclids.length === 0) return result;
 
-  // click_view requires single-day filter. Iteramos día por día en un rango ampliado
-  // (90 días atrás) para captar clicks previos a la semana del reporte.
+  // click_view requires single-day filter. Lookback 30d (default attribution window de Ads).
+  // Paralelizamos queries en tandas de 10 para acelerar.
   const end = new Date(endDate + "T23:59:59Z");
-  const lookbackStart = new Date(end.getTime() - 90 * 86400 * 1000);
+  const lookbackStart = new Date(end.getTime() - 30 * 86400 * 1000);
   const days: string[] = [];
   for (let d = new Date(lookbackStart); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
     days.push(fmtDateYMD(d));
   }
 
   const gclidList = gclids.map((g) => `'${g.replace(/'/g, "")}'`).join(",");
-
-  for (const day of days) {
-    if (result.size === gclids.length) break;
+  const queryDay = async (day: string) => {
     try {
       const q = `
         SELECT click_view.gclid, campaign.id, campaign.name, segments.date
         FROM click_view
         WHERE segments.date = '${day}' AND click_view.gclid IN (${gclidList})
       `;
-      const rows = await adsSearch(accessToken, q);
+      return await adsSearch(accessToken, q);
+    } catch {
+      return [];
+    }
+  };
+
+  // Procesar en tandas de 10 días en paralelo.
+  const chunkSize = 10;
+  for (let i = 0; i < days.length; i += chunkSize) {
+    if (result.size === gclids.length) break;
+    const chunk = days.slice(i, i + chunkSize);
+    const batches = await Promise.all(chunk.map(queryDay));
+    for (const rows of batches) {
       for (const r of rows) {
         result.set(r.clickView.gclid, {
           campaignId: String(r.campaign.id),
@@ -218,8 +228,6 @@ async function resolveGclidsToCampaign(
           date: r.segments.date,
         });
       }
-    } catch {
-      // día sin clicks para esos gclids → OK, seguir
     }
   }
   return result;
