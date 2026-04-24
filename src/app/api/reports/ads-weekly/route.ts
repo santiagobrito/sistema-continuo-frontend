@@ -215,14 +215,19 @@ async function resolveGclidsToCampaign(
     }
   };
 
-  const all = await Promise.all(days.map(queryDay));
-  for (const rows of all) {
-    for (const r of rows) {
-      result.set(r.clickView.gclid, {
-        campaignId: String(r.campaign.id),
-        campaignName: r.campaign.name,
-        date: r.segments.date,
-      });
+  // Tandas de 5 para no pegarle al rate limit de Ads (429 si hay >10 concurrent).
+  for (let i = 0; i < days.length; i += 5) {
+    if (result.size === gclids.length) break;
+    const chunk = days.slice(i, i + 5);
+    const batches = await Promise.all(chunk.map(queryDay));
+    for (const rows of batches) {
+      for (const r of rows) {
+        result.set(r.clickView.gclid, {
+          campaignId: String(r.campaign.id),
+          campaignName: r.campaign.name,
+          date: r.segments.date,
+        });
+      }
     }
   }
   return result;
