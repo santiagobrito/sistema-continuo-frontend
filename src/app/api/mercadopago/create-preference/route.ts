@@ -266,8 +266,8 @@ export async function POST(request: NextRequest) {
     // facturar ni despachar. Pedido #14676 (2026-04-24) llegó sin address_1 ni postcode
     // porque la validación del frontend solo cubría método de envío.
     const b = body.billing || ({} as CheckoutBody["billing"]);
-    const requiredAlways = ["first_name", "last_name", "email", "phone", "dni_cuit", "city", "state"] as const;
-    const missing = requiredAlways.filter((k) => !String(b[k] || "").trim());
+    const requiredAlways: Array<keyof CheckoutBody["billing"]> = ["first_name", "last_name", "email", "phone", "dni_cuit", "city", "state"];
+    const missing: string[] = requiredAlways.filter((k) => !String(b[k] || "").trim());
     const needsAddress = body.shipping_method && body.shipping_method !== "local_pickup" && body.shipping_method !== "correo_sucursal";
     const needsPostcode = body.shipping_method && body.shipping_method !== "local_pickup";
     if (needsAddress && !String(b.address_1 || "").trim()) missing.push("address_1");

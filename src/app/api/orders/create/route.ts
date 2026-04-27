@@ -63,8 +63,8 @@ export async function POST(request: NextRequest) {
     // Defensa en profundidad — mismas reglas que create-preference. Sin estos campos
     // no se puede facturar ni despachar (ver pedido #14676 que entró sin dirección).
     const b = body.billing || ({} as OrderBody["billing"]);
-    const requiredAlways = ["first_name", "last_name", "email", "phone", "dni_cuit", "city", "state"] as const;
-    const missing = requiredAlways.filter((k) => !String(b[k] || "").trim());
+    const requiredAlways: Array<keyof OrderBody["billing"]> = ["first_name", "last_name", "email", "phone", "dni_cuit", "city", "state"];
+    const missing: string[] = requiredAlways.filter((k) => !String(b[k] || "").trim());
     const needsAddress = body.shipping_method && body.shipping_method !== "local_pickup" && body.shipping_method !== "correo_sucursal";
     const needsPostcode = body.shipping_method && body.shipping_method !== "local_pickup";
     if (needsAddress && !String(b.address_1 || "").trim()) missing.push("address_1");

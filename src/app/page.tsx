@@ -1,4 +1,4 @@
-import { getCategories, getProducts, getBrands, getBlogPosts, getCategoryUrl } from "@/lib/wordpress/api";
+import { getCategories, getProducts, getBrands, getBlogPosts } from "@/lib/wordpress/api";
 import type { Product } from "@/lib/wordpress/types";
 import Image from "next/image";
 import Link from "next/link";
