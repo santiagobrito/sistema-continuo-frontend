@@ -1,10 +1,7 @@
-import { getProductUrl } from "@/lib/wordpress/api";
-import { formatPrice } from "@/lib/utils/format";
-import { isCatalogProduct } from "@/lib/wordpress/types";
 import type { Product } from "@/lib/wordpress/types";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import ProductCard from "@/components/product/ProductCard";
 
 export const dynamic = "force-dynamic";
 
@@ -94,35 +91,7 @@ export default async function SearchPage({ searchParams }: Props) {
             {results.data.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {results.data.map((product: Product) => (
-                  <Link
-                    key={product.id}
-                    href={getProductUrl(product)}
-                    className="group bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all overflow-hidden cursor-pointer"
-                  >
-                    <div className="aspect-square relative bg-gray-50/50 p-3">
-                      {product.images[0] ? (
-                        <Image src={product.images[0].url} alt={product.name} fill className="object-contain p-1 group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 50vw, 25vw" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <svg className="w-12 h-12 text-gray-200" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-3.5 pt-2">
-                      {product.marca && (
-                        <p className="text-[10px] font-semibold text-[#013d5a]/50 uppercase tracking-widest mb-0.5">{product.marca}</p>
-                      )}
-                      <h3 className="text-sm font-medium text-gray-900 line-clamp-2 leading-snug mb-2 group-hover:text-[#013d5a] transition-colors">{product.name}</h3>
-                      {isCatalogProduct(product) ? (
-                        <span className="text-sm text-[#013d5a] font-semibold">Solicitar cotización</span>
-                      ) : product.price ? (
-                        <span className="text-base font-bold text-gray-900">
-                          {formatPrice(product.price)}
-                          {product.unidad_venta && <span className="text-xs text-gray-500">/{product.unidad_venta}</span>}
-                        </span>
-                      ) : null}
-                    </div>
-                  </Link>
+                  <ProductCard key={product.id} product={product} />
                 ))}
               </div>
             ) : (
