@@ -112,6 +112,13 @@ function getMeta(order: WcOrderMin, key: string): string | undefined {
   return order.meta_data?.find((m) => m.key === key)?.value;
 }
 
+interface DedupDebug {
+  customerId?: number;
+  targetHash: string;
+  candidates: Array<{ id: number; hash: string; match: boolean; payment_method: string; date: string }>;
+  reason?: string;
+}
+
 /**
  * Busca una orden pending reciente del mismo customer/email cuyos items+envío+cupón
  * coincidan exactamente con el carrito actual. Si existe → reutilizable.
@@ -128,7 +135,8 @@ function getMeta(order: WcOrderMin, key: string): string | undefined {
  */
 async function findReusablePendingOrder(
   body: CheckoutBody,
-  customerId?: number
+  customerId: number | undefined,
+  debug?: DedupDebug
 ): Promise<WcOrderMin | null> {
   const WINDOW_LONG_MS = 96 * 60 * 60 * 1000;
   const params = new URLSearchParams({
@@ -149,12 +157,12 @@ async function findReusablePendingOrder(
     cache: "no-store",
   });
   if (!r.ok) {
-    console.warn(`[dedup] WC orders fetch failed: ${r.status}`);
+    if (debug) debug.reason = `WC fetch failed: ${r.status}`;
     return null;
   }
   const orders: WcOrderMin[] = await r.json();
   if (!Array.isArray(orders) || orders.length === 0) {
-    console.log(`[dedup] no pending orders found for ${customerId ? `customer ${customerId}` : `email ${body.billing.email}`}`);
+    if (debug) debug.reason = "no pending orders found";
     return null;
   }
 
@@ -162,10 +170,18 @@ async function findReusablePendingOrder(
   const now = Date.now();
   const SHORT_WINDOW_MS = 2 * 60 * 60 * 1000;
 
-  console.log(`[dedup] target hash: ${targetHash} | candidates: ${orders.length}`);
+  if (debug) debug.targetHash = targetHash;
   for (const o of orders) {
     const candidateHash = hashFromExistingOrder(o);
-    console.log(`[dedup]   #${o.id} hash: ${candidateHash} | match: ${candidateHash === targetHash} | pm: ${o.payment_method}`);
+    if (debug) {
+      debug.candidates.push({
+        id: o.id,
+        hash: candidateHash,
+        match: candidateHash === targetHash,
+        payment_method: o.payment_method,
+        date: o.date_created,
+      });
+    }
     if (o.payment_method !== "mercadopago") continue;
     if (candidateHash !== targetHash) continue;
 
@@ -290,9 +306,13 @@ export async function POST(request: NextRequest) {
 
     // 1. Reutilizar pending reciente con mismo carrito (anti-duplicado en reintentos MP).
     //    Si no existe, crear orden nueva.
+    const wantDebug = request.nextUrl.searchParams.get("debug") === "1";
+    const debug: DedupDebug | undefined = wantDebug
+      ? { customerId, targetHash: "", candidates: [] }
+      : undefined;
     let order: { id: number; number: string };
     let reused = false;
-    const reusable = await findReusablePendingOrder(body, customerId);
+    const reusable = await findReusablePendingOrder(body, customerId, debug);
     if (reusable) {
       order = { id: reusable.id, number: reusable.number || String(reusable.id) };
       reused = true;
@@ -360,6 +380,7 @@ export async function POST(request: NextRequest) {
       initPoint: preference.init_point,
       sandboxInitPoint: preference.sandbox_init_point,
       reused,
+      ...(debug ? { debug } : {}),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error desconocido";
