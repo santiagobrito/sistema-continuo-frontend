@@ -140,13 +140,30 @@ export function buildShippingData(
     streetNumber,
     cityName: order.shipping.city,
     state: stateCode,
-    zipCode: order.shipping.postcode,
+    // PAQ.AR exige zipCode numérico de 4 dígitos. Si el cliente cargó el CPA
+    // (formato "X5000XXX": letra de provincia + 4 dígitos + 3 letras de manzana),
+    // PAQ.AR responde 400 "Conversion failed... value 'X5000' to data type int".
+    // Detectado por orden #14805 (2026-04-27, Córdoba "X5000").
+    // Normalizamos: extraemos los primeros 4 dígitos consecutivos del string.
+    zipCode: normalizeZipCode(order.shipping.postcode),
     // CA renderiza literal "null" en el rótulo cuando floor/department vienen
     // ausentes — mandamos string vacío explícito para evitarlo.
     floor: "",
     department: order.shipping.address_2 || "",
   };
   return base;
+}
+
+/**
+ * Normaliza un código postal argentino al formato numérico de 4 dígitos que
+ * PAQ.AR requiere. Acepta: "5000", "X5000", "X5000XXX", " 5000 ", etc.
+ * Si no se puede extraer 4 dígitos consecutivos, devuelve el original (que PAQ.AR
+ * va a rechazar igual, pero al menos el error queda en su lado y diagnosticable).
+ */
+function normalizeZipCode(raw: string | undefined | null): string {
+  const s = String(raw || "").trim();
+  const m = s.match(/\d{4}/);
+  return m ? m[0] : s;
 }
 
 /**
