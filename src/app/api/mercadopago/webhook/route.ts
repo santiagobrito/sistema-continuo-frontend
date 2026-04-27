@@ -331,6 +331,12 @@ export async function POST(request: NextRequest) {
         case "rejected":
           await updateOrderStatus(orderId, "failed", payment);
           break;
+        case "cancelled":
+          // El cliente canceló el pago en MP (cerró el modal estando en flujo, o canceló desde su cuenta).
+          // No es failed — no es que falló, es que renunció. Quedaba en pending huérfano hasta que el
+          // cron lo barría. Ahora pasa a cancelled inmediato. Restaura stock y limpia reportes.
+          await updateOrderStatus(orderId, "cancelled", payment);
+          break;
         case "pending":
         case "in_process":
           await updateOrderStatus(orderId, "on-hold", payment);
