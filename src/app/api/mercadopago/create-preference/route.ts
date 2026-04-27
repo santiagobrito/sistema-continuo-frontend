@@ -87,7 +87,8 @@ interface WcOrderMin {
   id: number;
   number: string;
   status: string;
-  date_created: string;
+  date_created: string;       // hora local del site, SIN marcador de zona ("2026-04-27T10:22:11")
+  date_created_gmt: string;   // UTC, también sin Z pero realmente es UTC — usar este para cálculos.
   total: string;
   payment_method: string;
   line_items: Array<{ product_id: number; variation_id: number; quantity: number; price: string }>;
@@ -185,7 +186,12 @@ async function findReusablePendingOrder(
     if (o.payment_method !== "mercadopago") continue;
     if (candidateHash !== targetHash) continue;
 
-    const ageMs = now - new Date(o.date_created).getTime();
+    // WC devuelve date_created en hora local del site (sin "Z"); para no caer en
+    // bug de zona horaria usar date_created_gmt + "Z" para forzar parseo UTC.
+    const dateStr = o.date_created_gmt
+      ? `${o.date_created_gmt}Z`
+      : o.date_created;
+    const ageMs = now - new Date(dateStr).getTime();
     const paymentType = getMeta(o, "_mp_payment_type");
     const mpStatus = getMeta(o, "_mp_status");
     const isOfflineLive =
