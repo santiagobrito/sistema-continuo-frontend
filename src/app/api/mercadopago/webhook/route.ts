@@ -262,11 +262,13 @@ function readMeta(meta: WcOrderMeta | null, key: string): string | undefined {
 async function triggerPaqarCreate(orderId: string, shippingMethod: string, agencyId?: string) {
   if (!SITE_URL || !INTERNAL_SECRET) {
     console.warn("[MP webhook] Falta SITE_URL o INTERNAL_API_SECRET — skip PAQ.AR create");
+    await reportPaqarFailure(orderId, "Configuración faltante (SITE_URL/INTERNAL_API_SECRET)");
     return;
   }
 
   const deliveryType = shippingMethod === "correo_sucursal" ? "agency" : "homeDelivery";
 
+  let detail = "";
   try {
     const res = await fetch(`${SITE_URL}/api/paqar/create-orders`, {
       method: "POST",
@@ -276,15 +278,49 @@ async function triggerPaqarCreate(orderId: string, shippingMethod: string, agenc
       },
       body: JSON.stringify({ orderId: Number(orderId), deliveryType, agencyId }),
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      console.error(`[MP webhook] PAQ.AR create fail ${res.status}:`, data);
-    } else {
-      console.log(`[MP webhook] PAQ.AR ok, ${data.bundles} bultos`, data.trackings);
+      detail = `HTTP ${res.status}: ${JSON.stringify(data).slice(0, 300)}`;
+      console.error(`[MP webhook] PAQ.AR create fail ${res.status} order ${orderId}:`, data);
+      await reportPaqarFailure(orderId, detail);
+      return;
     }
+    if (data.partial) {
+      // Multi-bundle parcial — algunos TNs OK, otros fallaron
+      detail = `Parcial: ${data.failed?.length || 0} de ${data.bundles} bultos fallaron`;
+      console.warn(`[MP webhook] PAQ.AR partial order ${orderId}:`, data);
+      await reportPaqarFailure(orderId, detail);
+      return;
+    }
+    console.log(`[MP webhook] PAQ.AR ok, ${data.bundles} bultos`, data.trackings);
   } catch (err) {
+    detail = err instanceof Error ? err.message : String(err);
     console.error("[MP webhook] PAQ.AR create error:", err);
+    await reportPaqarFailure(orderId, detail);
   }
+}
+
+/**
+ * Cuando la auto-creación falla, dejamos rastro visible:
+ *  - Nota interna en la orden (visible en WP admin)
+ *  - Email a admin para alertar inmediato (no esperar al reporte diario)
+ */
+async function reportPaqarFailure(orderId: string, detail: string): Promise<void> {
+  const noteText = `⚠️ [PAQ.AR] Auto-creación falló: ${detail}\nNecesita generación manual desde el panel Correo Argentino.`;
+  await addOrderNote(orderId, noteText);
+
+  // Email alerta admin — usa el mismo wp_mail rooteado por Resend
+  const subject = `⚠️ PAQ.AR auto-create falló — orden #${orderId}`;
+  const body = `<p>La auto-creación de la etiqueta PAQ.AR falló para la orden <a href="https://api.sistemacontinuo.com.ar/wp-admin/post.php?post=${orderId}&action=edit"><strong>#${orderId}</strong></a>.</p><p><strong>Detalle:</strong> ${detail}</p><p>Acción: abrir el pedido en WP admin → metabox PAQ.AR → generar etiqueta manual.</p>`;
+  // Fire and forget — el alert es nice-to-have, no bloquea el webhook
+  fetch(`${WP_URL}/wp-json/sistema-continuo/v1/admin-alert`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Basic ${WC_API_AUTH}`,
+    },
+    body: JSON.stringify({ subject, body }),
+  }).catch(() => {});
 }
 
 export async function POST(request: NextRequest) {
@@ -310,6 +346,32 @@ export async function POST(request: NextRequest) {
       const savedStatus = readMeta(currentMeta, "_mp_status");
       if (savedPaymentId === String(payment.id) && savedStatus === payment.status) {
         return NextResponse.json({ ok: true, skipped: "duplicate" });
+      }
+
+      // Anti-regresión de status. MP a veces manda webhooks delayed: llega un evento viejo
+      // (status anterior) DESPUÉS de uno nuevo. Comparamos el timestamp del payment con el
+      // último que registramos y rechazamos los más viejos.
+      // También bloqueamos transiciones lógicamente regresivas (approved → pending) cuando
+      // hay shipping ya disparado (no podemos "des-aprobar" un pago que ya generó etiqueta).
+      const savedDate = readMeta(currentMeta, "_mp_date_created");
+      const incomingDate = payment.date_last_updated || payment.date_created || "";
+      if (savedDate && incomingDate && new Date(incomingDate) < new Date(savedDate)) {
+        console.warn(
+          `[MP webhook] Webhook con timestamp viejo ignorado: incoming ${incomingDate} < saved ${savedDate} (order ${orderId})`
+        );
+        return NextResponse.json({ ok: true, skipped: "stale_event" });
+      }
+      // Bloqueo regresión cuando ya estamos en flujo logístico
+      const PROTECTED_FROM_REGRESSION: Record<string, string[]> = {
+        // Si llegamos aquí, NO permitimos pasar a estos statuses MP regresivos
+        approved: ["pending", "in_process"],
+        // Si la orden ya está en processing/shipped/completed por otro motivo, ignoramos pending
+      };
+      if (savedStatus && PROTECTED_FROM_REGRESSION[savedStatus]?.includes(payment.status)) {
+        console.warn(
+          `[MP webhook] Regresión bloqueada: ${savedStatus} → ${payment.status} (order ${orderId})`
+        );
+        return NextResponse.json({ ok: true, skipped: "regression_blocked" });
       }
 
       switch (payment.status) {

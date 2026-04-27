@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "crypto";
 import { createPreference } from "@/lib/mercadopago/sdk";
 import { markCartRecovered, subscribeNewsletter } from "@/lib/brevo/client";
 import { getSession } from "@/lib/auth/session";
@@ -14,6 +15,54 @@ import {
   attributionToOrderMeta,
   type OrderAttributionInput,
 } from "@/lib/wordpress/order-attribution";
+
+/**
+ * Lock atómico via WP transient (Redis backend) para evitar race condition.
+ * Intenta adquirir el lock; si está tomado, reintenta cada 200ms hasta 3s.
+ * Devuelve null si el lock se adquirió (caller debe liberar al final),
+ * o un Response con 409 para devolver al cliente.
+ */
+async function acquireCheckoutLock(key: string, maxRetries = 15): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
+  const lockUrl = `${WP_URL}/wp-json/sistema-continuo/v1/checkout-lock`;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const r = await fetch(lockUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, ttl: 30 }),
+        cache: "no-store",
+      });
+      if (r.ok) {
+        const j = await r.json();
+        if (j.acquired) return { ok: true };
+      }
+    } catch (err) {
+      console.warn("[checkout-lock] error, continuando sin lock:", err);
+      // Fallback: si el lock endpoint falla (ej. WP caído), no bloqueamos checkout.
+      // El dedup por hash sigue funcionando aunque haya race posible.
+      return { ok: true };
+    }
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  // No pudimos adquirir el lock en 3s — otro request del mismo cliente está en curso.
+  return {
+    ok: false,
+    response: NextResponse.json(
+      { error: "Procesando otra solicitud, por favor esperá un momento e intentá de nuevo" },
+      { status: 409 }
+    ),
+  };
+}
+
+async function releaseCheckoutLock(key: string): Promise<void> {
+  try {
+    await fetch(`${WP_URL}/wp-json/sistema-continuo/v1/checkout-lock?key=${encodeURIComponent(key)}`, {
+      method: "DELETE",
+    });
+  } catch {
+    // No-op — el lock expira solo en 30s.
+  }
+}
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
@@ -75,7 +124,9 @@ interface CheckoutBody {
  */
 function computeCartHash(body: CheckoutBody): string {
   const items = [...body.items]
-    .map((i) => `${i.product_id}:${i.variation_id || 0}:${i.quantity}:${Math.round(i.price)}`)
+    // variation_id puede venir undefined / null / 0. Normalizamos siempre a 0.
+    // Antes el hash difería entre {variation_id: undefined} y {variation_id: 0} aunque eran lo mismo.
+    .map((i) => `${i.product_id}:${Number(i.variation_id) || 0}:${i.quantity}:${Math.round(i.price)}`)
     .sort()
     .join("|");
   const ship = `${body.shipping_method || ""}:${body.shipping_cost || 0}`;
@@ -99,7 +150,8 @@ interface WcOrderMin {
 
 function hashFromExistingOrder(order: WcOrderMin): string {
   const items = (order.line_items || [])
-    .map((i) => `${i.product_id}:${i.variation_id || 0}:${i.quantity}:${Math.round(parseFloat(String(i.price)))}`)
+    // Misma normalización que computeCartHash — variation_id puede ser null/undefined/0/string.
+    .map((i) => `${i.product_id}:${Number(i.variation_id) || 0}:${i.quantity}:${Math.round(parseFloat(String(i.price)))}`)
     .sort()
     .join("|");
   const ship = order.shipping_lines?.[0]
@@ -279,6 +331,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Lock atómico: previene race condition cuando el cliente apreta "Pagar" dos veces
+    // o mandan dos requests simultáneas. La key es sha256(email + cart_hash) — única por
+    // intento de checkout. El lock dura 30s, suficiente para que la primera request termine.
+    const cartHash = computeCartHash(body);
+    const lockKey = createHash("sha256")
+      .update(`${body.billing.email.toLowerCase()}|${cartHash}`)
+      .digest("hex")
+      .slice(0, 32);
+    const lockResult = await acquireCheckoutLock(lockKey);
+    if (!lockResult.ok) {
+      return lockResult.response;
+    }
+
+    try {
     // Asociar al customer WC si hay sesión; sino buscar por email; sino crear uno.
     // Política: todo pedido debe quedar asociado a un customer, nada de guest orders.
     let customerId: number | undefined;
@@ -372,6 +438,10 @@ export async function POST(request: NextRequest) {
       sandboxInitPoint: preference.sandbox_init_point,
       reused,
     });
+    } finally {
+      // Liberar el lock haya éxito o no — si falla, expira solo en 30s.
+      releaseCheckoutLock(lockKey).catch(() => {});
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error desconocido";
     console.error("Checkout error:", message);

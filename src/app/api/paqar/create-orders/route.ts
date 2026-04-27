@@ -115,14 +115,54 @@ export async function POST(request: NextRequest) {
     order = await enrichWithProductDims(order);
 
     const payloads = buildPaqarPayloads(order, { deliveryType, agencyId });
-    const responses = await paqarClient.createOrders(payloads);
 
-    const trackings = responses.map((r, idx) => ({
-      trackingNumber: r.trackingNumber,
-      bundleIndex: idx,
-    }));
+    // Antes usábamos Promise.all. Si TN1 se creaba OK pero TN2 fallaba, Promise.all
+    // rechazaba con el error de TN2 → no se guardaba nada → TN1 quedaba huérfano en
+    // PAQ.AR (creado allá, sin registro acá).
+    // Ahora usamos allSettled: guardamos los TNs que sí se crearon, dejamos rastro
+    // de los que fallaron, y si hay parciales devolvemos 207 para que el webhook MP
+    // dispare la alerta admin.
+    const settled = await Promise.allSettled(
+      payloads.map((p) => paqarClient.createOrder(p))
+    );
 
+    const trackings: Array<{ trackingNumber: string; bundleIndex: number }> = [];
+    const failed: Array<{ bundleIndex: number; error: string }> = [];
+    settled.forEach((r, idx) => {
+      if (r.status === "fulfilled") {
+        trackings.push({ trackingNumber: r.value.trackingNumber, bundleIndex: idx });
+      } else {
+        const msg = r.reason instanceof Error ? r.reason.message : String(r.reason);
+        failed.push({ bundleIndex: idx, error: msg.slice(0, 300) });
+        console.error(`[paqar/create-orders] bundle ${idx} fail:`, msg);
+      }
+    });
+
+    // Si TODOS fallaron, no guardamos nada y devolvemos 500.
+    if (trackings.length === 0) {
+      return NextResponse.json(
+        { error: "Todos los bultos fallaron", failed, bundles: payloads.length },
+        { status: 500 }
+      );
+    }
+
+    // Aunque sea parcial, guardamos los TNs exitosos. Mejor tener los buenos en WC
+    // que perderlos por un error parcial.
     await saveTrackingsToWc(orderId, trackings);
+
+    if (failed.length > 0) {
+      // Parcial: 207 Multi-Status. El webhook MP lo trata como error y dispara alerta admin.
+      return NextResponse.json(
+        {
+          ok: false,
+          partial: true,
+          bundles: payloads.length,
+          trackings,
+          failed,
+        },
+        { status: 207 }
+      );
+    }
 
     return NextResponse.json({
       ok: true,
