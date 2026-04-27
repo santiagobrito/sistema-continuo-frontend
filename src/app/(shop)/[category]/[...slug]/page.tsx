@@ -1,10 +1,8 @@
 import { notFound } from "next/navigation";
 import { getProduct, getCategory, getProductUrl, getCategoryUrl, getSettings } from "@/lib/wordpress/api";
-import { formatPrice, getWhatsAppUrl } from "@/lib/utils/format";
 import type { Metadata } from "next";
 import type { Product, Category } from "@/lib/wordpress/types";
 import { isCatalogProduct } from "@/lib/wordpress/types";
-import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { ProductActions } from "@/components/product/ProductActions";

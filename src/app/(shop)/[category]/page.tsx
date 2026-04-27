@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
-import { getCategory, getCategories, getCategoryUrl, getProductUrl } from "@/lib/wordpress/api";
-import { formatPrice } from "@/lib/utils/format";
+import { getCategory, getCategories, getCategoryUrl } from "@/lib/wordpress/api";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { FilterSidebar } from "@/components/shop/FilterSidebar";
 import ProductCard from "@/components/product/ProductCard";
