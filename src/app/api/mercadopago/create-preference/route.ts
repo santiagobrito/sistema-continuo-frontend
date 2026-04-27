@@ -148,17 +148,26 @@ async function findReusablePendingOrder(
     headers: { Authorization: `Basic ${WC_API_AUTH}` },
     cache: "no-store",
   });
-  if (!r.ok) return null;
+  if (!r.ok) {
+    console.warn(`[dedup] WC orders fetch failed: ${r.status}`);
+    return null;
+  }
   const orders: WcOrderMin[] = await r.json();
-  if (!Array.isArray(orders) || orders.length === 0) return null;
+  if (!Array.isArray(orders) || orders.length === 0) {
+    console.log(`[dedup] no pending orders found for ${customerId ? `customer ${customerId}` : `email ${body.billing.email}`}`);
+    return null;
+  }
 
   const targetHash = computeCartHash(body);
   const now = Date.now();
   const SHORT_WINDOW_MS = 2 * 60 * 60 * 1000;
 
+  console.log(`[dedup] target hash: ${targetHash} | candidates: ${orders.length}`);
   for (const o of orders) {
+    const candidateHash = hashFromExistingOrder(o);
+    console.log(`[dedup]   #${o.id} hash: ${candidateHash} | match: ${candidateHash === targetHash} | pm: ${o.payment_method}`);
     if (o.payment_method !== "mercadopago") continue;
-    if (hashFromExistingOrder(o) !== targetHash) continue;
+    if (candidateHash !== targetHash) continue;
 
     const ageMs = now - new Date(o.date_created).getTime();
     const paymentType = getMeta(o, "_mp_payment_type");
