@@ -60,8 +60,20 @@ export async function POST(request: NextRequest) {
     if (!body.items?.length) {
       return NextResponse.json({ error: "No hay productos" }, { status: 400 });
     }
-    if (!body.billing?.email || !body.billing?.first_name) {
-      return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+    // Defensa en profundidad — mismas reglas que create-preference. Sin estos campos
+    // no se puede facturar ni despachar (ver pedido #14676 que entró sin dirección).
+    const b = body.billing || ({} as OrderBody["billing"]);
+    const requiredAlways = ["first_name", "last_name", "email", "phone", "dni_cuit", "city", "state"] as const;
+    const missing = requiredAlways.filter((k) => !String(b[k] || "").trim());
+    const needsAddress = body.shipping_method && body.shipping_method !== "local_pickup" && body.shipping_method !== "correo_sucursal";
+    const needsPostcode = body.shipping_method && body.shipping_method !== "local_pickup";
+    if (needsAddress && !String(b.address_1 || "").trim()) missing.push("address_1");
+    if (needsPostcode && !String(b.postcode || "").trim()) missing.push("postcode");
+    if (missing.length > 0) {
+      return NextResponse.json(
+        { error: "Faltan datos requeridos", missing },
+        { status: 400 }
+      );
     }
 
     const paymentTitles: Record<string, string> = {

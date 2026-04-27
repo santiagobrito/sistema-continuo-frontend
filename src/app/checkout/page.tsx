@@ -541,11 +541,23 @@ export default function CheckoutPage() {
                   <input placeholder="Ciudad *" value={formData.city} onChange={(e) => updateField("city", e.target.value)} className={inputClass} />
                 </div>
 
-                {/* Address fields (hidden for local pickup) */}
-                {formData.state && (
+                {/* Address fields (hidden for local pickup).
+                    Para correo_sucursal address_1 es opcional (retiran en sucursal),
+                    pero postcode sigue siendo necesario para cotizar/identificar zona. */}
+                {formData.state && shippingMethod !== "local_pickup" && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-                    <input placeholder="Dirección" value={formData.address_1} onChange={(e) => updateField("address_1", e.target.value)} className={`${inputClass} sm:col-span-2`} />
-                    <input placeholder="Código postal" value={formData.postcode} onChange={(e) => updateField("postcode", e.target.value)} className={inputClass} />
+                    <input
+                      placeholder={shippingMethod === "correo_sucursal" ? "Dirección (opcional)" : "Dirección y número *"}
+                      value={formData.address_1}
+                      onChange={(e) => updateField("address_1", e.target.value)}
+                      className={`${inputClass} sm:col-span-2`}
+                    />
+                    <input
+                      placeholder="Código postal *"
+                      value={formData.postcode}
+                      onChange={(e) => updateField("postcode", e.target.value)}
+                      className={inputClass}
+                    />
                   </div>
                 )}
 
@@ -879,7 +891,19 @@ export default function CheckoutPage() {
                   type="submit"
                   disabled={
                     submitting ||
+                    !formData.first_name.trim() ||
+                    !formData.last_name.trim() ||
+                    !formData.email.trim() ||
+                    !formData.phone.trim() ||
+                    !formData.dni_cuit.trim() ||
+                    !formData.state ||
+                    !formData.city.trim() ||
                     !shippingMethod ||
+                    // address_1 y postcode son requeridos para todos los métodos excepto retiro en local.
+                    // Para correo_sucursal el cliente retira en una agencia: no necesita su propia dirección,
+                    // pero sí postcode (lo usa el quote y para identificar la región).
+                    (shippingMethod !== "local_pickup" && shippingMethod !== "correo_sucursal" && !formData.address_1.trim()) ||
+                    (shippingMethod !== "local_pickup" && !formData.postcode.trim()) ||
                     ((shippingMethod === "correo_domicilio" || shippingMethod === "correo_sucursal") && selectedShippingPrice <= 0) ||
                     (shippingMethod === "correo_sucursal" && !selectedAgencyId)
                   }
@@ -903,13 +927,36 @@ export default function CheckoutPage() {
                   )}
                 </button>
 
-                {!shippingMethod && !submitting && (
-                  <p className="mt-2 text-center text-xs text-amber-600 font-medium">
-                    {!formData.state
-                      ? "Selecciona tu provincia para elegir el método de envío"
-                      : "Selecciona un método de envío para continuar"}
-                  </p>
-                )}
+                {!submitting && (() => {
+                  // Lista los datos personales/dirección que falten. Hace explícito qué bloquea el botón.
+                  const missing: string[] = [];
+                  if (!formData.first_name.trim()) missing.push("Nombre");
+                  if (!formData.last_name.trim()) missing.push("Apellido");
+                  if (!formData.email.trim()) missing.push("Email");
+                  if (!formData.phone.trim()) missing.push("Teléfono");
+                  if (!formData.dni_cuit.trim()) missing.push("DNI o CUIT");
+                  if (!formData.state) missing.push("Provincia");
+                  if (!formData.city.trim()) missing.push("Ciudad");
+                  if (shippingMethod && shippingMethod !== "local_pickup" && shippingMethod !== "correo_sucursal" && !formData.address_1.trim()) missing.push("Dirección");
+                  if (shippingMethod && shippingMethod !== "local_pickup" && !formData.postcode.trim()) missing.push("Código postal");
+                  if (missing.length > 0) {
+                    return (
+                      <p className="mt-2 text-center text-xs text-amber-600 font-medium">
+                        Completá: {missing.join(", ")}
+                      </p>
+                    );
+                  }
+                  if (!shippingMethod) {
+                    return (
+                      <p className="mt-2 text-center text-xs text-amber-600 font-medium">
+                        {!formData.state
+                          ? "Selecciona tu provincia para elegir el método de envío"
+                          : "Selecciona un método de envío para continuar"}
+                      </p>
+                    );
+                  }
+                  return null;
+                })()}
                 {(shippingMethod === "correo_domicilio" || shippingMethod === "correo_sucursal") && selectedShippingPrice <= 0 && !submitting && (
                   <p className="mt-2 text-center text-xs text-amber-600 font-medium">
                     {!formData.postcode || formData.postcode.length < 4

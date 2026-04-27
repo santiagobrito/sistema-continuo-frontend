@@ -261,8 +261,22 @@ export async function POST(request: NextRequest) {
     if (!body.items?.length) {
       return NextResponse.json({ error: "No hay productos" }, { status: 400 });
     }
-    if (!body.billing?.email || !body.billing?.first_name) {
-      return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+    // Defensa en profundidad: el frontend ya valida estos campos en el botón disabled,
+    // pero alguien podría POSTear directo a este endpoint. Sin estos datos no podemos
+    // facturar ni despachar. Pedido #14676 (2026-04-24) llegó sin address_1 ni postcode
+    // porque la validación del frontend solo cubría método de envío.
+    const b = body.billing || ({} as CheckoutBody["billing"]);
+    const requiredAlways = ["first_name", "last_name", "email", "phone", "dni_cuit", "city", "state"] as const;
+    const missing = requiredAlways.filter((k) => !String(b[k] || "").trim());
+    const needsAddress = body.shipping_method && body.shipping_method !== "local_pickup" && body.shipping_method !== "correo_sucursal";
+    const needsPostcode = body.shipping_method && body.shipping_method !== "local_pickup";
+    if (needsAddress && !String(b.address_1 || "").trim()) missing.push("address_1");
+    if (needsPostcode && !String(b.postcode || "").trim()) missing.push("postcode");
+    if (missing.length > 0) {
+      return NextResponse.json(
+        { error: "Faltan datos requeridos", missing },
+        { status: 400 }
+      );
     }
 
     // Asociar al customer WC si hay sesión; sino buscar por email; sino crear uno.
