@@ -53,8 +53,15 @@ export interface Bundle {
 }
 
 export const SPLIT_RULES = {
-  /** Peso máximo en gramos para consolidar en una misma caja (15kg realista para carton estándar). */
-  MAX_CONSOLIDATED_WEIGHT_G: 15000,
+  /**
+   * Peso máximo en gramos para consolidar items chicos en una misma caja.
+   * 25kg deja un buffer de 5kg respecto al ABSOLUTE_MAX (30kg) para ítems con
+   * peso real subestimado por _weight desactualizado o cajas pesando de más.
+   * Decisión 2026-04-28: subir de 15kg a 25kg para reducir cantidad de bultos
+   * por orden grande y bajar el costo logístico — el cliente aceptó cajas más
+   * pesadas operativamente.
+   */
+  MAX_CONSOLIDATED_WEIGHT_G: 25000,
   /** Dimensión máxima (cualquier lado) en cm para consolidar. Correo acepta hasta 150cm por lado. */
   MAX_CONSOLIDATED_DIM_CM: 80,
   /** Volumen máximo por caja en cm³. Evita que productos "chatos y anchos" se separen innecesariamente. */
