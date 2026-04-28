@@ -437,9 +437,16 @@ export default function CheckoutPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Error al procesar el pedido");
 
-        // Try modal checkout, fallback to redirect
-        const mpPublicKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || "TEST-d8548e3c-e516-4a3e-ab89-d3b2d9c45ab6";
-        if (mpSdkReady && (window as unknown as Record<string, unknown>).MercadoPago) {
+        // Try modal checkout, fallback to redirect.
+        // OJO: usar SOLO la public key prod (NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY o
+        // alias NEXT_PUBLIC_MP_PUBLIC_KEY). NUNCA hardcodear fallback TEST acá: si
+        // la env var falta en build, queremos error visible — no que el cliente
+        // termine en sandbox sin saberlo.
+        const mpPublicKey =
+          process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY ||
+          process.env.NEXT_PUBLIC_MP_PUBLIC_KEY ||
+          "";
+        if (mpSdkReady && mpPublicKey && (window as unknown as Record<string, unknown>).MercadoPago) {
           try {
             const mp = new ((window as unknown as Record<string, { new(key: string, opts: Record<string, unknown>): unknown }>).MercadoPago)(mpPublicKey, { locale: "es-AR" });
             (mp as Record<string, (opts: Record<string, unknown>) => void>).checkout({
@@ -452,7 +459,11 @@ export default function CheckoutPage() {
             // Fallback to redirect
           }
         }
-        window.location.href = data.sandboxInitPoint || data.initPoint;
+        // initPoint es la URL de PRODUCCIÓN. sandboxInitPoint es solo para testing
+        // y NUNCA debe priorizarse en flujo real. Antes (commit d39e15c7) estaba
+        // invertido — los clientes caían a sandbox.mercadopago.com.ar y veían
+        // "esta es una cuenta de prueba".
+        window.location.href = data.initPoint || data.sandboxInitPoint;
       } else {
         const res = await fetch("/api/orders/create", {
           method: "POST",
