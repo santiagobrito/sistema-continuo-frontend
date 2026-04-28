@@ -60,10 +60,11 @@ export const SPLIT_RULES = {
   /** Volumen máximo por caja en cm³. Evita que productos "chatos y anchos" se separen innecesariamente. */
   MAX_CONSOLIDATED_VOLUME_CM3: 80000,
   /**
-   * Tope absoluto por bulto del acuerdo (API rechaza por encima).
-   * Leer del env PAQAR_MAX_WEIGHT_GRAMS, default 25000.
+   * Tope ABSOLUTO por bulto del acuerdo PAQ.AR (30kg confirmado por el cliente
+   * 2026-04-28). La API rechaza cualquier bulto por encima.
+   * Override vía env `PAQAR_MAX_WEIGHT_GRAMS` si Correo cambia el contrato.
    */
-  ABSOLUTE_MAX_WEIGHT_G: Number(process.env.PAQAR_MAX_WEIGHT_GRAMS) || 25000,
+  ABSOLUTE_MAX_WEIGHT_G: Number(process.env.PAQAR_MAX_WEIGHT_GRAMS) || 30000,
   /**
    * Dimensión mínima declarable (si el producto no tiene datos).
    * El API requiere dimensions obligatorias.
@@ -72,6 +73,17 @@ export const SPLIT_RULES = {
   /** Peso mínimo declarable si el producto no tiene datos. */
   FALLBACK_WEIGHT_G: 500,
 };
+
+/**
+ * Error específico de split — cuando un ítem no puede ir por PAQ.AR.
+ * El handler API lo convierte en un mensaje claro al admin.
+ */
+export class PaqarSplitError extends Error {
+  constructor(message: string, public readonly code: 'item_too_heavy' | 'bundle_too_heavy') {
+    super(message);
+    this.name = 'PaqarSplitError';
+  }
+}
 
 function maxDim(item: SplitItem): number {
   return Math.max(item.height || 0, item.width || 0, item.depth || 0);
@@ -93,12 +105,16 @@ function isBulky(item: SplitItem): boolean {
 }
 
 function makeBulkyBundle(item: SplitItem): Bundle {
+  const weight = Math.max(item.weight || SPLIT_RULES.FALLBACK_WEIGHT_G, 1);
+  if (weight > SPLIT_RULES.ABSOLUTE_MAX_WEIGHT_G) {
+    throw new PaqarSplitError(
+      `El producto "${item.name}" pesa ${(weight / 1000).toFixed(1)}kg y supera el máximo de ${SPLIT_RULES.ABSOLUTE_MAX_WEIGHT_G / 1000}kg por bulto del Correo Argentino. Despachalo por transporte al interior u otro método.`,
+      'item_too_heavy'
+    );
+  }
   return {
     items: [{ id: item.id, name: item.name, quantity: 1 }],
-    weightGrams: Math.max(
-      item.weight || SPLIT_RULES.FALLBACK_WEIGHT_G,
-      1
-    ),
+    weightGrams: weight,
     height: item.height || SPLIT_RULES.FALLBACK_DIM_CM,
     width: item.width || SPLIT_RULES.FALLBACK_DIM_CM,
     depth: item.depth || SPLIT_RULES.FALLBACK_DIM_CM,
@@ -185,11 +201,15 @@ export function splitIntoBundles(items: SplitItem[]): Bundle[] {
   }
   if (current.items.length > 0) bundles.push(current);
 
+  // Validación final: ningún bulto puede superar el tope absoluto.
+  // Si un consolidate-bundle quedó por encima (por ejemplo varios fallbacks
+  // sumaron mucho), cortar la creación: el flow está roto.
   for (const b of bundles) {
     if (b.weightGrams > SPLIT_RULES.ABSOLUTE_MAX_WEIGHT_G) {
-      console.warn(
-        `[paqar/split] bulto de ${b.weightGrams}g supera ABSOLUTE_MAX_WEIGHT_G=${SPLIT_RULES.ABSOLUTE_MAX_WEIGHT_G}. Items:`,
-        b.items
+      const itemList = b.items.map(i => `${i.quantity}x ${i.name}`).join(', ');
+      throw new PaqarSplitError(
+        `Bulto consolidado de ${(b.weightGrams / 1000).toFixed(1)}kg supera el máximo de ${SPLIT_RULES.ABSOLUTE_MAX_WEIGHT_G / 1000}kg de PAQ.AR. Contenido: ${itemList}.`,
+        'bundle_too_heavy'
       );
     }
   }
