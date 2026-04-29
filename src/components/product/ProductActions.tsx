@@ -318,7 +318,7 @@ function ShippingPaymentInfo() {
           </svg>
         </div>
         <div>
-          <p className="text-sm font-medium text-gray-900">Garantía 1 año</p>
+          <p className="text-sm font-medium text-gray-900">Producto con Garantía</p>
           <p className="text-xs text-gray-500">Soporte técnico y post-venta incluidos</p>
         </div>
       </div>

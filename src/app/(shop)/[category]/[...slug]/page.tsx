@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       p.marca ? `Marca ${p.marca}.` : "",
       p.price && !isCatalogProduct(p) ? `$${Number(p.price).toLocaleString("es-AR")}.` : "",
       "Envío a todo Argentina.",
-      "Garantía 1 año.",
+      "Producto con Garantía.",
       "Compra online en Sistema Continuo.",
     ].filter(Boolean).join(" ").slice(0, 160);
 

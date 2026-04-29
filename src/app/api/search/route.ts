@@ -50,6 +50,17 @@ interface RawProduct {
   purchasable: boolean;
   stock_status: string;
   unidad_venta: string;
+  sku: string;
+}
+
+// Heurística simple: una búsqueda parece SKU si tiene dígitos o guiones,
+// no contiene espacios y mide entre 3 y 30 chars. Saltea synonyms/typo fix
+// (rompen códigos como "ASD-123") y boostea match exacto.
+function looksLikeSku(q: string): boolean {
+  const s = q.trim();
+  if (s.length < 3 || s.length > 30) return false;
+  if (/\s/.test(s)) return false;
+  return /\d/.test(s) || /-/.test(s);
 }
 
 async function searchWP(term: string): Promise<RawProduct[]> {
@@ -73,9 +84,19 @@ function scoreProduct(
 ): number {
   const nameLower = product.name.toLowerCase();
   const marcaLower = (product.marca || "").toLowerCase();
+  const skuLower = (product.sku || "").toLowerCase();
   const qLower = originalQuery.toLowerCase();
 
   let score = 0;
+
+  // Match por SKU — señal muy fuerte. Coincidencia exacta = top.
+  if (skuLower && qLower) {
+    if (skuLower === qLower) {
+      score += 500;
+    } else if (skuLower.includes(qLower) || qLower.includes(skuLower)) {
+      score += 250;
+    }
+  }
 
   // Full phrase match in name — strongest signal
   if (nameLower.includes(qLower)) {
@@ -130,8 +151,14 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Process query: fix typos + expand synonyms
-    const { corrected, variants, wasCorrected } = processSearchQuery(q);
+    // Si el query parece un SKU (sin espacios, con dígitos o guiones), saltamos
+    // synonyms/fuzzy — destrozarían el código. Lo pasamos crudo a WP.
+    const isSkuQuery = looksLikeSku(q);
+
+    // Process query: fix typos + expand synonyms (skip for SKU-like queries)
+    const { corrected, variants, wasCorrected } = isSkuQuery
+      ? { corrected: q.toLowerCase(), variants: [q.toLowerCase()], wasCorrected: false }
+      : processSearchQuery(q);
 
     // Build list of WP search terms to try
     // For each variant, pick the longest word (most distinctive) for WP search

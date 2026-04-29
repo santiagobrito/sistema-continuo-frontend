@@ -225,6 +225,39 @@ export function splitIntoBundles(items: SplitItem[]): Bundle[] {
 }
 
 /**
+ * Override manual: arma UN solo bundle con todos los items, ignorando los topes
+ * de consolidación. Sólo respeta el ABSOLUTE_MAX_WEIGHT_G del contrato PAQ.AR
+ * (porque arriba de eso lo rechaza la API). Útil cuando el split automático
+ * generó N bultos pero físicamente entra todo en uno (ej. orden #14764: 27kg
+ * que el split partió en 2 por la regla de consolidación de 25kg).
+ */
+export function forceSingleBundle(items: SplitItem[]): Bundle[] {
+  if (items.length === 0) return [];
+
+  const bundle = newEmptyBundle();
+  let dominantCategory: string | undefined;
+
+  for (const item of items) {
+    for (let i = 0; i < item.quantity; i++) {
+      addToConsolidated(bundle, item);
+    }
+    if (!dominantCategory && item.category) dominantCategory = item.category;
+  }
+
+  if (dominantCategory) bundle.category = dominantCategory;
+
+  if (bundle.weightGrams > SPLIT_RULES.ABSOLUTE_MAX_WEIGHT_G) {
+    const itemList = bundle.items.map((i) => `${i.quantity}x ${i.name}`).join(", ");
+    throw new PaqarSplitError(
+      `Forzar bulto único: ${(bundle.weightGrams / 1000).toFixed(1)}kg supera el máximo de ${SPLIT_RULES.ABSOLUTE_MAX_WEIGHT_G / 1000}kg de PAQ.AR. Contenido: ${itemList}.`,
+      "bundle_too_heavy"
+    );
+  }
+
+  return [bundle];
+}
+
+/**
  * Convierte un Bundle al formato `parcels[0]` del payload PAQ.AR.
  */
 export function bundleToParcel(b: Bundle): PaqarParcel {

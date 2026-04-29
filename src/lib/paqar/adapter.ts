@@ -12,7 +12,7 @@ import type {
   PaqarPerson,
   DeliveryType,
 } from "./types";
-import { splitIntoBundles, bundleToParcel, type SplitItem } from "./split";
+import { splitIntoBundles, forceSingleBundle, bundleToParcel, type SplitItem } from "./split";
 import { provinceNameToCode } from "./provinces";
 import { getSenderData } from "./sender";
 import { paqarClient } from "./client";
@@ -63,6 +63,13 @@ export interface BuildOptions {
   serviceType?: string;
   /** Para logs / idempotencia. */
   shipmentClientId?: string;
+  /**
+   * Forzar todos los items en un único bulto, ignorando los topes de
+   * consolidación. Sólo se respeta el tope absoluto del contrato PAQ.AR.
+   * Override manual desde el panel admin para órdenes que físicamente entran
+   * en un bulto pero que el split automático partió por la regla de 25kg.
+   */
+  forceSingleBundle?: boolean;
 }
 
 /**
@@ -202,7 +209,10 @@ export function buildPaqarPayloads(
 
   const senderData = getSenderData();
   const shippingData = buildShippingData(order, opts.deliveryType);
-  const bundles = splitIntoBundles(wcItemsToSplitItems(order));
+  const splitItems = wcItemsToSplitItems(order);
+  const bundles = opts.forceSingleBundle
+    ? forceSingleBundle(splitItems)
+    : splitIntoBundles(splitItems);
 
   if (bundles.length === 0) {
     throw new Error(`PAQ.AR: orden #${order.id} sin ítems despachables`);

@@ -98,10 +98,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { orderId, deliveryType, agencyId } = body as {
+    const { orderId, deliveryType, agencyId, forceSingleBundle } = body as {
       orderId: number;
       deliveryType: DeliveryType;
       agencyId?: string;
+      forceSingleBundle?: boolean;
     };
 
     if (!orderId || !deliveryType) {
@@ -114,7 +115,11 @@ export async function POST(request: NextRequest) {
     let order = await fetchWcOrder(orderId);
     order = await enrichWithProductDims(order);
 
-    const payloads = buildPaqarPayloads(order, { deliveryType, agencyId });
+    const payloads = buildPaqarPayloads(order, {
+      deliveryType,
+      agencyId,
+      forceSingleBundle: !!forceSingleBundle,
+    });
 
     // Antes usábamos Promise.all. Si TN1 se creaba OK pero TN2 fallaba, Promise.all
     // rechazaba con el error de TN2 → no se guardaba nada → TN1 quedaba huérfano en

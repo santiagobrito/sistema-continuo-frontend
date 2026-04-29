@@ -356,7 +356,6 @@ export default function CheckoutPage() {
   }
 
   const selectedShipping = ALL_SHIPPING_OPTIONS.find((o) => o.id === shippingMethod);
-  const needsAddress = shippingMethod !== "local_pickup" && shippingMethod !== "";
   const selectedShippingPrice = selectedShipping
     ? getShippingPrice(selectedShipping.id, selectedShipping.price)
     : 0;
@@ -552,13 +551,25 @@ export default function CheckoutPage() {
                   <input placeholder="Ciudad *" value={formData.city} onChange={(e) => updateField("city", e.target.value)} className={inputClass} />
                 </div>
 
-                {/* Address fields (hidden for local pickup).
+                {/* Address fields. Para retiro en local: pedimos calle/número/CP
+                    igualmente porque AFIP los exige en la factura.
                     Para correo_sucursal address_1 es opcional (retiran en sucursal),
                     pero postcode sigue siendo necesario para cotizar/identificar zona. */}
-                {formData.state && shippingMethod !== "local_pickup" && (
+                {formData.state && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+                    {shippingMethod === "local_pickup" && (
+                      <p className="sm:col-span-2 -mt-1 text-xs text-gray-500">
+                        Necesitamos calle, número y código postal para emitir la factura.
+                      </p>
+                    )}
                     <input
-                      placeholder={shippingMethod === "correo_sucursal" ? "Dirección (opcional)" : "Dirección y número *"}
+                      placeholder={
+                        shippingMethod === "correo_sucursal"
+                          ? "Dirección (opcional)"
+                          : shippingMethod === "local_pickup"
+                          ? "Calle y número (facturación) *"
+                          : "Dirección y número *"
+                      }
                       value={formData.address_1}
                       onChange={(e) => updateField("address_1", e.target.value)}
                       className={`${inputClass} sm:col-span-2`}
@@ -910,11 +921,13 @@ export default function CheckoutPage() {
                     !formData.state ||
                     !formData.city.trim() ||
                     !shippingMethod ||
-                    // address_1 y postcode son requeridos para todos los métodos excepto retiro en local.
-                    // Para correo_sucursal el cliente retira en una agencia: no necesita su propia dirección,
-                    // pero sí postcode (lo usa el quote y para identificar la región).
-                    (shippingMethod !== "local_pickup" && shippingMethod !== "correo_sucursal" && !formData.address_1.trim()) ||
-                    (shippingMethod !== "local_pickup" && !formData.postcode.trim()) ||
+                    // address_1 y postcode son requeridos siempre para facturación AFIP.
+                    // Excepción: correo_sucursal puede tener address_1 vacío porque
+                    // el cliente retira en agencia y la factura usa los datos de
+                    // facturación (que sí toman calle/CP de los campos siguientes
+                    // si los completó); aquí mantenemos relax sólo en address_1.
+                    (shippingMethod !== "correo_sucursal" && !formData.address_1.trim()) ||
+                    !formData.postcode.trim() ||
                     ((shippingMethod === "correo_domicilio" || shippingMethod === "correo_sucursal") && selectedShippingPrice <= 0) ||
                     (shippingMethod === "correo_sucursal" && !selectedAgencyId)
                   }
@@ -948,8 +961,8 @@ export default function CheckoutPage() {
                   if (!formData.dni_cuit.trim()) missing.push("DNI o CUIT");
                   if (!formData.state) missing.push("Provincia");
                   if (!formData.city.trim()) missing.push("Ciudad");
-                  if (shippingMethod && shippingMethod !== "local_pickup" && shippingMethod !== "correo_sucursal" && !formData.address_1.trim()) missing.push("Dirección");
-                  if (shippingMethod && shippingMethod !== "local_pickup" && !formData.postcode.trim()) missing.push("Código postal");
+                  if (shippingMethod && shippingMethod !== "correo_sucursal" && !formData.address_1.trim()) missing.push("Dirección");
+                  if (shippingMethod && !formData.postcode.trim()) missing.push("Código postal");
                   if (missing.length > 0) {
                     return (
                       <p className="mt-2 text-center text-xs text-amber-600 font-medium">
