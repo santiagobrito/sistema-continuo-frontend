@@ -188,6 +188,11 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (cartTracked || !formData.email || !formData.email.includes("@") || !cart) return;
+    // No capturar carts vacíos — sobrescriben uno bueno guardado antes y el cron termina
+    // mandando "Tu carrito te espera — Total: $0" (bug observado en cart de Marisa, 2026-04-29).
+    if (!cart.items?.length) return;
+    const total = parseInt(cart.totals.total_items || "0");
+    if (!total || total <= 0) return;
     const timer = setTimeout(() => {
       fetch("/api/abandoned-cart", {
         method: "POST",
@@ -197,7 +202,7 @@ export default function CheckoutPage() {
           name: `${formData.first_name} ${formData.last_name}`.trim(),
           phone: formData.phone,
           items: cart.items.map((i) => ({ id: i.id, sku: i.sku, name: i.name, quantity: i.quantity, price: parseInt(i.prices.price) })),
-          total: parseInt(cart.totals.total_items || "0"),
+          total,
         }),
       }).catch(() => {});
       setCartTracked(true);
