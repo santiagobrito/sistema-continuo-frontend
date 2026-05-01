@@ -556,25 +556,19 @@ export default function CheckoutPage() {
                   <input placeholder="Ciudad *" value={formData.city} onChange={(e) => updateField("city", e.target.value)} className={inputClass} />
                 </div>
 
-                {/* Address fields. Para retiro en local: pedimos calle/número/CP
-                    igualmente porque AFIP los exige en la factura.
-                    Para correo_sucursal address_1 es opcional (retiran en sucursal),
-                    pero postcode sigue siendo necesario para cotizar/identificar zona. */}
+                {/* Address fields. Calle/número/CP siempre obligatorios — AFIP los
+                    exige en la factura, da igual el método de envío (incluso retiro
+                    en local o correo a sucursal). El destino del envío puede ser otro
+                    (sucursal/local), pero los datos de facturación son del comprador. */}
                 {formData.state && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-                    {shippingMethod === "local_pickup" && (
+                    {(shippingMethod === "local_pickup" || shippingMethod === "correo_sucursal") && (
                       <p className="sm:col-span-2 -mt-1 text-xs text-gray-500">
                         Necesitamos calle, número y código postal para emitir la factura.
                       </p>
                     )}
                     <input
-                      placeholder={
-                        shippingMethod === "correo_sucursal"
-                          ? "Dirección (opcional)"
-                          : shippingMethod === "local_pickup"
-                          ? "Calle y número (facturación) *"
-                          : "Dirección y número *"
-                      }
+                      placeholder="Calle y número (facturación) *"
                       value={formData.address_1}
                       onChange={(e) => updateField("address_1", e.target.value)}
                       className={`${inputClass} sm:col-span-2`}
@@ -926,12 +920,11 @@ export default function CheckoutPage() {
                     !formData.state ||
                     !formData.city.trim() ||
                     !shippingMethod ||
-                    // address_1 y postcode son requeridos siempre para facturación AFIP.
-                    // Excepción: correo_sucursal puede tener address_1 vacío porque
-                    // el cliente retira en agencia y la factura usa los datos de
-                    // facturación (que sí toman calle/CP de los campos siguientes
-                    // si los completó); aquí mantenemos relax sólo en address_1.
-                    (shippingMethod !== "correo_sucursal" && !formData.address_1.trim()) ||
+                    // address_1 y postcode son SIEMPRE requeridos para facturación
+                    // AFIP, sin importar el método de envío. El destino del envío
+                    // puede ser otro (sucursal/local), pero la factura usa la
+                    // dirección del comprador.
+                    !formData.address_1.trim() ||
                     !formData.postcode.trim() ||
                     ((shippingMethod === "correo_domicilio" || shippingMethod === "correo_sucursal") && selectedShippingPrice <= 0) ||
                     (shippingMethod === "correo_sucursal" && !selectedAgencyId)
@@ -966,7 +959,7 @@ export default function CheckoutPage() {
                   if (!formData.dni_cuit.trim()) missing.push("DNI o CUIT");
                   if (!formData.state) missing.push("Provincia");
                   if (!formData.city.trim()) missing.push("Ciudad");
-                  if (shippingMethod && shippingMethod !== "correo_sucursal" && !formData.address_1.trim()) missing.push("Dirección");
+                  if (shippingMethod && !formData.address_1.trim()) missing.push("Dirección");
                   if (shippingMethod && !formData.postcode.trim()) missing.push("Código postal");
                   if (missing.length > 0) {
                     return (

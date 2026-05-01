@@ -320,11 +320,11 @@ export async function POST(request: NextRequest) {
     const b = body.billing || ({} as CheckoutBody["billing"]);
     const requiredAlways: Array<keyof CheckoutBody["billing"]> = ["first_name", "last_name", "email", "phone", "dni_cuit", "city", "state"];
     const missing: string[] = requiredAlways.filter((k) => !String(b[k] || "").trim());
-    // address_1 y postcode siempre requeridos para facturación AFIP, incluso
-    // en local_pickup. Sólo correo_sucursal puede tener address_1 vacío
-    // (cliente retira en agencia y los datos de facturación se toman de billing).
-    const needsAddress = body.shipping_method && body.shipping_method !== "correo_sucursal";
-    if (needsAddress && !String(b.address_1 || "").trim()) missing.push("address_1");
+    // address_1 y postcode SIEMPRE requeridos para facturación AFIP, sin
+    // importar el método de envío (incluyendo correo_sucursal y local_pickup).
+    // El destino del envío puede ser sucursal o local, pero los datos de
+    // facturación son del comprador.
+    if (!String(b.address_1 || "").trim()) missing.push("address_1");
     if (!String(b.postcode || "").trim()) missing.push("postcode");
     if (missing.length > 0) {
       return NextResponse.json(
