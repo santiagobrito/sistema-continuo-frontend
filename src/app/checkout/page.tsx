@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { formatStorePrice } from "@/lib/utils/format";
 import Image from "next/image";
 import Link from "next/link";
-import Script from "next/script";
 import { getGclid } from "@/components/analytics/GclidCapture";
 import { getAttribution } from "@/components/analytics/AttributionCapture";
 import { fbPixelTrack } from "@/lib/fbpixel/client";
@@ -132,8 +131,6 @@ export default function CheckoutPage() {
         hasZeroWeight?: boolean;
       }
   >(null);
-  const mpCheckoutRef = useRef<HTMLDivElement>(null);
-  const [mpSdkReady, setMpSdkReady] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
 
   // Auto-fill from user profile if logged in
@@ -441,33 +438,13 @@ export default function CheckoutPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Error al procesar el pedido");
 
-        // Try modal checkout, fallback to redirect.
-        // OJO: usar SOLO la public key prod (NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY o
-        // alias NEXT_PUBLIC_MP_PUBLIC_KEY). NUNCA hardcodear fallback TEST acá: si
-        // la env var falta en build, queremos error visible — no que el cliente
-        // termine en sandbox sin saberlo.
-        const mpPublicKey =
-          process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY ||
-          process.env.NEXT_PUBLIC_MP_PUBLIC_KEY ||
-          "";
-        if (mpSdkReady && mpPublicKey && (window as unknown as Record<string, unknown>).MercadoPago) {
-          try {
-            const mp = new ((window as unknown as Record<string, { new(key: string, opts: Record<string, unknown>): unknown }>).MercadoPago)(mpPublicKey, { locale: "es-AR" });
-            (mp as Record<string, (opts: Record<string, unknown>) => void>).checkout({
-              preference: { id: data.preferenceId },
-              autoOpen: true,
-            });
-            setSubmitting(false);
-            return;
-          } catch {
-            // Fallback to redirect
-          }
-        }
-        // initPoint es la URL de PRODUCCIÓN. sandboxInitPoint es solo para testing
-        // y NUNCA debe priorizarse en flujo real. Antes (commit d39e15c7) estaba
-        // invertido — los clientes caían a sandbox.mercadopago.com.ar y veían
-        // "esta es una cuenta de prueba".
-        window.location.href = data.initPoint || data.sandboxInitPoint;
+        // Redirect directo a Checkout Pro. El modal MP del SDK v2 (mp.checkout autoOpen)
+        // perdió el "user activation" gesture al hacer await fetch arriba, y Chrome
+        // bloqueaba el popup. MP también tiene problemas con third-party cookies en
+        // Chrome incógnito. El redirect es la integración estable de MP.
+        // back_urls + auto_return:"approved" en createPreference traen al cliente de
+        // vuelta a /pedido-confirmado automáticamente al pagar.
+        window.location.href = data.initPoint;
       } else {
         const res = await fetch("/api/orders/create", {
           method: "POST",
@@ -1007,11 +984,6 @@ export default function CheckoutPage() {
           </div>
         </form>
       </div>
-      <Script
-        src="https://sdk.mercadopago.com/js/v2"
-        onLoad={() => setMpSdkReady(true)}
-        strategy="lazyOnload"
-      />
     </main>
   );
 }
