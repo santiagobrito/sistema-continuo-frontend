@@ -196,22 +196,47 @@ async function findReusablePendingOrder(
   } else {
     params.set("billing_email", body.billing.email);
   }
+  // Nota: WC ignora `billing_email` como filtro en /wc/v3/orders (verificado
+  // 2026-05-02 con #15028/15029). Si caemos a esa rama, devuelve TODAS las
+  // pendings sin filtrar y la dedup se vuelve a ciegas. Por eso los logs de
+  // abajo registran el modo de filtro real.
+  const filterMode = customerId ? `customer=${customerId}` : `email=${body.billing.email}(unfiltered)`;
 
-  const r = await fetch(`${WP_URL}/wp-json/wc/v3/orders?${params}`, {
-    headers: { Authorization: `Basic ${WC_API_AUTH}` },
-    cache: "no-store",
-  });
-  if (!r.ok) return null;
+  let r: Response;
+  try {
+    r = await fetch(`${WP_URL}/wp-json/wc/v3/orders?${params}`, {
+      headers: { Authorization: `Basic ${WC_API_AUTH}` },
+      cache: "no-store",
+    });
+  } catch (e) {
+    console.warn("[dedup] WC fetch threw — creando nueva orden", { filterMode, err: String(e) });
+    return null;
+  }
+  if (!r.ok) {
+    console.warn("[dedup] WC fetch !ok — creando nueva orden", { filterMode, status: r.status });
+    return null;
+  }
   const orders: WcOrderMin[] = await r.json();
-  if (!Array.isArray(orders) || orders.length === 0) return null;
+  if (!Array.isArray(orders) || orders.length === 0) {
+    console.log("[dedup] sin candidatos pending", { filterMode });
+    return null;
+  }
 
   const targetHash = computeCartHash(body);
   const now = Date.now();
   const SHORT_WINDOW_MS = 2 * 60 * 60 * 1000;
+  const considered: Array<{ id: number; reason: string; ageMin?: number }> = [];
 
   for (const o of orders) {
-    if (o.payment_method !== "mercadopago") continue;
-    if (hashFromExistingOrder(o) !== targetHash) continue;
+    if (o.payment_method !== "mercadopago") {
+      considered.push({ id: o.id, reason: `pm=${o.payment_method}` });
+      continue;
+    }
+    const oHash = hashFromExistingOrder(o);
+    if (oHash !== targetHash) {
+      considered.push({ id: o.id, reason: "hash_mismatch" });
+      continue;
+    }
 
     // WC devuelve date_created en hora local del site (sin "Z"); para no caer en
     // bug de zona horaria usar date_created_gmt + "Z" para forzar parseo UTC.
@@ -219,6 +244,7 @@ async function findReusablePendingOrder(
       ? `${o.date_created_gmt}Z`
       : o.date_created;
     const ageMs = now - new Date(dateStr).getTime();
+    const ageMin = Math.round(ageMs / 60000);
     const paymentType = getMeta(o, "_mp_payment_type");
     const mpStatus = getMeta(o, "_mp_status");
     const isOfflineLive =
@@ -226,9 +252,17 @@ async function findReusablePendingOrder(
       ["pending", "in_process"].includes(mpStatus || "");
 
     // Reutilizar si: dentro de 2h, o si hay pago offline vivo dentro de 96h.
-    if (ageMs <= SHORT_WINDOW_MS) return o;
-    if (isOfflineLive && ageMs <= WINDOW_LONG_MS) return o;
+    if (ageMs <= SHORT_WINDOW_MS) {
+      console.log("[dedup] HIT — reusando orden", { filterMode, orderId: o.id, ageMin });
+      return o;
+    }
+    if (isOfflineLive && ageMs <= WINDOW_LONG_MS) {
+      console.log("[dedup] HIT offline — reusando orden", { filterMode, orderId: o.id, ageMin });
+      return o;
+    }
+    considered.push({ id: o.id, reason: "out_of_window", ageMin });
   }
+  console.log("[dedup] MISS — creando nueva orden", { filterMode, candidates: orders.length, targetHash, considered });
   return null;
 }
 
