@@ -18,6 +18,16 @@ export interface CampaignReportRow {
   roas: number;
 }
 
+export interface CampaignGroupTotals {
+  impressions: number;
+  clicks: number;
+  cost: number;
+  orders: number;
+  revenue: number;
+  roas: number;
+  ctr: number;
+}
+
 export interface WeeklyReportData {
   weekStart: string;
   weekEnd: string;
@@ -32,7 +42,10 @@ export interface WeeklyReportData {
     clicks: number;
     ctr: number;
   };
-  byCampaign: CampaignReportRow[];
+  byCampaignMarca: CampaignReportRow[];
+  byCampaignCaptacion: CampaignReportRow[];
+  totalsMarca: CampaignGroupTotals;
+  totalsCaptacion: CampaignGroupTotals;
   individualOrders: {
     number: string;
     date: string;
@@ -100,6 +113,25 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginTop: 16,
     marginBottom: 8,
+  },
+  groupTitle: {
+    fontSize: 12,
+    fontFamily: "Helvetica-Bold",
+    color: "#1a1a1a",
+    marginTop: 14,
+    marginBottom: 2,
+  },
+  groupSubtitle: {
+    fontSize: 9,
+    color: "#888",
+    marginBottom: 6,
+  },
+  emptyGroup: {
+    fontSize: 9,
+    color: "#999",
+    fontStyle: "italic",
+    paddingVertical: 8,
+    paddingHorizontal: 8,
   },
 
   kpisGrid: {
@@ -214,6 +246,109 @@ function fmtFechaCorta(iso: string) {
   }
 }
 
+function CampaignGroupTable({
+  title,
+  subtitle,
+  rows,
+  totals,
+}: {
+  title: string;
+  subtitle: string;
+  rows: CampaignReportRow[];
+  totals: CampaignGroupTotals;
+}) {
+  return (
+    <View>
+      <Text style={styles.groupTitle}>{title}</Text>
+      <Text style={styles.groupSubtitle}>{subtitle}</Text>
+
+      <View style={styles.table}>
+        <View style={styles.tableHeader}>
+          <Text style={[styles.th, styles.colName]}>Campaña</Text>
+          <Text style={[styles.th, { width: "9%" }, styles.colCenter]}>Impr.</Text>
+          <Text style={[styles.th, { width: "9%" }, styles.colCenter]}>Clicks</Text>
+          <Text style={[styles.th, { width: "12%" }, styles.colRight]}>Inversión</Text>
+          <Text style={[styles.th, { width: "8%" }, styles.colCenter]}>Ventas</Text>
+          <Text style={[styles.th, { width: "14%" }, styles.colRight]}>Revenue</Text>
+          <Text style={[styles.th, { width: "8%" }, styles.colCenter]}>CVR</Text>
+          <Text style={[styles.th, { width: "10%" }, styles.colRight]}>ROAS</Text>
+        </View>
+
+        {rows.length === 0 ? (
+          <Text style={styles.emptyGroup}>Sin campañas activas en esta categoría durante la semana.</Text>
+        ) : (
+          rows.map((row, i) => (
+            <View
+              key={row.campaign}
+              style={[styles.tableRow, i % 2 === 1 ? styles.tableRowAlt : {}]}
+            >
+              <Text style={[styles.td, styles.colName, styles.tdBold]}>
+                {row.campaign.slice(0, 40)}
+              </Text>
+              <Text style={[styles.td, { width: "9%" }, styles.colCenter]}>
+                {num(row.impressions)}
+              </Text>
+              <Text style={[styles.td, { width: "9%" }, styles.colCenter]}>
+                {num(row.clicks)}
+              </Text>
+              <Text style={[styles.td, { width: "12%" }, styles.colRight]}>
+                {pesoARS(row.cost)}
+              </Text>
+              <Text style={[styles.td, { width: "8%" }, styles.colCenter]}>
+                {row.orders}
+              </Text>
+              <Text style={[styles.td, { width: "14%" }, styles.colRight, styles.tdBold]}>
+                {pesoARS(row.revenue)}
+              </Text>
+              <Text style={[styles.td, { width: "8%" }, styles.colCenter]}>
+                {row.conversionRate > 0 ? pct(row.conversionRate) : "—"}
+              </Text>
+              <Text
+                style={[
+                  styles.td,
+                  { width: "10%" },
+                  styles.colRight,
+                  styles.tdBold,
+                  { color: row.roas >= 5 ? "#16a34a" : row.roas >= 1 ? "#ca8a04" : "#dc2626" },
+                ]}
+              >
+                {row.roas > 0 ? row.roas.toFixed(1) + "x" : "—"}
+              </Text>
+            </View>
+          ))
+        )}
+
+        {rows.length > 0 && (
+          <View style={styles.totalsRow}>
+            <Text style={[styles.td, styles.colName, styles.tdBold]}>SUBTOTAL</Text>
+            <Text style={[styles.td, { width: "9%" }, styles.colCenter, styles.tdBold]}>
+              {num(totals.impressions)}
+            </Text>
+            <Text style={[styles.td, { width: "9%" }, styles.colCenter, styles.tdBold]}>
+              {num(totals.clicks)}
+            </Text>
+            <Text style={[styles.td, { width: "12%" }, styles.colRight, styles.tdBold]}>
+              {pesoARS(totals.cost)}
+            </Text>
+            <Text style={[styles.td, { width: "8%" }, styles.colCenter, styles.tdBold]}>
+              {totals.orders}
+            </Text>
+            <Text style={[styles.td, { width: "14%" }, styles.colRight, styles.tdBold]}>
+              {pesoARS(totals.revenue)}
+            </Text>
+            <Text style={[styles.td, { width: "8%" }, styles.colCenter, styles.tdBold]}>
+              —
+            </Text>
+            <Text style={[styles.td, { width: "10%" }, styles.colRight, styles.tdBold]}>
+              {totals.roas > 0 ? totals.roas.toFixed(1) + "x" : "—"}
+            </Text>
+          </View>
+        )}
+      </View>
+    </View>
+  );
+}
+
 export function AdsWeeklyReportPDF({ data }: { data: WeeklyReportData }) {
   const periodo = `${fmtFechaCorta(data.weekStart)} – ${fmtFechaCorta(data.weekEnd)}`;
   const attributionRate =
@@ -300,86 +435,19 @@ export function AdsWeeklyReportPDF({ data }: { data: WeeklyReportData }) {
 
         <Text style={styles.sectionLabel}>Detalle por campaña</Text>
 
-        <View style={styles.table}>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.th, styles.colName]}>Campaña</Text>
-            <Text style={[styles.th, { width: "9%" }, styles.colCenter]}>Impr.</Text>
-            <Text style={[styles.th, { width: "9%" }, styles.colCenter]}>Clicks</Text>
-            <Text style={[styles.th, { width: "12%" }, styles.colRight]}>Inversión</Text>
-            <Text style={[styles.th, { width: "8%" }, styles.colCenter]}>Ventas</Text>
-            <Text style={[styles.th, { width: "14%" }, styles.colRight]}>Revenue</Text>
-            <Text style={[styles.th, { width: "8%" }, styles.colCenter]}>CVR</Text>
-            <Text style={[styles.th, { width: "10%" }, styles.colRight]}>ROAS</Text>
-          </View>
+        <CampaignGroupTable
+          title="Captación — tráfico nuevo"
+          subtitle="Shopping, Search genéricas, competidores. ROAS real de adquisición."
+          rows={data.byCampaignCaptacion}
+          totals={data.totalsCaptacion}
+        />
 
-          {data.byCampaign.map((row, i) => (
-            <View
-              key={row.campaign}
-              style={[
-                styles.tableRow,
-                i % 2 === 1 ? styles.tableRowAlt : {},
-              ]}
-            >
-              <Text style={[styles.td, styles.colName, styles.tdBold]}>
-                {row.campaign.slice(0, 40)}
-              </Text>
-              <Text style={[styles.td, { width: "9%" }, styles.colCenter]}>
-                {num(row.impressions)}
-              </Text>
-              <Text style={[styles.td, { width: "9%" }, styles.colCenter]}>
-                {num(row.clicks)}
-              </Text>
-              <Text style={[styles.td, { width: "12%" }, styles.colRight]}>
-                {pesoARS(row.cost)}
-              </Text>
-              <Text style={[styles.td, { width: "8%" }, styles.colCenter]}>
-                {row.orders}
-              </Text>
-              <Text style={[styles.td, { width: "14%" }, styles.colRight, styles.tdBold]}>
-                {pesoARS(row.revenue)}
-              </Text>
-              <Text style={[styles.td, { width: "8%" }, styles.colCenter]}>
-                {row.conversionRate > 0 ? pct(row.conversionRate) : "—"}
-              </Text>
-              <Text
-                style={[
-                  styles.td,
-                  { width: "10%" },
-                  styles.colRight,
-                  styles.tdBold,
-                  { color: row.roas >= 5 ? "#16a34a" : row.roas >= 1 ? "#ca8a04" : "#dc2626" },
-                ]}
-              >
-                {row.roas > 0 ? row.roas.toFixed(1) + "x" : "—"}
-              </Text>
-            </View>
-          ))}
-
-          <View style={styles.totalsRow}>
-            <Text style={[styles.td, styles.colName, styles.tdBold]}>TOTAL</Text>
-            <Text style={[styles.td, { width: "9%" }, styles.colCenter, styles.tdBold]}>
-              {num(data.totals.impressions)}
-            </Text>
-            <Text style={[styles.td, { width: "9%" }, styles.colCenter, styles.tdBold]}>
-              {num(data.totals.clicks)}
-            </Text>
-            <Text style={[styles.td, { width: "12%" }, styles.colRight, styles.tdBold]}>
-              {pesoARS(data.totals.cost)}
-            </Text>
-            <Text style={[styles.td, { width: "8%" }, styles.colCenter, styles.tdBold]}>
-              {data.totals.ordersAttributed}
-            </Text>
-            <Text style={[styles.td, { width: "14%" }, styles.colRight, styles.tdBold]}>
-              {pesoARS(data.totals.revenueAttributed)}
-            </Text>
-            <Text style={[styles.td, { width: "8%" }, styles.colCenter, styles.tdBold]}>
-              —
-            </Text>
-            <Text style={[styles.td, { width: "10%" }, styles.colRight, styles.tdBold]}>
-              {data.totals.roas.toFixed(1)}x
-            </Text>
-          </View>
-        </View>
+        <CampaignGroupTable
+          title="Marca — tráfico que ya te conocía"
+          subtitle="ROAS infla por audiencia caliente. Mide retención + asistencia, no adquisición."
+          rows={data.byCampaignMarca}
+          totals={data.totalsMarca}
+        />
 
         {data.individualOrders.length > 0 && (
           <>

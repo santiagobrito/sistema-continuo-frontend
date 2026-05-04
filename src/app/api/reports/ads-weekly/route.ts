@@ -4,7 +4,15 @@ import {
   AdsWeeklyReportPDF,
   type WeeklyReportData,
   type CampaignReportRow,
+  type CampaignGroupTotals,
 } from "@/lib/reports/ads-weekly-pdf";
+
+// Una campaña es de "marca" si su nombre contiene "marca" (cualquier casing).
+// Cubre: "2026 | MARCA — Sistema Continuo", "MARCA - SITEMA CONTINUO - BUSQUEDA",
+// "Marca_Artanium_Search_V1", "2026 | MARCA — Senko", etc.
+function isBrandCampaign(name: string): boolean {
+  return /\bmarca\b/i.test(name);
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -157,13 +165,16 @@ async function fetchAdsCampaignPerf(
   startDate: string,
   endDate: string
 ): Promise<Map<string, AdsCampaignRow>> {
+  // Solo ENABLED — campañas pausadas/eliminadas no se reportan aunque hayan
+  // tenido gasto en la semana, porque ya no están corriendo y meten ruido al cliente.
   const q = `
-    SELECT campaign.id, campaign.name, campaign.advertising_channel_type,
+    SELECT campaign.id, campaign.name, campaign.advertising_channel_type, campaign.status,
            metrics.impressions, metrics.clicks, metrics.cost_micros,
            metrics.conversions, metrics.conversions_value
     FROM campaign
     WHERE segments.date BETWEEN '${startDate}' AND '${endDate}'
       AND metrics.impressions > 0
+      AND campaign.status = 'ENABLED'
   `;
   const rows = await adsSearch(accessToken, q);
   const map = new Map<string, AdsCampaignRow>();
@@ -304,27 +315,38 @@ async function buildReport(week?: string | null): Promise<WeeklyReportData> {
     byCampaignName.set(name, row);
   }
 
-  const byCampaign = Array.from(byCampaignName.values())
+  const allRows = Array.from(byCampaignName.values())
     .filter((r) => r.impressions > 0 || r.orders > 0)
     .sort((a, b) => b.revenue - a.revenue || b.cost - a.cost);
 
-  const totals = byCampaign.reduce(
-    (acc, r) => {
-      acc.impressions += r.impressions;
-      acc.clicks += r.clicks;
-      acc.cost += r.cost;
-      acc.ordersAttributed += r.orders;
-      acc.revenueAttributed += r.revenue;
-      return acc;
-    },
-    {
-      impressions: 0,
-      clicks: 0,
-      cost: 0,
-      ordersAttributed: 0,
-      revenueAttributed: 0,
-    }
-  );
+  // Separar marca de captación. Marca = tráfico que ya te conocía
+  // (ROAS infla todo, no es el verdadero costo de adquisición).
+  // Captación = tráfico nuevo, lo que importa para crecer.
+  const byCampaignMarca = allRows.filter((r) => isBrandCampaign(r.campaign));
+  const byCampaignCaptacion = allRows.filter((r) => !isBrandCampaign(r.campaign));
+
+  const sumGroup = (rows: CampaignReportRow[]): CampaignGroupTotals => {
+    const t = rows.reduce(
+      (acc, r) => {
+        acc.impressions += r.impressions;
+        acc.clicks += r.clicks;
+        acc.cost += r.cost;
+        acc.orders += r.orders;
+        acc.revenue += r.revenue;
+        return acc;
+      },
+      { impressions: 0, clicks: 0, cost: 0, orders: 0, revenue: 0 }
+    );
+    return {
+      ...t,
+      roas: t.cost > 0 ? t.revenue / t.cost : 0,
+      ctr: t.impressions > 0 ? t.clicks / t.impressions : 0,
+    };
+  };
+
+  const totalsMarca = sumGroup(byCampaignMarca);
+  const totalsCaptacion = sumGroup(byCampaignCaptacion);
+  const totalsAll = sumGroup(allRows);
 
   const revenueTotal = orders.reduce((s, o) => s + o.total, 0);
 
@@ -347,15 +369,18 @@ async function buildReport(week?: string | null): Promise<WeeklyReportData> {
     totals: {
       ordersTotal: orders.length,
       revenueTotal,
-      ordersAttributed: totals.ordersAttributed,
-      revenueAttributed: totals.revenueAttributed,
-      cost: totals.cost,
-      roas: totals.cost > 0 ? totals.revenueAttributed / totals.cost : 0,
-      impressions: totals.impressions,
-      clicks: totals.clicks,
-      ctr: totals.impressions > 0 ? totals.clicks / totals.impressions : 0,
+      ordersAttributed: totalsAll.orders,
+      revenueAttributed: totalsAll.revenue,
+      cost: totalsAll.cost,
+      roas: totalsAll.roas,
+      impressions: totalsAll.impressions,
+      clicks: totalsAll.clicks,
+      ctr: totalsAll.ctr,
     },
-    byCampaign,
+    byCampaignMarca,
+    byCampaignCaptacion,
+    totalsMarca,
+    totalsCaptacion,
     individualOrders,
   };
 }
