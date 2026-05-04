@@ -95,7 +95,7 @@ export default function ReturnsPage() {
           <ul>
             <li><strong>MercadoPago / tarjeta:</strong> reversa a la tarjeta original (el plazo de acreditación efectiva depende del banco emisor y puede extenderse 1 a 2 ciclos de liquidación).</li>
             <li><strong>Transferencia bancaria:</strong> transferencia a la misma cuenta de origen.</li>
-            <li><strong>Efectivo en local:</strong> reintegro mediante transferencia bancaria a la cuenta del titular de la factura.</li>
+            <li><strong>Pago y retiro en local:</strong> reintegro mediante transferencia bancaria a la cuenta del titular de la factura.</li>
           </ul>
           <p>
             Sistema Continuo no reintegra en efectivo ni emite nota de crédito salvo solicitud

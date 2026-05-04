@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     const paymentTitles: Record<string, string> = {
       transferencia: "Transferencia Bancaria",
-      efectivo: "Efectivo en Local",
+      efectivo: "Pago y retiro en local",
     };
 
     // Asociar al customer WC si hay sesión; sino buscar por email; sino crear uno.

@@ -25,7 +25,7 @@ export default function ComoComprarPage() {
             { step: 3, title: "Revisa tu carrito", desc: "En el carrito podes modificar cantidades o eliminar productos. Si compras en cantidad, se aplican descuentos automáticos." },
             { step: 4, title: "Completa tus datos", desc: "Ingresa nombre, email, teléfono y DNI/CUIT. Si ya tenes cuenta, los datos se completan automáticamente." },
             { step: 5, title: "Elegí método de envío", desc: "Selecciona tu provincia y elegí entre retiro en local (gratis), moto CABA/GBA, Correo Argentino o transporte al interior." },
-            { step: 6, title: "Elegí cómo pagar", desc: "MercadoPago (tarjeta hasta 12 cuotas, débito, Rapipago), transferencia bancaria o efectivo en local." },
+            { step: 6, title: "Elegí cómo pagar", desc: "MercadoPago (tarjeta hasta 12 cuotas, débito, Rapipago), transferencia bancaria o pago en efectivo al retirar en local." },
             { step: 7, title: "Confirmación", desc: "Recibís un email con los detalles de tu pedido. Nuestro equipo lo prepara y te avisa cuando está listo para despachar." },
           ].map((item) => (
             <div key={item.step} className="bg-white rounded-xl border border-gray-100 p-5 flex gap-4">
