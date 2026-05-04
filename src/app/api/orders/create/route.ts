@@ -78,6 +78,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // REGLA DE NEGOCIO: efectivo en local solo permite retiro en local.
+    // Sino se generan órdenes incoherentes como #15058 (efectivo + Correo Argentino domicilio):
+    // el cliente viene a pagar al local, no tiene sentido que también pidamos despacho.
+    if (body.payment_method === "efectivo" && body.shipping_method !== "local_pickup") {
+      return NextResponse.json(
+        {
+          error: "El pago en efectivo solo es compatible con retiro en local. Si necesitás envío a domicilio, elegí transferencia o MercadoPago.",
+          field: "payment_method",
+        },
+        { status: 400 }
+      );
+    }
+
     const paymentTitles: Record<string, string> = {
       transferencia: "Transferencia Bancaria",
       efectivo: "Efectivo en Local",

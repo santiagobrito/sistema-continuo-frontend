@@ -324,8 +324,15 @@ export default function CheckoutPage() {
       ? Boolean((paqarQuote as { hasZeroWeight?: boolean }).hasZeroWeight)
       : false;
 
-  // Filter shipping options based on selected province + product constraints.
+  // Filter shipping options based on selected province + product constraints + payment method.
+  // REGLA: si paga en efectivo en local, sólo puede retirar en local. No tiene sentido
+  // que el cliente venga al local a pagar y nos pida que despachemos a su casa.
+  // (Bug observado #15058 2026-05-04: efectivo + Correo Argentino domicilio.)
   const availableShipping = useMemo(() => {
+    if (paymentMethod === "efectivo") {
+      return ALL_SHIPPING_OPTIONS.filter((opt) => opt.id === "local_pickup");
+    }
+
     const province = formData.state;
     if (!province) return [];
 
@@ -337,9 +344,10 @@ export default function CheckoutPage() {
       if (opt.zones.includes("interior") && !["C", "B"].includes(province)) return true;
       return false;
     });
-  }, [formData.state, hasZeroWeightItem]);
+  }, [formData.state, hasZeroWeightItem, paymentMethod]);
 
-  // Auto-select first available shipping when province changes
+  // Auto-select first available shipping when province or payment method changes.
+  // Si el usuario tenía elegido correo y cambia a efectivo, forzamos local_pickup.
   useMemo(() => {
     if (availableShipping.length > 0 && !availableShipping.find((o) => o.id === shippingMethod)) {
       setShippingMethod(availableShipping[0].id);
