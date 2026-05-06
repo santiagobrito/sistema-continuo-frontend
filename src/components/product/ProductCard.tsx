@@ -62,6 +62,15 @@ export default function ProductCard({ product, hideBrand, hideOutOfStockBadge }:
             -{discountPct}%
           </span>
         )}
+        {product.envio_gratis && product.stock_status !== "outofstock" && (
+          <span className={`absolute ${onSale ? "top-9" : "top-2"} left-2 bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1`}>
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+            </svg>
+            Envío gratis
+          </span>
+        )}
         {!hideOutOfStockBadge && product.stock_status === "outofstock" && (
           <span className="absolute top-2 right-2 bg-gray-800/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
             Sin stock

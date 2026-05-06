@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/components/cart/CartProvider";
 import { formatStorePrice } from "@/lib/utils/format";
+import { cartQualifiesForFreeShipping } from "@/lib/woocommerce/cart";
 
 export default function CartPage() {
   const { cart, loading, updateItem, removeItem } = useCart();
@@ -26,12 +27,36 @@ export default function CartPage() {
   }
 
   const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+  const freeShipping = cartQualifiesForFreeShipping(cart);
+  const hasFreeShippingItem = cart.items.some(
+    (i) => i.extensions?.["sistema-continuo-core"]?.envio_gratis === true
+  );
+  const lostFreeShipping = hasFreeShippingItem && !freeShipping;
 
   return (
     <main className="bg-gray-50 min-h-screen">
       <div className="max-w-5xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Tu carrito</h1>
-        <p className="text-gray-500 text-sm mb-8">{totalItems} {totalItems === 1 ? "producto" : "productos"}</p>
+        <p className="text-gray-500 text-sm mb-4">{totalItems} {totalItems === 1 ? "producto" : "productos"}</p>
+
+        {freeShipping && (
+          <div className="mb-6 bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-3 text-green-800">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <p className="text-sm font-semibold">¡Tu carrito tiene envío gratis incluido!</p>
+          </div>
+        )}
+        {lostFreeShipping && (
+          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3 text-amber-900">
+            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z" />
+            </svg>
+            <p className="text-sm">
+              <span className="font-semibold">Perdiste el envío gratis.</span> Para que sea gratis, dejá solo el producto marcado como envío gratis (cualquier cantidad).
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Items */}
@@ -112,7 +137,11 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Envío</span>
-                  <span className="text-gray-400 text-xs">Se calcula en checkout</span>
+                  {freeShipping ? (
+                    <span className="text-green-700 text-xs font-semibold">Gratis</span>
+                  ) : (
+                    <span className="text-gray-400 text-xs">Se calcula en checkout</span>
+                  )}
                 </div>
                 <div className="border-t border-gray-100 pt-3 flex justify-between">
                   <span className="font-bold text-gray-900">Total</span>

@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useCart } from "@/components/cart/CartProvider";
+import { cartQualifiesForFreeShipping } from "@/lib/woocommerce/cart";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { formatStorePrice } from "@/lib/utils/format";
 import Image from "next/image";
@@ -369,7 +370,9 @@ export default function CheckoutPage() {
   const selectedShippingPrice = selectedShipping
     ? getShippingPrice(selectedShipping.id, selectedShipping.price)
     : 0;
-  const shippingCost = (appliedCoupon?.free_shipping && shippingMethod) ? 0 : selectedShippingPrice;
+  const productFreeShipping = cartQualifiesForFreeShipping(cart);
+  const shippingIsFree = productFreeShipping || !!appliedCoupon?.free_shipping;
+  const shippingCost = (shippingIsFree && shippingMethod) ? 0 : selectedShippingPrice;
   const subtotal = parseInt(cart.totals.total_items || "0");
   const couponDiscount = appliedCoupon?.discount_amount || 0;
   const total = Math.max(0, subtotal - couponDiscount + shippingCost);
@@ -506,6 +509,15 @@ export default function CheckoutPage() {
           )
         )}
 
+        {productFreeShipping && (
+          <div className="mb-5 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm flex items-center gap-3 text-green-800">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <span><strong>Envío gratis incluido.</strong> Aplica a todos los métodos de envío pagos.</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-5">
@@ -623,7 +635,9 @@ export default function CheckoutPage() {
                         if (exceedsMaxWeight) return null;
 
                         let priceLabel: React.ReactNode;
-                        if (livePrice > 0) {
+                        if (productFreeShipping) {
+                          priceLabel = <span className="text-green-600">Gratis</span>;
+                        } else if (livePrice > 0) {
                           priceLabel = `$${livePrice.toLocaleString("es-AR")}`;
                         } else if (opt.id === "local_pickup") {
                           priceLabel = "Gratis";
@@ -872,6 +886,8 @@ export default function CheckoutPage() {
                     <span className="font-medium">
                       {!shippingMethod
                         ? "—"
+                        : productFreeShipping
+                        ? <span className="text-green-600">Gratis</span>
                         : appliedCoupon?.free_shipping
                         ? <span className="text-green-600">Gratis (cupón)</span>
                         : shippingCost > 0

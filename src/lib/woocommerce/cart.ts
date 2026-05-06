@@ -74,6 +74,30 @@ export interface CartItem {
     line_total: string;
     currency_code: string;
   };
+  /** Inyectado por SC_Store_API_Extensions (plugin sistema-continuo-core). */
+  extensions?: {
+    "sistema-continuo-core"?: {
+      envio_gratis?: boolean;
+    };
+  };
+}
+
+/**
+ * El carrito califica para envío gratis si TODOS los items son del mismo
+ * producto (mismo product_id, ignorando variaciones) y ese producto está
+ * marcado como `envio_gratis`. Cualquier cantidad cuenta.
+ *
+ * Nota: usamos `id` del CartItem porque para variaciones la Store API
+ * devuelve el variation_id ahí, y el envio_gratis vive a nivel producto.
+ * Igualmente la extension del plugin lee `product_id` del cart_item, así
+ * que todas las variaciones del mismo producto comparten el mismo flag.
+ */
+export function cartQualifiesForFreeShipping(cart: Cart | null): boolean {
+  if (!cart || cart.items.length === 0) return false;
+  const allFreeShipping = cart.items.every(
+    (i) => i.extensions?.["sistema-continuo-core"]?.envio_gratis === true
+  );
+  return allFreeShipping;
 }
 
 export interface Cart {
