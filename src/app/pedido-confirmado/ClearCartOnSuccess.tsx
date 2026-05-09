@@ -22,6 +22,12 @@ export function ClearCartOnSuccess({ shouldClear }: Props) {
     clearCart().catch(() => {
       // Silencioso — si falla no rompemos la UX de confirmación.
     });
+    // Limpiar cache de initPoint MP — la compra ya cerró, próximo checkout
+    // debe generar preference fresca (bug duplicados 2026-04-28 fix).
+    try {
+      sessionStorage.removeItem("sc_mp_pending");
+      sessionStorage.removeItem("sc_last_submit_at");
+    } catch {}
   }, [shouldClear, clearCart]);
 
   return null;

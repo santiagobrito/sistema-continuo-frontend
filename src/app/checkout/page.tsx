@@ -417,6 +417,17 @@ export default function CheckoutPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!shippingMethod) { setError("Selecciona un método de envío"); return; }
+
+    // Cooldown frontend — evita doble-submit por click rápido o vuelta de MP.
+    // Combinado con el sessionStorage cache de abajo cubre el caso del cliente
+    // que vuelve atrás desde MP y reintenta sin haber pagado (bug 2026-04-28).
+    const lastSubmitAt = parseInt(sessionStorage.getItem("sc_last_submit_at") || "0");
+    if (Date.now() - lastSubmitAt < 5000) {
+      setError("Esperá unos segundos antes de reintentar.");
+      return;
+    }
+    sessionStorage.setItem("sc_last_submit_at", String(Date.now()));
+
     setError("");
     setSubmitting(true);
 
@@ -441,6 +452,24 @@ export default function CheckoutPage() {
       };
 
       if (paymentMethod === "mercadopago") {
+        // Cache de initPoint: si el mismo cart_hash ya tiene una preference MP
+        // emitida en últimos 5min, reusar el initPoint sin tocar backend.
+        // Evita los duplicados que aparecían cuando el cliente vuelve atrás
+        // desde MP (sessionStorage no se vacía, el handler reutiliza la URL).
+        const cartHash = items.map(i => `${i.product_id}:${i.quantity}`).sort().join("|");
+        const cached = sessionStorage.getItem("sc_mp_pending");
+        if (cached) {
+          try {
+            const c = JSON.parse(cached);
+            if (c.initPoint && c.cartHash === cartHash &&
+                c.email === formData.email &&
+                Date.now() - c.at < 5 * 60 * 1000) {
+              window.location.href = c.initPoint;
+              return;
+            }
+          } catch {}
+        }
+
         const res = await fetch("/api/mercadopago/create-preference", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -448,6 +477,15 @@ export default function CheckoutPage() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Error al procesar el pedido");
+
+        // Persistir initPoint para reuso en retries (bug duplicados 2026-04-28).
+        sessionStorage.setItem("sc_mp_pending", JSON.stringify({
+          initPoint: data.initPoint,
+          orderId: data.orderId,
+          cartHash,
+          email: formData.email,
+          at: Date.now(),
+        }));
 
         // Redirect directo a Checkout Pro. El modal MP del SDK v2 (mp.checkout autoOpen)
         // perdió el "user activation" gesture al hacer await fetch arriba, y Chrome

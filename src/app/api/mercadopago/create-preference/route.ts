@@ -184,13 +184,18 @@ async function findReusablePendingOrder(
   customerId?: number
 ): Promise<WcOrderMin | null> {
   const WINDOW_LONG_MS = 96 * 60 * 60 * 1000;
+  // WC degrada órdenes creadas vía REST a `checkout-draft` cuando vienen sin
+  // marcadores Blocks Checkout. Si el dedup solo busca `pending`, las drafts
+  // quedan invisibles y cada retry crea una nueva orden — bug 2026-04-28
+  // (#14904-14911, 8 drafts del mismo cliente en 2min).
   const params = new URLSearchParams({
-    status: "pending",
     per_page: "10",
     orderby: "date",
     order: "desc",
     after: new Date(Date.now() - WINDOW_LONG_MS).toISOString(),
   });
+  params.append("status[]", "pending");
+  params.append("status[]", "checkout-draft");
   if (customerId) {
     params.set("customer", String(customerId));
   } else {
