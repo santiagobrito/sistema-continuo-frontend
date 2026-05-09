@@ -11,7 +11,7 @@ export async function PromoMarquee() {
   const campaign = await getActiveCampaign({ withProducts: false });
   if (!campaign) return null;
 
-  const { logo, primary_color, text_color, marquee_prefix, marquee_emphasis, marquee_suffix } = campaign;
+  const { logo, primary_color, text_color, marquee_prefix, marquee_emphasis, marquee_emphasis_color, marquee_suffix } = campaign;
   const hasContent = marquee_prefix || marquee_emphasis || marquee_suffix || logo;
   if (!hasContent) return null;
 
@@ -28,7 +28,14 @@ export async function PromoMarquee() {
         />
       )}
       {marquee_prefix && <span>{marquee_prefix}</span>}
-      {marquee_emphasis && <span className="font-extrabold">{marquee_emphasis}</span>}
+      {marquee_emphasis && (
+        <span
+          className="font-extrabold"
+          style={marquee_emphasis_color ? { color: marquee_emphasis_color } : undefined}
+        >
+          {marquee_emphasis}
+        </span>
+      )}
       {marquee_suffix && <span>{marquee_suffix}</span>}
       <span className="opacity-60" aria-hidden>•</span>
     </span>

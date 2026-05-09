@@ -210,6 +210,7 @@ export interface ActiveCampaign {
   text_color: string;
   marquee_prefix: string;
   marquee_emphasis: string;
+  marquee_emphasis_color: string;
   marquee_suffix: string;
   section_title: string;
   section_cta_label: string;
