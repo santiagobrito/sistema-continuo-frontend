@@ -4,6 +4,7 @@ import "./globals.css";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { Header } from "@/components/layout/Header";
+import { PromoMarquee } from "@/components/layout/PromoMarquee";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppFloat } from "@/components/layout/WhatsAppFloat";
 import { MerchantWidget } from "@/components/analytics/MerchantWidget";
@@ -61,6 +62,7 @@ export default function RootLayout({
         <AuthProvider>
           <CartProvider>
             <Header />
+            <PromoMarquee />
             {children}
             <Footer />
             <WhatsAppFloat />

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type {
   Product,
   Category,
@@ -8,6 +9,7 @@ import type {
   CategoriesResponse,
   SitemapData,
   ProductFilters,
+  ActiveCampaign,
 } from "./types";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
@@ -213,3 +215,30 @@ export interface SiteSettings {
 export async function getSettings(): Promise<SiteSettings> {
   return apiFetch<SiteSettings>("/settings", undefined, { revalidate: 300 });
 }
+
+// === Promotional Campaign (HotSale, Black Friday, etc.) ===
+
+/**
+ * Devuelve la campaña promocional activa o null. React-cache para que un mismo
+ * render reuse el resultado entre layout/header/home/ProductCard.
+ *
+ * ISR cacheado a 5 min en el backend (matches WP transient TTL). Tag "campaign"
+ * permite revalidación on-demand cuando se edita una campaña en WP.
+ */
+export const getActiveCampaign = cache(async (
+  options: { withProducts?: boolean; limit?: number } = {}
+): Promise<ActiveCampaign | null> => {
+  try {
+    const res = await apiFetch<{ data: ActiveCampaign | null }>(
+      "/campaigns/active",
+      {
+        with_products: options.withProducts === false ? "0" : "1",
+        limit: options.limit ?? 8,
+      },
+      { revalidate: 300, tags: ["campaign"] }
+    );
+    return res.data ?? null;
+  } catch {
+    return null;
+  }
+});

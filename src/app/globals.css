@@ -24,3 +24,20 @@ a:not([class]) {
 a:not([class]):hover {
   text-decoration: underline;
 }
+
+/* Promo marquee — ticker reutilizable para campañas (HotSale, Black Friday, etc.) */
+@keyframes sc-marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.sc-marquee-track {
+  display: inline-flex;
+  animation: sc-marquee-scroll 30s linear infinite;
+  will-change: transform;
+}
+.sc-marquee:hover .sc-marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sc-marquee-track { animation: none; }
+}

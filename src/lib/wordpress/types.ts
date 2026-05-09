@@ -76,6 +76,7 @@ export interface Product {
   unidad_venta: "" | "metro" | "rollo" | "par" | "juego" | "kit" | "pack" | "litro" | "kg";
   precio_usd: number | null;
   quantity_discounts: QuantityDiscount[];
+  in_active_campaign?: boolean;
 
   // Reseller (only present if user is reseller)
   reseller_discount_percent?: number;
@@ -197,6 +198,27 @@ export interface Brand {
  */
 export function isCatalogProduct(product: Product): boolean {
   return product.is_catalog_only || (!product.price && !product.purchasable);
+}
+
+// === Promotional campaign (HotSale, Black Friday, etc.) ===
+
+export interface ActiveCampaign {
+  id: number;
+  name: string;
+  logo: SCImage | null;
+  primary_color: string;
+  text_color: string;
+  marquee_prefix: string;
+  marquee_emphasis: string;
+  marquee_suffix: string;
+  section_title: string;
+  section_cta_label: string;
+  section_cta_url: string;
+  badge_label: string;
+  date_start: string | null;
+  date_end: string | null;
+  product_ids: number[];
+  products?: Product[];
 }
 
 export interface ProductFilters {

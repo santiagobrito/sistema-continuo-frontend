@@ -3,6 +3,7 @@ import type { Product } from "@/lib/wordpress/types";
 import Image from "next/image";
 import Link from "next/link";
 import ProductCard from "@/components/product/ProductCard";
+import { PromoSection } from "@/components/shop/PromoSection";
 
 export const revalidate = 3600; // ISR: match API cache (1h)
 
@@ -110,6 +111,9 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Promo activa (HotSale, Black Friday, etc.) — solo si hay campaña vigente */}
+      <PromoSection />
 
       {/* Featured: Combos */}
       <section className="max-w-7xl mx-auto px-4 py-10">

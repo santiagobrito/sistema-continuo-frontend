@@ -4,12 +4,15 @@
  * Una sola fuente de verdad para listados (home, categoría, marca, ofertas, búsqueda,
  * relacionados). Antes había duplicación entre páginas y la mayoría no mostraba el
  * estado de promo (precio tachado + badge -X%). Reportado 2026-04-27.
+ *
+ * Server async: lee la campaña activa via React-cache (1 fetch por request) y
+ * añade automáticamente badge top-right si el producto está adherido.
  */
 
 import Image from "next/image";
 import Link from "next/link";
 import { formatPrice } from "@/lib/utils/format";
-import { getProductUrl } from "@/lib/wordpress/api";
+import { getActiveCampaign, getProductUrl } from "@/lib/wordpress/api";
 import type { Product } from "@/lib/wordpress/types";
 
 interface ProductCardProps {
@@ -24,7 +27,7 @@ function isCatalogOnly(p: Product): boolean {
   return Boolean((p as Product & { is_catalog_only?: boolean }).is_catalog_only);
 }
 
-export default function ProductCard({ product, hideBrand, hideOutOfStockBadge }: ProductCardProps) {
+export default async function ProductCard({ product, hideBrand, hideOutOfStockBadge }: ProductCardProps) {
   const onSale =
     product.on_sale &&
     product.regular_price &&
@@ -35,6 +38,10 @@ export default function ProductCard({ product, hideBrand, hideOutOfStockBadge }:
     : 0;
 
   const showCatalog = isCatalogOnly(product);
+
+  const campaign = product.in_active_campaign ? await getActiveCampaign({ withProducts: false }) : null;
+  const showCampaignBadge = Boolean(campaign && product.in_active_campaign);
+  const isOutOfStock = product.stock_status === "outofstock";
 
   return (
     <Link
@@ -71,9 +78,32 @@ export default function ProductCard({ product, hideBrand, hideOutOfStockBadge }:
             Envío gratis
           </span>
         )}
-        {!hideOutOfStockBadge && product.stock_status === "outofstock" && (
+        {!hideOutOfStockBadge && isOutOfStock && (
           <span className="absolute top-2 right-2 bg-gray-800/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
             Sin stock
+          </span>
+        )}
+        {showCampaignBadge && campaign && !isOutOfStock && (
+          <span
+            className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-1 rounded-full shadow-md"
+            style={{ backgroundColor: campaign.primary_color, color: campaign.text_color }}
+            title={campaign.name}
+          >
+            {campaign.logo?.url && (
+              <Image
+                src={campaign.logo.url}
+                alt={campaign.logo.alt || campaign.name}
+                width={campaign.logo.width || 40}
+                height={campaign.logo.height || 14}
+                className="h-3.5 w-auto object-contain"
+                unoptimized
+              />
+            )}
+            {campaign.badge_label && (
+              <span className="text-[10px] font-extrabold uppercase tracking-wide">
+                {campaign.badge_label}
+              </span>
+            )}
           </span>
         )}
       </div>
@@ -85,11 +115,21 @@ export default function ProductCard({ product, hideBrand, hideOutOfStockBadge }:
           {product.name}
         </h3>
         {product.price && !showCatalog ? (
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-base font-bold text-gray-900">{formatPrice(product.price)}</span>
-            {product.unidad_venta && <span className="text-xs text-gray-500">/{product.unidad_venta}</span>}
+          <div className="flex items-baseline justify-between gap-2 flex-wrap">
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <span className="text-base font-bold text-gray-900">{formatPrice(product.price)}</span>
+              {product.unidad_venta && <span className="text-xs text-gray-500">/{product.unidad_venta}</span>}
+              {onSale && (
+                <span className="text-xs text-gray-400 line-through">{formatPrice(product.regular_price)}</span>
+              )}
+            </div>
             {onSale && (
-              <span className="text-xs text-gray-400 line-through">{formatPrice(product.regular_price)}</span>
+              <span className="inline-flex items-center gap-1 bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/>
+                </svg>
+                En oferta
+              </span>
             )}
           </div>
         ) : showCatalog ? (
