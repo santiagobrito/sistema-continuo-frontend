@@ -19,6 +19,7 @@ interface SearchProduct {
   is_catalog: boolean;
   url: string;
   unidad_venta: string;
+  envio_gratis: boolean;
 }
 
 interface SearchCategory {
@@ -243,9 +244,16 @@ export function SearchBar({ mobile = false }: { mobile?: boolean }) {
                             <p className="text-[9px] font-semibold text-[#013d5a]/40 uppercase tracking-widest">{product.marca}</p>
                           )}
                           <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
-                          {product.categories[0] && (
-                            <p className="text-[10px] text-gray-400 truncate">en {product.categories[0].name}</p>
-                          )}
+                          <div className="flex items-center gap-2 mt-0.5">
+                            {product.categories[0] && (
+                              <p className="text-[10px] text-gray-400 truncate">en {product.categories[0].name}</p>
+                            )}
+                            {product.envio_gratis && (
+                              <span className="text-[9px] font-bold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded-full inline-flex items-center gap-0.5 flex-shrink-0">
+                                Envío gratis
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {/* Price */}

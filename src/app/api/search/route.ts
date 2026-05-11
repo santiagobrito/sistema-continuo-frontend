@@ -27,6 +27,7 @@ interface SearchProduct {
   is_catalog: boolean;
   url: string;
   unidad_venta: string;
+  envio_gratis: boolean;
 }
 
 interface SearchCategory {
@@ -51,6 +52,7 @@ interface RawProduct {
   stock_status: string;
   unidad_venta: string;
   sku: string;
+  envio_gratis: boolean;
 }
 
 // Heurística simple: una búsqueda parece SKU si tiene dígitos o guiones,
@@ -236,6 +238,7 @@ export async function GET(request: NextRequest) {
         is_catalog: !p.price && !p.purchasable,
         url: deepest ? `/${deepest.path}/${p.slug}` : `/${p.slug}`,
         unidad_venta: p.unidad_venta || "",
+        envio_gratis: !!p.envio_gratis,
       };
     });
 
