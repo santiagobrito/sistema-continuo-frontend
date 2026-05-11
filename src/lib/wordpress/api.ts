@@ -91,7 +91,10 @@ export async function getCategory(
     params as Record<string, string | number | undefined>,
     {
       revalidate: 3600,
-      tags: ["categories", `category-${slug}`],
+      // Tag `products` necesario: el payload de categoría incluye la lista de
+      // productos con su precio. Al cambiar el precio de un producto, WP
+      // invalida `products` → esto fuerza refresh aquí también.
+      tags: ["categories", `category-${slug}`, "products"],
     }
   );
 }
