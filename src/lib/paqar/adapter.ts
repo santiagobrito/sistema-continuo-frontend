@@ -75,20 +75,38 @@ export interface BuildOptions {
 /**
  * Divide la dirección en streetName + streetNumber.
  * WC suele guardar "Av. Rivadavia 17002 depto 4B" en address_1.
+ *
+ * Si address_1 no tiene número y `address2NumberFallback` viene definido,
+ * lo usa como streetNumber (caso del checkout donde el cliente carga calle
+ * y número en campos separados — detectado en orden #15343 / 2026-05-11).
  */
-function splitStreetAndNumber(address: string): {
+function splitStreetAndNumber(
+  address1: string,
+  address2NumberFallback?: string
+): {
   streetName: string;
   streetNumber: string;
 } {
-  if (!address) return { streetName: "", streetNumber: "" };
-  const match = address.match(/^(.*?)\s+(\d+[A-Za-z]?)(?:\s|$|,)/);
+  if (!address1) return { streetName: "", streetNumber: "" };
+  const match = address1.match(/^(.*?)\s+(\d+[A-Za-z]?)(?:\s|$|,)/);
   if (match) {
     return {
       streetName: match[1].trim(),
       streetNumber: match[2].trim(),
     };
   }
-  return { streetName: address.trim(), streetNumber: "S/N" };
+  if (address2NumberFallback) {
+    return {
+      streetName: address1.trim(),
+      streetNumber: address2NumberFallback.trim(),
+    };
+  }
+  return { streetName: address1.trim(), streetNumber: "S/N" };
+}
+
+/** True si el string es exclusivamente un número de calle (dígitos + letra opcional). */
+function isJustStreetNumber(s: string): boolean {
+  return /^\d+[A-Za-z]?$/.test(s.trim());
 }
 
 /** Separa áreaCódigo del teléfono (formato AR). */
@@ -141,7 +159,16 @@ export function buildShippingData(
     );
   }
 
-  const { streetName, streetNumber } = splitStreetAndNumber(order.shipping.address_1);
+  const addr2 = order.shipping.address_2 || "";
+  // address_2 normalmente es depto/piso, pero algunos clientes cargan ahí el
+  // número de calle cuando el form los confunde. Si address_2 es solo número,
+  // (a) lo usamos como streetNumber fallback, (b) no lo mandamos como department
+  // para evitar duplicarlo en el rótulo.
+  const addr2IsJustNumber = isJustStreetNumber(addr2);
+  const { streetName, streetNumber } = splitStreetAndNumber(
+    order.shipping.address_1,
+    addr2IsJustNumber ? addr2 : undefined
+  );
   base.address = {
     streetName,
     streetNumber,
@@ -156,7 +183,7 @@ export function buildShippingData(
     // CA renderiza literal "null" en el rótulo cuando floor/department vienen
     // ausentes — mandamos string vacío explícito para evitarlo.
     floor: "",
-    department: order.shipping.address_2 || "",
+    department: addr2IsJustNumber ? "" : addr2,
   };
   return base;
 }
