@@ -109,6 +109,7 @@ interface CheckoutBody {
   shipping_method?: string;
   shipping_cost?: number;
   paqar_agency_id?: string;
+  customer_note?: string;
   gclid?: string;
   coupon_code?: string;
   attribution?: OrderAttributionInput;
@@ -281,6 +282,7 @@ async function createWCOrder(body: CheckoutBody, customerId?: number): Promise<{
   const orderData: Record<string, unknown> = {
     status: "pending",
     customer_id: customerId || 0,
+    customer_note: (body.customer_note || "").trim().slice(0, 300),
     billing: {
       first_name: body.billing.first_name,
       last_name: body.billing.last_name,
@@ -363,11 +365,24 @@ export async function POST(request: NextRequest) {
     // importar el método de envío (incluyendo correo_sucursal y local_pickup).
     // El destino del envío puede ser sucursal o local, pero los datos de
     // facturación son del comprador.
-    if (!String(b.address_1 || "").trim()) missing.push("address_1");
+    // address_1 debe tener calle + número (no solo ciudad/provincia) — ver pedido
+    // #15374 "Posadas Misiones" que pasó por falta de esta validación.
+    const a1 = String(b.address_1 || "").trim();
+    if (!a1) missing.push("address_1");
+    else if (a1.length < 5 || !/[a-zA-ZáéíóúñÁÉÍÓÚÑ]/.test(a1) || !/\d/.test(a1)) missing.push("address_1 (debe incluir calle y número)");
     if (!String(b.postcode || "").trim()) missing.push("postcode");
     if (missing.length > 0) {
       return NextResponse.json(
         { error: "Faltan datos requeridos", missing },
+        { status: 400 }
+      );
+    }
+
+    // Transporte al interior necesita empresa de transporte + terminal.
+    // Sin ese dato logística no puede despachar.
+    if (body.shipping_method === "transporte" && !String(body.customer_note || "").trim()) {
+      return NextResponse.json(
+        { error: "Para transporte al interior necesitamos la empresa de transporte y terminal de destino.", field: "customer_note" },
         { status: 400 }
       );
     }

@@ -89,6 +89,14 @@ const PROVINCIAS = [
   { code: "V", name: "Tierra del Fuego", zone: "interior" }, { code: "T", name: "Tucumán", zone: "interior" },
 ];
 
+// Valida que address_1 tenga calle + número (no solo ciudad/provincia, no solo "s/n").
+// Requisitos: ≥5 chars, al menos una letra, al menos un dígito.
+// Previene casos como "Posadas Misiones" (pedido 15374) que pasan el chequeo de "no vacío".
+const isValidStreetAddress = (s: string) => {
+  const t = s.trim();
+  return t.length >= 5 && /[a-zA-ZáéíóúñÁÉÍÓÚÑ]/.test(t) && /\d/.test(t);
+};
+
 export default function CheckoutPage() {
   const { cart } = useCart();
   const { user, loading: authLoading } = useAuth();
@@ -96,6 +104,9 @@ export default function CheckoutPage() {
     first_name: "", last_name: "", email: "", phone: "", dni_cuit: "",
     address_1: "", city: "", state: "", postcode: "",
   });
+  // Nota libre del cliente: horario preferido (moto) o empresa de transporte (interior).
+  // Se limpia al cambiar de método para no arrastrar notas obsoletas.
+  const [shippingNote, setShippingNote] = useState("");
   const [shippingMethod, setShippingMethod] = useState("");
   const [selectedAgencyId, setSelectedAgencyId] = useState("");
   const [agencyQuery, setAgencyQuery] = useState("");
@@ -446,6 +457,7 @@ export default function CheckoutPage() {
         shipping_method: shippingMethod,
         shipping_cost: shippingCost,
         paqar_agency_id: shippingMethod === "correo_sucursal" ? selectedAgencyId : undefined,
+        customer_note: shippingNote.trim() || undefined,
         gclid: getGclid() || undefined,
         coupon_code: appliedCoupon?.code || undefined,
         attribution: getAttribution(),
@@ -584,7 +596,7 @@ export default function CheckoutPage() {
 
                 {/* Province first — determines available shipping */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                  <select required value={formData.state} onChange={(e) => { updateField("state", e.target.value); setShippingMethod(""); }} className={`${inputClass} cursor-pointer font-medium`}>
+                  <select required value={formData.state} onChange={(e) => { updateField("state", e.target.value); setShippingMethod(""); setShippingNote(""); }} className={`${inputClass} cursor-pointer font-medium`}>
                     <option value="">Provincia *</option>
                     {PROVINCIAS.map((p) => <option key={p.code} value={p.code}>{p.name}</option>)}
                   </select>
@@ -602,12 +614,23 @@ export default function CheckoutPage() {
                         Necesitamos calle, número y código postal para emitir la factura.
                       </p>
                     )}
-                    <input
-                      placeholder="Calle y número (facturación) *"
-                      value={formData.address_1}
-                      onChange={(e) => updateField("address_1", e.target.value)}
-                      className={`${inputClass} sm:col-span-2`}
-                    />
+                    <div className="sm:col-span-2">
+                      <input
+                        placeholder="Calle y número (facturación) *"
+                        value={formData.address_1}
+                        onChange={(e) => updateField("address_1", e.target.value)}
+                        className={`${inputClass} w-full ${
+                          formData.address_1.trim().length > 0 && !isValidStreetAddress(formData.address_1)
+                            ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                            : ""
+                        }`}
+                      />
+                      {formData.address_1.trim().length > 0 && !isValidStreetAddress(formData.address_1) && (
+                        <p className="mt-1 text-xs text-red-600">
+                          Falta el número de la calle. Ej: <span className="font-medium">Av. Rivadavia 17002</span>.
+                        </p>
+                      )}
+                    </div>
                     <input
                       placeholder="Código postal *"
                       value={formData.postcode}
@@ -709,7 +732,7 @@ export default function CheckoutPage() {
                                   name="shipping"
                                   value={opt.id}
                                   checked={isSelected}
-                                  onChange={() => setShippingMethod(opt.id)}
+                                  onChange={() => { setShippingMethod(opt.id); setShippingNote(""); }}
                                   className="w-4 h-4 mt-0.5 text-[#013d5a] cursor-pointer"
                                 />
                                 <div className="flex-1">
@@ -785,6 +808,46 @@ export default function CheckoutPage() {
                         );
                       })}
                     </div>
+
+                    {/* Textarea para nota del cliente al despachante. Solo en métodos
+                        que requieren coordinación humana: moto (horario) y transporte
+                        al interior (empresa preferida + horario). Correo Argentino y
+                        retiro en local no la muestran porque no hay decisión que tomar. */}
+                    {(shippingMethod === "moto_caba" || shippingMethod === "moto_gba1" || shippingMethod === "moto_gba2") && (
+                      <div className="mt-3 p-3.5 rounded-xl border border-[#013d5a]/30 bg-[#013d5a]/5">
+                        <label htmlFor="shipping-note" className="block text-xs font-semibold text-gray-700 mb-1.5">
+                          Indicaciones para la entrega <span className="text-gray-400 font-normal">(opcional)</span>
+                        </label>
+                        <textarea
+                          id="shipping-note"
+                          value={shippingNote}
+                          onChange={(e) => setShippingNote(e.target.value.slice(0, 300))}
+                          rows={2}
+                          placeholder="Ej: entregar de 9 a 13hs, tocar timbre depto 4B, dejar con encargado…"
+                          className={`${inputClass} resize-none`}
+                        />
+                        <p className="mt-1 text-[10px] text-gray-500 text-right">{shippingNote.length}/300</p>
+                      </div>
+                    )}
+                    {shippingMethod === "transporte" && (
+                      <div className="mt-3 p-3.5 rounded-xl border border-[#013d5a]/30 bg-[#013d5a]/5">
+                        <label htmlFor="shipping-note" className="block text-xs font-semibold text-gray-700 mb-1.5">
+                          Empresa de transporte y detalles <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          id="shipping-note"
+                          value={shippingNote}
+                          onChange={(e) => setShippingNote(e.target.value.slice(0, 300))}
+                          rows={2}
+                          placeholder="Ej: Vía Cargo terminal Posadas, retira Juan Pérez DNI 12345678…"
+                          className={`${inputClass} resize-none`}
+                        />
+                        <p className="mt-1 text-[10px] text-gray-500">
+                          Necesitamos saber a qué transporte despachar (Vía Cargo, Andreani Cargas, Ezeyra, etc.) y la terminal/sucursal de destino.
+                        </p>
+                        <p className="mt-1 text-[10px] text-gray-500 text-right">{shippingNote.length}/300</p>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="bg-gray-50 rounded-lg p-4 text-center">
@@ -963,10 +1026,11 @@ export default function CheckoutPage() {
                     // AFIP, sin importar el método de envío. El destino del envío
                     // puede ser otro (sucursal/local), pero la factura usa la
                     // dirección del comprador.
-                    !formData.address_1.trim() ||
+                    !isValidStreetAddress(formData.address_1) ||
                     !formData.postcode.trim() ||
                     ((shippingMethod === "correo_domicilio" || shippingMethod === "correo_sucursal") && selectedShippingPrice <= 0) ||
-                    (shippingMethod === "correo_sucursal" && !selectedAgencyId)
+                    (shippingMethod === "correo_sucursal" && !selectedAgencyId) ||
+                    (shippingMethod === "transporte" && !shippingNote.trim())
                   }
                   className={`mt-5 w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-base transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                     paymentMethod === "mercadopago"
@@ -999,6 +1063,7 @@ export default function CheckoutPage() {
                   if (!formData.state) missing.push("Provincia");
                   if (!formData.city.trim()) missing.push("Ciudad");
                   if (shippingMethod && !formData.address_1.trim()) missing.push("Dirección");
+                  else if (shippingMethod && !isValidStreetAddress(formData.address_1)) missing.push("Calle y número (la dirección debe incluir el número)");
                   if (shippingMethod && !formData.postcode.trim()) missing.push("Código postal");
                   if (missing.length > 0) {
                     return (
@@ -1030,6 +1095,11 @@ export default function CheckoutPage() {
                 {shippingMethod === "correo_sucursal" && selectedShippingPrice > 0 && !selectedAgencyId && !submitting && (
                   <p className="mt-2 text-center text-xs text-amber-600 font-medium">
                     Elegí una sucursal de Correo Argentino para continuar
+                  </p>
+                )}
+                {shippingMethod === "transporte" && !shippingNote.trim() && !submitting && (
+                  <p className="mt-2 text-center text-xs text-amber-600 font-medium">
+                    Indicá la empresa de transporte y terminal para continuar
                   </p>
                 )}
 
