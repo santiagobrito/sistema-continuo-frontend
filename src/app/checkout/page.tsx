@@ -712,7 +712,12 @@ export default function CheckoutPage() {
                           priceLabel = `$${opt.price.toLocaleString("es-AR")}`;
                         }
 
-                        const isExpanded = opt.id === "correo_sucursal" && isSelected;
+                        // Métodos que requieren coordinación humana muestran un bloque
+                        // extra cuando se seleccionan: sucursal CA → selector de sucursal;
+                        // moto/transporte → textarea con detalles de entrega.
+                        const isMoto = opt.id === "moto_caba" || opt.id === "moto_gba1" || opt.id === "moto_gba2";
+                        const isTransporte = opt.id === "transporte";
+                        const isExpanded = isSelected && (opt.id === "correo_sucursal" || isMoto || isTransporte);
 
                         // Clases del contenedor externo. Cuando está expanded (sucursal seleccionada),
                         // el border/rounded/bg viven en el contenedor y los hijos (label + selector)
@@ -749,8 +754,38 @@ export default function CheckoutPage() {
                               </div>
                             </label>
 
-                            {/* Selector de sucursal inline cuando está expanded */}
-                            {isExpanded && (
+                            {/* Bloque inline expandido. Sucursal CA muestra selector;
+                                moto/transporte muestran textarea con detalles. */}
+                            {isExpanded && (isMoto || isTransporte) && (
+                              <div className="border-t border-[#013d5a]/30 px-3.5 pb-3.5 pt-3">
+                                <div className="pl-7">
+                                  <label htmlFor="shipping-note" className="block text-xs font-semibold text-gray-700 mb-2">
+                                    {isTransporte ? (
+                                      <>Empresa de transporte y detalles <span className="text-red-500">*</span></>
+                                    ) : (
+                                      <>Indicaciones para la entrega <span className="text-gray-400 font-normal">(opcional)</span></>
+                                    )}
+                                  </label>
+                                  <textarea
+                                    id="shipping-note"
+                                    value={shippingNote}
+                                    onChange={(e) => setShippingNote(e.target.value.slice(0, 300))}
+                                    rows={2}
+                                    placeholder={isTransporte
+                                      ? "Ej: Vía Cargo terminal Posadas, retira Juan Pérez DNI 12345678…"
+                                      : "Ej: entregar de 9 a 13hs, tocar timbre depto 4B, dejar con encargado…"}
+                                    className={`${inputClass} resize-none bg-white`}
+                                  />
+                                  {isTransporte && (
+                                    <p className="mt-1 text-[10px] text-gray-500">
+                                      Necesitamos saber a qué transporte despachar (Vía Cargo, Andreani Cargas, Ezeyra, etc.) y la terminal/sucursal de destino.
+                                    </p>
+                                  )}
+                                  <p className="mt-1 text-[10px] text-gray-500 text-right">{shippingNote.length}/300</p>
+                                </div>
+                              </div>
+                            )}
+                            {isExpanded && opt.id === "correo_sucursal" && (
                               <div className="border-t border-[#013d5a]/30 px-3.5 pb-3.5 pt-3">
                                 <div className="pl-7">
                                   <label className="block text-xs font-semibold text-gray-700 mb-2">
@@ -809,45 +844,6 @@ export default function CheckoutPage() {
                       })}
                     </div>
 
-                    {/* Textarea para nota del cliente al despachante. Solo en métodos
-                        que requieren coordinación humana: moto (horario) y transporte
-                        al interior (empresa preferida + horario). Correo Argentino y
-                        retiro en local no la muestran porque no hay decisión que tomar. */}
-                    {(shippingMethod === "moto_caba" || shippingMethod === "moto_gba1" || shippingMethod === "moto_gba2") && (
-                      <div className="mt-3 p-3.5 rounded-xl border border-[#013d5a]/30 bg-[#013d5a]/5">
-                        <label htmlFor="shipping-note" className="block text-xs font-semibold text-gray-700 mb-1.5">
-                          Indicaciones para la entrega <span className="text-gray-400 font-normal">(opcional)</span>
-                        </label>
-                        <textarea
-                          id="shipping-note"
-                          value={shippingNote}
-                          onChange={(e) => setShippingNote(e.target.value.slice(0, 300))}
-                          rows={2}
-                          placeholder="Ej: entregar de 9 a 13hs, tocar timbre depto 4B, dejar con encargado…"
-                          className={`${inputClass} resize-none`}
-                        />
-                        <p className="mt-1 text-[10px] text-gray-500 text-right">{shippingNote.length}/300</p>
-                      </div>
-                    )}
-                    {shippingMethod === "transporte" && (
-                      <div className="mt-3 p-3.5 rounded-xl border border-[#013d5a]/30 bg-[#013d5a]/5">
-                        <label htmlFor="shipping-note" className="block text-xs font-semibold text-gray-700 mb-1.5">
-                          Empresa de transporte y detalles <span className="text-red-500">*</span>
-                        </label>
-                        <textarea
-                          id="shipping-note"
-                          value={shippingNote}
-                          onChange={(e) => setShippingNote(e.target.value.slice(0, 300))}
-                          rows={2}
-                          placeholder="Ej: Vía Cargo terminal Posadas, retira Juan Pérez DNI 12345678…"
-                          className={`${inputClass} resize-none`}
-                        />
-                        <p className="mt-1 text-[10px] text-gray-500">
-                          Necesitamos saber a qué transporte despachar (Vía Cargo, Andreani Cargas, Ezeyra, etc.) y la terminal/sucursal de destino.
-                        </p>
-                        <p className="mt-1 text-[10px] text-gray-500 text-right">{shippingNote.length}/300</p>
-                      </div>
-                    )}
                   </>
                 ) : (
                   <div className="bg-gray-50 rounded-lg p-4 text-center">
