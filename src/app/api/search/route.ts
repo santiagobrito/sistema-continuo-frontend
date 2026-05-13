@@ -9,7 +9,9 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { processSearchQuery } from "@/lib/search/synonyms";
+import { processSearchQuery, stripAccents } from "@/lib/search/synonyms";
+
+const norm = (s: string) => stripAccents(s.toLowerCase());
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const API_BASE = `${WP_URL}/wp-json/sistema-continuo/v1`;
@@ -84,30 +86,33 @@ function scoreProduct(
   originalQuery: string,
   allQueryWords: string[],
 ): number {
-  const nameLower = product.name.toLowerCase();
-  const marcaLower = (product.marca || "").toLowerCase();
-  const skuLower = (product.sku || "").toLowerCase();
-  const qLower = originalQuery.toLowerCase();
+  // Comparamos siempre sobre forma normalizada (lowercase + sin tildes) para
+  // que "cartón"/"carton" o "impresión"/"impresion" matcheen igual.
+  const nameNorm = norm(product.name);
+  const marcaNorm = norm(product.marca || "");
+  const skuNorm = norm(product.sku || "");
+  const qNorm = norm(originalQuery);
+  const wordsNorm = allQueryWords.map(norm);
 
   let score = 0;
 
   // Match por SKU — señal muy fuerte. Coincidencia exacta = top.
-  if (skuLower && qLower) {
-    if (skuLower === qLower) {
+  if (skuNorm && qNorm) {
+    if (skuNorm === qNorm) {
       score += 500;
-    } else if (skuLower.includes(qLower) || qLower.includes(skuLower)) {
+    } else if (skuNorm.includes(qNorm) || qNorm.includes(skuNorm)) {
       score += 250;
     }
   }
 
   // Full phrase match in name — strongest signal
-  if (nameLower.includes(qLower)) {
+  if (nameNorm.includes(qNorm)) {
     score += 200;
   }
 
   // Word-by-word matching against original query
-  const nameMatches = allQueryWords.filter((w) => nameLower.includes(w)).length;
-  const totalWords = allQueryWords.length;
+  const nameMatches = wordsNorm.filter((w) => nameNorm.includes(w)).length;
+  const totalWords = wordsNorm.length;
 
   if (totalWords > 0 && nameMatches === totalWords) {
     score += 150;
@@ -115,10 +120,10 @@ function scoreProduct(
     score += Math.round((nameMatches / totalWords) * 100);
 
     // Penalize contextual mentions ("tinta PARA impresoras" when searching "impresora")
-    const primaryWord = allQueryWords[0];
-    if (primaryWord && nameLower.includes(primaryWord)) {
-      const idx = nameLower.indexOf(primaryWord);
-      const before = nameLower.slice(Math.max(0, idx - 6), idx).trim();
+    const primaryWord = wordsNorm[0];
+    if (primaryWord && nameNorm.includes(primaryWord)) {
+      const idx = nameNorm.indexOf(primaryWord);
+      const before = nameNorm.slice(Math.max(0, idx - 6), idx).trim();
       if (before.endsWith("para") || before.endsWith("de") || before.endsWith("con")) {
         score -= 60;
       }
@@ -127,12 +132,12 @@ function scoreProduct(
 
   // Category match
   const catMatch = (product.categories || []).some((c) =>
-    allQueryWords.some((w) => c.name.toLowerCase().includes(w)),
+    wordsNorm.some((w) => norm(c.name).includes(w)),
   );
   if (catMatch) score += 30;
 
   // Brand match
-  if (allQueryWords.some((w) => marcaLower.includes(w))) {
+  if (wordsNorm.some((w) => marcaNorm.includes(w))) {
     score += 25;
   }
 
@@ -247,15 +252,15 @@ export async function GET(request: NextRequest) {
     if (categoriesRes.ok) {
       const catData = await categoriesRes.json();
       const flat = catData.flat || [];
-      const qLower = corrected.toLowerCase();
-      // Match categories against original + corrected query
+      const qNorm = norm(corrected);
+      const scoringNorm = scoringWords.map(norm);
+      // Match categories against original + corrected query (accent-insensitive)
       categories = flat
-        .filter(
-          (c: { name: string; count: number }) =>
-            c.count > 0 &&
-            (c.name.toLowerCase().includes(qLower) ||
-              scoringWords.some((w) => c.name.toLowerCase().includes(w))),
-        )
+        .filter((c: { name: string; count: number }) => {
+          if (!c.count || c.count <= 0) return false;
+          const n = norm(c.name);
+          return n.includes(qNorm) || scoringNorm.some((w) => n.includes(w));
+        })
         .slice(0, 4)
         .map((c: { id: number; name: string; slug: string; count: number; path: string }) => ({
           id: c.id,

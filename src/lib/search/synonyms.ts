@@ -5,7 +5,16 @@
  * 1. Synonyms: "manual" → also search "mano", "portatil"
  * 2. Common misspellings in the sublimation/printing niche
  * 3. Abbreviations: "estampa" → "estampadora"
+ * 4. Accent insensitivity: "carton" matches "cartón", "imprimir" matches "imprímir"
  */
+
+/**
+ * Strip Spanish diacritics so "cartón"/"carton" or "ñ"/"n" compare equal.
+ * Used as the canonical form for synonyms, misspellings and product scoring.
+ */
+export function stripAccents(str: string): string {
+  return str.normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
 
 // Synonym groups: any word in a group can match any other
 // When a user searches for one word, we also try the others
@@ -113,6 +122,13 @@ const MISSPELLINGS: Record<string, string> = {
   fotográfico: "fotografica",
 };
 
+// Normalized misspellings index (keys without accents) — los lookups usan
+// la forma stripAccents() del input para que "fotografico"/"fotográfico"/
+// "fotográficó" matcheen el mismo arreglo.
+const MISSPELLINGS_NORM: Record<string, string> = Object.fromEntries(
+  Object.entries(MISSPELLINGS).map(([k, v]) => [stripAccents(k), v]),
+);
+
 /**
  * Expand a search query with synonyms.
  * Returns array of alternative queries to try.
@@ -120,24 +136,31 @@ const MISSPELLINGS: Record<string, string> = {
  * "estampadora manual" → ["estampadora manual", "estampadora mano", "estampadora portatil"]
  */
 export function expandWithSynonyms(query: string): string[] {
-  const words = query.toLowerCase().split(/\s+/).filter((w) => w.length >= 2);
+  const lower = query.toLowerCase();
+  const words = lower.split(/\s+/).filter((w) => w.length >= 2);
+  const wordsNorm = words.map(stripAccents);
   const results = new Set<string>();
-  results.add(query.toLowerCase());
+  results.add(lower);
+  results.add(stripAccents(lower));
 
-  for (let i = 0; i < words.length; i++) {
-    const word = words[i];
+  for (let i = 0; i < wordsNorm.length; i++) {
+    const wordNorm = wordsNorm[i];
 
-    // Find synonym groups containing this word
     for (const group of SYNONYM_GROUPS) {
-      const match = group.find((syn) => syn === word || word.includes(syn) || syn.includes(word));
-      if (match) {
-        // Create alternative queries replacing this word with each synonym
-        for (const synonym of group) {
-          if (synonym !== word && synonym !== match) {
-            const alt = [...words];
-            alt[i] = synonym;
-            results.add(alt.join(" "));
-          }
+      const groupNorm = group.map(stripAccents);
+      const hit = groupNorm.findIndex(
+        (synNorm) =>
+          synNorm === wordNorm ||
+          wordNorm.includes(synNorm) ||
+          synNorm.includes(wordNorm),
+      );
+      if (hit >= 0) {
+        for (let j = 0; j < group.length; j++) {
+          if (j === hit) continue;
+          if (groupNorm[j] === wordNorm) continue;
+          const alt = [...wordsNorm];
+          alt[i] = group[j];
+          results.add(alt.join(" "));
         }
       }
     }
@@ -155,9 +178,11 @@ export function fixMisspellings(query: string): string {
   let changed = false;
 
   const fixed = words.map((word) => {
-    if (MISSPELLINGS[word]) {
+    const norm = stripAccents(word);
+    const replacement = MISSPELLINGS_NORM[norm];
+    if (replacement) {
       changed = true;
-      return MISSPELLINGS[word];
+      return replacement;
     }
     return word;
   });
@@ -198,9 +223,10 @@ export function fuzzyCorrect(word: string): string | null {
   if (word.length < 3) return null;
 
   const lower = word.toLowerCase();
+  const lowerNorm = stripAccents(lower);
 
-  // Check misspellings dictionary first
-  if (MISSPELLINGS[lower]) return MISSPELLINGS[lower];
+  // Check misspellings dictionary (accent-insensitive) first
+  if (MISSPELLINGS_NORM[lowerNorm]) return MISSPELLINGS_NORM[lowerNorm];
 
   // Check against all known words in synonym groups
   let bestMatch: string | null = null;
@@ -211,8 +237,9 @@ export function fuzzyCorrect(word: string): string | null {
   allKnownWords.push(...Object.values(MISSPELLINGS));
 
   for (const known of allKnownWords) {
-    if (Math.abs(known.length - lower.length) > 2) continue; // Skip if length too different
-    const dist = levenshtein(lower, known);
+    const knownNorm = stripAccents(known);
+    if (Math.abs(knownNorm.length - lowerNorm.length) > 2) continue;
+    const dist = levenshtein(lowerNorm, knownNorm);
     if (dist < bestDist) {
       bestDist = dist;
       bestMatch = known;
