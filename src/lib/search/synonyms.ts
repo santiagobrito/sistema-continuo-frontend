@@ -228,9 +228,15 @@ export function fuzzyCorrect(word: string): string | null {
   // Check misspellings dictionary (accent-insensitive) first
   if (MISSPELLINGS_NORM[lowerNorm]) return MISSPELLINGS_NORM[lowerNorm];
 
-  // Check against all known words in synonym groups
+  // Dynamic threshold: short words (3-4 chars) requieren match exacto en
+  // misspellings, palabras de 5+ chars aceptan 1 edit. Antes era hasta 2
+  // edits, lo que convertía "carton"→"canon" (palabras diferentes pero
+  // cercanas) y rompía búsquedas legítimas.
+  const maxDist = lowerNorm.length >= 5 ? 1 : 0;
+  if (maxDist === 0) return null;
+
   let bestMatch: string | null = null;
-  let bestDist = 3; // max distance threshold
+  let bestDist = maxDist + 1;
 
   const allKnownWords = SYNONYM_GROUPS.flat();
   // Also add misspelling targets
@@ -238,9 +244,9 @@ export function fuzzyCorrect(word: string): string | null {
 
   for (const known of allKnownWords) {
     const knownNorm = stripAccents(known);
-    if (Math.abs(knownNorm.length - lowerNorm.length) > 2) continue;
+    if (Math.abs(knownNorm.length - lowerNorm.length) > maxDist) continue;
     const dist = levenshtein(lowerNorm, knownNorm);
-    if (dist < bestDist) {
+    if (dist > 0 && dist <= maxDist && dist < bestDist) {
       bestDist = dist;
       bestMatch = known;
     }

@@ -167,9 +167,16 @@ export async function GET(request: NextRequest) {
       ? { corrected: q.toLowerCase(), variants: [q.toLowerCase()], wasCorrected: false }
       : processSearchQuery(q);
 
-    // Build list of WP search terms to try
-    // For each variant, pick the longest word (most distinctive) for WP search
+    // Build list of WP search terms to try.
+    // SIEMPRE incluimos el query original (lowercase) — la búsqueda accent-
+    // insensitive del backend WP se encarga de matchear con/sin tildes, así
+    // que pasarle el término del usuario garantiza resultados aunque el fuzzy
+    // correct haya elegido otra palabra cercana.
     const searchTerms = new Set<string>();
+    for (const w of q.toLowerCase().split(/\s+/).filter((w) => w.length >= 2)) {
+      searchTerms.add(w);
+    }
+    // For each variant, pick the longest word (most distinctive) for WP search
     for (const variant of variants) {
       const words = variant.split(/\s+/).filter((w) => w.length >= 2);
       // Add the longest word
@@ -271,11 +278,19 @@ export async function GET(request: NextRequest) {
         }));
     }
 
+    // Only flag "Mostrando resultados para X" si el query original no apareció
+    // en ningún nombre de producto. Si "carton" trae cartones, no tiene sentido
+    // decir "Mostrando resultados para canon" aunque el typo-fix lo sugiriera.
+    const qOriginalNorm = norm(q);
+    const originalMatched =
+      qOriginalNorm.length >= 3 &&
+      products.some((p) => norm(p.name).includes(qOriginalNorm));
+
     return NextResponse.json({
       products,
       categories,
       query: q,
-      corrected_query: wasCorrected ? corrected : undefined,
+      corrected_query: wasCorrected && !originalMatched ? corrected : undefined,
       total_products: products.length,
     });
   } catch {
