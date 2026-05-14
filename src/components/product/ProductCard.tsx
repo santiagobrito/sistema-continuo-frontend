@@ -43,6 +43,11 @@ export default async function ProductCard({ product, hideBrand, hideOutOfStockBa
   const showCampaignBadge = Boolean(campaign && product.in_active_campaign);
   const isOutOfStock = product.stock_status === "outofstock";
 
+  const maxQtyDiscount = product.quantity_discounts?.length
+    ? Math.max(...product.quantity_discounts.map((d) => Number(d.discount_percent)))
+    : 0;
+  const hasQtyDiscount = maxQtyDiscount > 0 && !showCatalog;
+
   return (
     <Link
       href={getProductUrl(product)}
@@ -81,6 +86,14 @@ export default async function ProductCard({ product, hideBrand, hideOutOfStockBa
         {!hideOutOfStockBadge && isOutOfStock && (
           <span className="absolute top-2 right-2 bg-gray-800/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
             Sin stock
+          </span>
+        )}
+        {hasQtyDiscount && !isOutOfStock && (
+          <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8 10-4-5M4 7l4 5" />
+            </svg>
+            Por cantidad -{maxQtyDiscount}%
           </span>
         )}
         {showCampaignBadge && campaign && !isOutOfStock && (
