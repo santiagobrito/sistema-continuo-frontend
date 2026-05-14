@@ -353,7 +353,7 @@ export default function CheckoutPage() {
       if (isCorreo && hasZeroWeightItem) return false;
       if (opt.zones.includes("all")) return true;
       if (opt.zones.includes(province)) return true;
-      if (opt.zones.includes("interior") && !["C", "B"].includes(province)) return true;
+      if (opt.zones.includes("interior") && province !== "C") return true;
       return false;
     });
   }, [formData.state, hasZeroWeightItem, paymentMethod]);
