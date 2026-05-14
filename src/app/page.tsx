@@ -25,14 +25,14 @@ export default async function HomePage() {
     estampadorasData, tintasData, papelesData, sublimablesData, silhouetteData
   ] = await Promise.all([
     getCategories().catch(() => ({ data: [], flat: [] })),
-    getProducts({ per_page: 4, on_sale: "1" }).catch(() => emptyPaginated),
+    getProducts({ per_page: 4, on_sale: "1", in_stock: "1" }).catch(() => emptyPaginated),
     getBrands().catch(() => []),
     getBlogPosts({ per_page: 3 }).catch(() => emptyPaginated),
-    getProducts({ category: "estampadoras", per_page: 4, orderby: "popularity" }).catch(() => emptyPaginated),
-    getProducts({ category: "tintas", per_page: 4, orderby: "popularity" }).catch(() => emptyPaginated),
-    getProducts({ category: "papel", per_page: 4, orderby: "popularity" }).catch(() => emptyPaginated),
-    getProducts({ category: "sublimables", per_page: 4, orderby: "popularity" }).catch(() => emptyPaginated),
-    getProducts({ category: "silhouette", per_page: 4, orderby: "popularity" }).catch(() => emptyPaginated),
+    getProducts({ category: "estampadoras", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
+    getProducts({ category: "tintas", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
+    getProducts({ category: "papel", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
+    getProducts({ category: "sublimables", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
+    getProducts({ category: "silhouette", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
   ]);
 
   const onSaleProducts = onSaleData.data.filter((p) => p.regular_price && Number(p.regular_price) > Number(p.price));
