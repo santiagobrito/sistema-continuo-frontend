@@ -77,6 +77,7 @@ export interface Product {
   precio_usd: number | null;
   quantity_discounts: QuantityDiscount[];
   in_active_campaign?: boolean;
+  is_pinned?: boolean;
 
   // Reseller (only present if user is reseller)
   reseller_discount_percent?: number;

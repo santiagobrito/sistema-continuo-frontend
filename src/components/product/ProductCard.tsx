@@ -96,6 +96,14 @@ export default async function ProductCard({ product, hideBrand, hideOutOfStockBa
             Por cantidad -{maxQtyDiscount}%
           </span>
         )}
+        {product.is_pinned && !isOutOfStock && !showCampaignBadge && (
+          <span className="absolute top-2 right-2 inline-flex items-center gap-1 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <path d="M12 17.27l5.18 3.13-1.37-5.91L20.5 9.71l-6.08-.52L12 3.5 9.58 9.19 3.5 9.71l4.69 4.78-1.37 5.91L12 17.27z" />
+            </svg>
+            Destacado
+          </span>
+        )}
         {showCampaignBadge && campaign && !isOutOfStock && (
           <span
             className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-1 rounded-full shadow-md"
