@@ -86,7 +86,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   const c = resolved.data as Category;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
-  const catDesc = c.seo_description || `Compra ${c.name} online en Sistema Continuo. ${c.count} productos disponibles. Envío a todo Argentina. Hasta 12 cuotas.`;
+  const catDesc = c.seo_description || `Compra ${c.name} online en Sistema Continuo. ${c.count} productos disponibles. Envío a todo Argentina. Pagá con tarjeta vía MercadoPago.`;
   return {
     title: (c.seo_title && c.seo_title.includes("Sistema Continuo")) ? { absolute: c.seo_title } : (c.seo_title || c.name),
     description: catDesc,

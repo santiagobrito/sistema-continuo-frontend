@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Formas de pago",
-  description: "MercadoPago hasta 12 cuotas, transferencia bancaria y efectivo. Todos los medios de pago disponibles.",
+  description: "MercadoPago con tarjetas de crédito y débito, transferencia bancaria y efectivo. Todos los medios de pago disponibles.",
 };
 
 export default function FormasDePagoPage() {
@@ -27,7 +27,7 @@ export default function FormasDePagoPage() {
               <h2 className="text-lg font-bold text-gray-900">MercadoPago</h2>
             </div>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li>Tarjeta de crédito hasta 12 cuotas sin interés</li>
+              <li>Financiación en cuotas con tarjeta de crédito (las cuotas y promociones disponibles dependen del banco emisor)</li>
               <li>Tarjeta de débito</li>
               <li>Dinero en cuenta MercadoPago</li>
               <li>Rapipago y Pago Fácil</li>

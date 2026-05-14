@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     template: "%s | Sistema Continuo",
   },
   description:
-    "Tienda online de sublimación: estampadoras, sublimadoras, impresoras Epson, plotters Silhouette, tintas, papeles y +600 productos. Envíos a todo Argentina. Hasta 12 cuotas.",
+    "Tienda online de sublimación: estampadoras, sublimadoras, impresoras Epson, plotters Silhouette, tintas, papeles y +600 productos. Envíos a todo Argentina. Pagá con tarjeta vía Mercado Pago.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "https://sistemacontinuo.com.ar"
   ),

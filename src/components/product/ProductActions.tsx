@@ -323,7 +323,7 @@ function ShippingPaymentInfo({ envioGratis = false }: { envioGratis?: boolean })
         </div>
         <div>
           <p className="text-sm font-medium text-gray-900">Todos los medios de pago</p>
-          <p className="text-xs text-gray-500">MercadoPago, tarjeta hasta 12 cuotas, transferencia, efectivo</p>
+          <p className="text-xs text-gray-500">MercadoPago, tarjeta de crédito o débito, transferencia, efectivo</p>
         </div>
       </div>
       <div className="flex items-center gap-3 px-4 py-3">
