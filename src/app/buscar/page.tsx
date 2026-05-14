@@ -30,6 +30,11 @@ async function searchWithRelevance(q: string, page: number, perPage: number) {
   const data = await res.json();
   const qLower = q.toLowerCase();
 
+  // Para queries con dígitos ("8 en 1", "papel a4"), también probamos un
+  // match "sin separadores" — así "8 en 1" matchea "(8en1)" y viceversa.
+  const qHasDigit = /\d/.test(qLower);
+  const qCompact = qHasDigit ? qLower.replace(/[^a-z0-9áéíóúñü]/gi, "") : "";
+
   // Score and filter
   const scored = (data.data || []).map((p: Product) => {
     const name = p.name.toLowerCase();
@@ -47,6 +52,9 @@ async function searchWithRelevance(q: string, page: number, perPage: number) {
       } else {
         relevance += 80;
       }
+    } else if (qCompact && qCompact.length >= 3) {
+      const nameCompact = name.replace(/[^a-z0-9áéíóúñü]/gi, "");
+      if (nameCompact.includes(qCompact)) relevance += 70;
     }
 
     const catMatch = (p.categories || []).some((c: { name: string }) => c.name.toLowerCase().includes(qLower));
