@@ -8,19 +8,21 @@
 import { cookies } from "next/headers";
 import { createHmac, timingSafeEqual } from "crypto";
 
-// Fail-fast: si AUTH_SECRET no está seteado, no arrancar la app. Cualquier
-// fallback hardcoded = sesiones firmadas con un secret público = forge cookie
-// arbitraria. Mejor crashear que correr inseguro.
-function loadAuthSecret(): string {
+// Fail-fast LAZY: si AUTH_SECRET no está al INVOCAR sign(), throw. No tiramos
+// al cargar el módulo porque Next.js evalúa lib durante el build (cuando las
+// env vars de runtime aún no están seteadas) y rompería el build.
+let _authSecretCache: string | null = null;
+function getAuthSecret(): string {
+  if (_authSecretCache) return _authSecretCache;
   const s = process.env.AUTH_SECRET;
   if (!s || s.length < 32 || s.includes("placeholder") || s.includes("change_me")) {
     throw new Error(
       "AUTH_SECRET no seteado o usa valor placeholder/débil. Generar con: openssl rand -hex 32 y setear en env."
     );
   }
+  _authSecretCache = s;
   return s;
 }
-const AUTH_SECRET = loadAuthSecret();
 const SESSION_COOKIE = "sc_session";
 const SESSION_EXPIRY = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -32,7 +34,7 @@ export interface SessionUser {
 }
 
 function sign(payload: string): string {
-  return createHmac("sha256", AUTH_SECRET).update(payload).digest("hex");
+  return createHmac("sha256", getAuthSecret()).update(payload).digest("hex");
 }
 
 export async function createSession(user: SessionUser): Promise<void> {
