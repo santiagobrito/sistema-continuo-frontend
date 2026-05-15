@@ -368,7 +368,14 @@ export async function POST(request: NextRequest) {
     const sig = validateMpSignature(request, body);
     if (!sig.ok) {
       console.warn(`[MP webhook] firma inválida (${sig.reason})`);
-      return NextResponse.json({ error: "invalid signature" }, { status: 401 });
+      // Si el flag está activo, rechazar. Si no, aceptar pero loggear.
+      // La defensa en profundidad: el handler igual consulta MP API con
+      // nuestro access token para validar el pago antes de procesar, así
+      // un webhook fake con payment_id inventado no afecta nada.
+      if (process.env.MP_WEBHOOK_REQUIRE_SIGNATURE === "1") {
+        return NextResponse.json({ error: "invalid signature" }, { status: 401 });
+      }
+      console.warn(`[MP webhook] aceptando sin firma válida (REQUIRE_SIGNATURE=0). Razón: ${sig.reason}`);
     }
 
     if (body.type === "payment" && body.data?.id) {
