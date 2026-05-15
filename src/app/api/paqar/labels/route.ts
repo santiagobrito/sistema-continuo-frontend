@@ -1,3 +1,4 @@
+import { safeEqual } from "@/lib/auth/timing-safe";
 /**
  * POST /api/paqar/labels
  *
@@ -46,7 +47,7 @@ export async function OPTIONS(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const cors = corsHeaders(request.headers.get("origin"));
 
-  if (request.headers.get("x-internal-secret") !== INTERNAL_SECRET) {
+  if (!safeEqual(request.headers.get("x-internal-secret"), INTERNAL_SECRET)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403, headers: cors });
   }
 

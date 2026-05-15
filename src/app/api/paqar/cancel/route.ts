@@ -1,3 +1,4 @@
+import { safeEqual } from "@/lib/auth/timing-safe";
 /**
  * POST /api/paqar/cancel
  *
@@ -15,7 +16,7 @@ import { paqarClient } from "@/lib/paqar/client";
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET || "";
 
 export async function POST(request: NextRequest) {
-  if (request.headers.get("x-internal-secret") !== INTERNAL_SECRET) {
+  if (!safeEqual(request.headers.get("x-internal-secret"), INTERNAL_SECRET)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

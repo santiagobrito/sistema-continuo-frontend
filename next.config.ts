@@ -42,7 +42,36 @@ const nextConfig: NextConfig = {
     const noCache = [
       { key: "Cache-Control", value: "private, no-store, no-cache, must-revalidate, max-age=0" },
     ];
+    // Security headers globales. CSP arranca permissive (report-only style) para
+    // no romper GTM/MP/YouTube embeds; tighten en pasada siguiente cuando se
+    // releve el inventario completo de scripts third-party.
+    const security = [
+      { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+      { key: "X-Frame-Options", value: "SAMEORIGIN" },
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
+      // CSP permissive: permite scripts/styles inline (Next.js + GTM) y dominios
+      // de terceros que ya usamos. Endurecer en sprint siguiente.
+      {
+        key: "Content-Security-Policy",
+        value: [
+          "default-src 'self'",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://sdk.mercadopago.com https://connect.facebook.net https://www.googleadservices.com https://googleads.g.doubleclick.net https://*.googletagmanager.com",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+          "img-src 'self' data: blob: https: http://localhost",
+          "font-src 'self' data: https://fonts.gstatic.com",
+          "connect-src 'self' https://api.sistemacontinuo.com.ar https://sistema-continuo-wp.a7lflv.easypanel.host https://*.mercadopago.com https://api.mercadopago.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://*.googletagmanager.com https://stats.g.doubleclick.net https://www.facebook.com https://connect.facebook.net",
+          "frame-src 'self' https://www.youtube.com https://*.mercadopago.com",
+          "frame-ancestors 'self'",
+          "form-action 'self' https://*.mercadopago.com",
+          "base-uri 'self'",
+          "object-src 'none'",
+        ].join("; "),
+      },
+    ];
     return [
+      { source: "/:path*", headers: security },
       { source: "/checkout", headers: noCache },
       { source: "/mi-cuenta/:path*", headers: noCache },
       { source: "/iniciar-sesion", headers: noCache },

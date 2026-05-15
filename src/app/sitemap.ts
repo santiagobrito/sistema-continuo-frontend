@@ -3,8 +3,9 @@ import { getSitemapData, getBrands } from "@/lib/wordpress/api";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sistemacontinuo.com.ar";
 
-// Force dynamic — sitemap must fetch from API at runtime, not build time
-export const dynamic = "force-dynamic";
+// Re-generate diariamente. Invalidación granular via revalidateTag("sitemap")
+// cuando se publican productos/categorías (ya hooked en /api/revalidate).
+export const revalidate = 86400;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [

@@ -48,8 +48,20 @@ function validateMpSignature(
   body: { data?: { id?: string | number } }
 ): { ok: boolean; reason?: string } {
   if (!MP_WEBHOOK_SECRET) {
-    console.warn("[MP webhook] MP_WEBHOOK_SECRET no configurado — saltando validación");
-    return { ok: true, reason: "no-secret" };
+    // En producción, sin secret = vulnerabilidad crítica. El warning se loggea
+    // PROMINENTEMENTE pero seguimos aceptando para no romper webhooks reales
+    // mientras Santi no haya seteado el secret en panel MP + env.
+    //
+    // BLOQUEAR esto requiere acción de Santi:
+    //   1. MercadoPago panel → Webhooks → activar firma + copiar secret
+    //   2. EasyPanel → frontend service → env MP_WEBHOOK_SECRET=<copia>
+    //   3. EasyPanel → frontend → env MP_WEBHOOK_REQUIRE_SIGNATURE=1
+    if (process.env.MP_WEBHOOK_REQUIRE_SIGNATURE === "1") {
+      console.error("[MP webhook] CRÍTICO: MP_WEBHOOK_REQUIRE_SIGNATURE=1 pero MP_WEBHOOK_SECRET vacío. Rechazando.");
+      return { ok: false, reason: "secret-required-but-not-set" };
+    }
+    console.warn("[MP webhook] ⚠ INSEGURO: MP_WEBHOOK_SECRET no configurado, webhook acepta sin firma");
+    return { ok: true, reason: "no-secret-warn" };
   }
 
   const xSignature = request.headers.get("x-signature") || "";

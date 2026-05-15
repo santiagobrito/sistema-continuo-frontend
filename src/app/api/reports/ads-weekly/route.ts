@@ -1,3 +1,4 @@
+import { safeEqual } from "@/lib/auth/timing-safe";
 import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import {
@@ -388,7 +389,7 @@ async function buildReport(week?: string | null): Promise<WeeklyReportData> {
 export async function GET(req: NextRequest) {
   const auth = req.headers.get("authorization") || "";
   const token = auth.replace(/^Bearer /, "");
-  if (!INTERNAL_SECRET || token !== INTERNAL_SECRET) {
+  if (!safeEqual(token, INTERNAL_SECRET)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

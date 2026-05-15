@@ -1,3 +1,4 @@
+import { safeEqual } from "@/lib/auth/timing-safe";
 /**
  * POST /api/paqar/create-orders
  *
@@ -85,7 +86,7 @@ async function saveTrackingsToWc(
 }
 
 export async function POST(request: NextRequest) {
-  if (request.headers.get("x-internal-secret") !== INTERNAL_SECRET) {
+  if (!safeEqual(request.headers.get("x-internal-secret"), INTERNAL_SECRET)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

@@ -1,3 +1,4 @@
+import { safeEqual } from "@/lib/auth/timing-safe";
 /**
  * GET /api/mercadopago/payment-status?orderId=<id>
  *
@@ -40,7 +41,7 @@ const PRIORITY: Record<string, number> = {
 
 export async function GET(request: NextRequest) {
   const auth = request.headers.get("x-internal-secret");
-  if (!INTERNAL_SECRET || auth !== INTERNAL_SECRET) {
+  if (!safeEqual(auth, INTERNAL_SECRET)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

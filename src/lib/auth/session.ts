@@ -6,9 +6,21 @@
  */
 
 import { cookies } from "next/headers";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 
-const AUTH_SECRET = process.env.AUTH_SECRET || "sc_default_secret_change_me";
+// Fail-fast: si AUTH_SECRET no está seteado, no arrancar la app. Cualquier
+// fallback hardcoded = sesiones firmadas con un secret público = forge cookie
+// arbitraria. Mejor crashear que correr inseguro.
+function loadAuthSecret(): string {
+  const s = process.env.AUTH_SECRET;
+  if (!s || s.length < 32 || s.includes("placeholder") || s.includes("change_me")) {
+    throw new Error(
+      "AUTH_SECRET no seteado o usa valor placeholder/débil. Generar con: openssl rand -hex 32 y setear en env."
+    );
+  }
+  return s;
+}
+const AUTH_SECRET = loadAuthSecret();
 const SESSION_COOKIE = "sc_session";
 const SESSION_EXPIRY = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -50,7 +62,11 @@ export async function getSession(): Promise<SessionUser | null> {
   try {
     const payload = Buffer.from(payloadB64, "base64").toString();
     const expectedSig = sign(payload);
-    if (sig !== expectedSig) return null;
+    // timingSafeEqual evita timing attacks que permitirían forge gradual de cookies.
+    if (sig.length !== expectedSig.length) return null;
+    const sigBuf = Buffer.from(sig, "hex");
+    const expBuf = Buffer.from(expectedSig, "hex");
+    if (sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) return null;
 
     const data = JSON.parse(payload);
     if (data.exp < Date.now()) return null;

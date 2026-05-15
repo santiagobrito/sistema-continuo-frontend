@@ -1,3 +1,4 @@
+import { safeEqual } from "@/lib/auth/timing-safe";
 /**
  * POST /api/mercadopago/regenerate-preference
  *
@@ -31,7 +32,7 @@ interface WcOrder {
 
 export async function POST(request: NextRequest) {
   const auth = request.headers.get("x-internal-secret");
-  if (!INTERNAL_SECRET || auth !== INTERNAL_SECRET) {
+  if (!safeEqual(auth, INTERNAL_SECRET)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
