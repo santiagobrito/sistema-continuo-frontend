@@ -57,7 +57,7 @@ const nextConfig: NextConfig = {
         key: "Content-Security-Policy",
         value: [
           "default-src 'self'",
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://www.googletagmanager.com https://www.google-analytics.com https://sdk.mercadopago.com https://connect.facebook.net https://www.googleadservices.com https://googleads.g.doubleclick.net https://*.googletagmanager.com https://apis.google.com",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://www.googletagmanager.com https://www.google-analytics.com https://sdk.mercadopago.com https://connect.facebook.net https://www.googleadservices.com https://googleads.g.doubleclick.net https://*.googletagmanager.com https://apis.google.com https://www.gstatic.com https://*.gstatic.com",
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
           "img-src 'self' data: blob: https: http://localhost",
           "font-src 'self' data: https://fonts.gstatic.com",
