@@ -17,6 +17,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getPayment, type MPPayment } from "@/lib/mercadopago/sdk";
+import { record as debugRecord } from "@/lib/_debug-buffer";
 import crypto from "crypto";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
@@ -101,9 +102,7 @@ function validateMpSignature(
     }
     const match = crypto.timingSafeEqual(a, b);
     if (!match) {
-      // Loggear contexto SIN exponer la secret. Esto sirve para debug si
-      // la firma sigue fallando.
-      console.error("[MP webhook DEBUG] hmac-mismatch:", {
+      const dbg = {
         manifest,
         dataIdSource: request.nextUrl.searchParams.get("data.id") ? "querystring" : "body",
         dataId,
@@ -114,7 +113,12 @@ function validateMpSignature(
         secret_len: MP_WEBHOOK_SECRET.length,
         secret_first4: MP_WEBHOOK_SECRET.slice(0, 4),
         secret_last4: MP_WEBHOOK_SECRET.slice(-4),
-      });
+        // also log all headers and query for full context
+        allHeaders: Object.fromEntries(request.headers.entries()),
+        queryString: request.nextUrl.searchParams.toString(),
+      };
+      console.error("[MP webhook DEBUG] hmac-mismatch:", dbg);
+      debugRecord("mp-webhook-mismatch", dbg);
     }
     return match ? { ok: true } : { ok: false, reason: "hmac-mismatch" };
   } catch (err) {
