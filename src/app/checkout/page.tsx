@@ -776,11 +776,6 @@ export default function CheckoutPage() {
                                       : "Ej: entregar de 9 a 13hs, tocar timbre depto 4B, dejar con encargado…"}
                                     className={`${inputClass} resize-none bg-white`}
                                   />
-                                  {isTransporte && (
-                                    <p className="mt-1 text-[10px] text-gray-500">
-                                      Necesitamos saber a qué transporte despachar (Vía Cargo, Andreani Cargas, Ezeyra, etc.) y la terminal/sucursal de destino.
-                                    </p>
-                                  )}
                                   <p className="mt-1 text-[10px] text-gray-500 text-right">{shippingNote.length}/300</p>
                                 </div>
                               </div>
