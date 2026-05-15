@@ -92,11 +92,33 @@ function validateMpSignature(
   try {
     const a = Buffer.from(expected, "hex");
     const b = Buffer.from(v1, "hex");
-    if (a.length !== b.length) return { ok: false, reason: "length-mismatch" };
-    return crypto.timingSafeEqual(a, b)
-      ? { ok: true }
-      : { ok: false, reason: "hmac-mismatch" };
-  } catch {
+    if (a.length !== b.length) {
+      console.error("[MP webhook DEBUG] length-mismatch:", {
+        manifest, expected_len: a.length, received_len: b.length,
+        expected_first8: expected.slice(0, 8), v1_first8: v1.slice(0, 8),
+      });
+      return { ok: false, reason: "length-mismatch" };
+    }
+    const match = crypto.timingSafeEqual(a, b);
+    if (!match) {
+      // Loggear contexto SIN exponer la secret. Esto sirve para debug si
+      // la firma sigue fallando.
+      console.error("[MP webhook DEBUG] hmac-mismatch:", {
+        manifest,
+        dataIdSource: request.nextUrl.searchParams.get("data.id") ? "querystring" : "body",
+        dataId,
+        xRequestId,
+        ts,
+        expected_first16: expected.slice(0, 16),
+        received_first16: v1.slice(0, 16),
+        secret_len: MP_WEBHOOK_SECRET.length,
+        secret_first4: MP_WEBHOOK_SECRET.slice(0, 4),
+        secret_last4: MP_WEBHOOK_SECRET.slice(-4),
+      });
+    }
+    return match ? { ok: true } : { ok: false, reason: "hmac-mismatch" };
+  } catch (err) {
+    console.error("[MP webhook DEBUG] hex-parse-error:", err);
     return { ok: false, reason: "hex-parse-error" };
   }
 }
