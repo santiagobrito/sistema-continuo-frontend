@@ -1,9 +1,10 @@
-import { getCategories, getProducts, getBrands, getBlogPosts } from "@/lib/wordpress/api";
+import { getCategories, getProducts, getBrands, getBlogPosts, getHeroSlides } from "@/lib/wordpress/api";
 import type { Product } from "@/lib/wordpress/types";
 import Image from "next/image";
 import Link from "next/link";
 import ProductCard from "@/components/product/ProductCard";
 import { PromoSection } from "@/components/shop/PromoSection";
+import HeroCarousel from "@/components/layout/HeroCarousel";
 
 export const revalidate = 3600; // ISR: match API cache (1h)
 
@@ -22,7 +23,8 @@ export default async function HomePage() {
   const emptyPaginated = { data: [], total: 0, pages: 0, page: 1 };
 
   const [categoriesData, onSaleData, brandsData, blogData,
-    estampadorasData, tintasData, papelesData, sublimablesData, silhouetteData
+    estampadorasData, tintasData, papelesData, sublimablesData, silhouetteData,
+    heroSlidesData
   ] = await Promise.all([
     getCategories().catch(() => ({ data: [], flat: [] })),
     getProducts({ per_page: 4, on_sale: "1", in_stock: "1" }).catch(() => emptyPaginated),
@@ -33,7 +35,9 @@ export default async function HomePage() {
     getProducts({ category: "papel", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
     getProducts({ category: "sublimables", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
     getProducts({ category: "silhouette", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
+    getHeroSlides().catch(() => ({ data: [] })),
   ]);
+  const heroSlides = heroSlidesData.data || [];
 
   const onSaleProducts = onSaleData.data.filter((p) => p.regular_price && Number(p.regular_price) > Number(p.price));
   const brands = brandsData;
@@ -49,7 +53,10 @@ export default async function HomePage() {
 
   return (
     <main className="bg-gray-50">
-      {/* Hero */}
+      {/* Hero: carousel CMS si hay slides activos, sino fallback al hardcoded */}
+      {heroSlides.length > 0 ? (
+        <HeroCarousel slides={heroSlides} />
+      ) : (
       <section className="relative bg-gradient-to-br from-[#013d5a] via-[#01567a] to-[#0178a5] text-white overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIi8+PC9zdmc+')] opacity-50" />
         <div className="relative max-w-7xl mx-auto px-4 py-16 md:py-24">
@@ -91,6 +98,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Categories grid */}
       <section className="max-w-7xl mx-auto px-4 -mt-10 relative z-10 mb-12">

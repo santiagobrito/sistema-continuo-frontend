@@ -82,6 +82,14 @@ export async function getCategories(): Promise<CategoriesResponse> {
   });
 }
 
+export async function getHeroSlides(): Promise<{ data: import("./types").HeroSlide[] }> {
+  return apiFetch<{ data: import("./types").HeroSlide[] }>(
+    "/hero-slides/active",
+    undefined,
+    { revalidate: 300, tags: ["hero-slides"] }
+  );
+}
+
 export async function getCategory(
   slug: string,
   params?: { page?: number; per_page?: number; orderby?: string; order?: string }

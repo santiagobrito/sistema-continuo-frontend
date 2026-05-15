@@ -27,6 +27,9 @@ export async function POST(request: NextRequest) {
     case "page":
       tags.push("pages", `page-${slug}`);
       break;
+    case "hero_slide":
+      tags.push("hero-slides");
+      break;
     default:
       tags.push("products", "categories", "blog", "sitemap");
   }

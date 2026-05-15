@@ -172,6 +172,19 @@ export interface PaginatedResponse<T> {
   per_page?: number;
 }
 
+export interface HeroSlide {
+  id: number;
+  order: number;
+  title: string;
+  subtitle: string;
+  text_in_image: boolean;
+  overlay_style: "dark" | "light" | "none";
+  cta_label: string;
+  cta_url: string;
+  image_desktop: { url: string; alt: string; width: number; height: number } | null;
+  image_mobile: { url: string; alt: string; width: number; height: number } | null;
+}
+
 export interface CategoriesResponse {
   data: Category[];
   flat: Category[];
