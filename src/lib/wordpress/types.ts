@@ -73,7 +73,7 @@ export interface Product {
   catalog_contact_message: string;
   shipping_category: "standard" | "heavy" | "oversized" | "fragile";
   envio_gratis: boolean;
-  unidad_venta: "" | "metro" | "rollo" | "par" | "juego" | "kit" | "pack" | "litro" | "kg";
+  unidad_venta: "" | "metro" | "rollo" | "par" | "juego" | "kit" | "pack" | "paquete" | "litro" | "kg";
   precio_usd: number | null;
   quantity_discounts: QuantityDiscount[];
   in_active_campaign?: boolean;
