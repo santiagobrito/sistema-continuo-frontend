@@ -3,11 +3,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import ProductCard from "@/components/product/ProductCard";
 import { getCategories, getCategory, getProducts, getCategoryUrl } from "@/lib/wordpress/api";
+import { searchProducts, type ScoredProduct } from "@/lib/search/products";
 
 export const dynamic = "force-dynamic";
-
-const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
-const API_BASE = `${WP_URL}/wp-json/sistema-continuo/v1`;
 
 interface Props {
   searchParams: Promise<{ q?: string; page?: string }>;
@@ -18,64 +16,23 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   return { title: q ? `Buscar: ${q}` : "Buscar productos" };
 }
 
-type ScoredProduct = Product & { _relevance: number };
-
 /**
- * Server-side search with same relevance logic as /api/search
+ * Wraps the shared searchProducts() with pagination for the full results page.
  */
-async function searchWithRelevance(q: string, page: number, perPage: number) {
-  const res = await fetch(`${API_BASE}/products?search=${encodeURIComponent(q)}&per_page=100`, {
-    next: { revalidate: 60 },
-  });
-
-  if (!res.ok) return { data: [] as ScoredProduct[], total: 0, pages: 0 };
-
-  const data = await res.json();
-  const qLower = q.toLowerCase();
-
-  // Para queries con dígitos ("8 en 1", "papel a4"), también probamos un
-  // match "sin separadores" — así "8 en 1" matchea "(8en1)" y viceversa.
-  const qHasDigit = /\d/.test(qLower);
-  const qCompact = qHasDigit ? qLower.replace(/[^a-z0-9áéíóúñü]/gi, "") : "";
-
-  const scored: ScoredProduct[] = (data.data || []).map((p: Product) => {
-    const name = p.name.toLowerCase();
-    const words = name.split(/[\s\-–,]+/);
-    let relevance = 0;
-
-    const firstWords = words.slice(0, 4).join(" ");
-    if (firstWords.includes(qLower)) relevance += 150;
-    else if (name.startsWith(qLower)) relevance += 120;
-    else if (name.includes(qLower)) {
-      const idx = name.indexOf(qLower);
-      const before = name.slice(Math.max(0, idx - 6), idx).trim();
-      if (before.endsWith("para") || before.endsWith("de") || before.endsWith("con")) {
-        relevance += 5;
-      } else {
-        relevance += 80;
-      }
-    } else if (qCompact && qCompact.length >= 3) {
-      const nameCompact = name.replace(/[^a-z0-9áéíóúñü]/gi, "");
-      if (nameCompact.includes(qCompact)) relevance += 70;
-    }
-
-    const catMatch = (p.categories || []).some((c: { name: string }) => c.name.toLowerCase().includes(qLower));
-    if (catMatch) relevance += 40;
-    if (p.marca?.toLowerCase().includes(qLower)) relevance += 30;
-
-    return { ...p, _relevance: relevance };
-  });
-
-  const filtered = scored
-    .filter((p) => p._relevance >= 20)
-    .sort((a, b) => b._relevance - a._relevance);
-
-  const total = filtered.length;
+async function searchPaginated(q: string, page: number, perPage: number) {
+  const { products, corrected, wasCorrected, originalMatched } = await searchProducts(q);
+  const total = products.length;
   const pages = Math.ceil(total / perPage);
   const offset = (page - 1) * perPage;
-  const paged = filtered.slice(offset, offset + perPage);
-
-  return { data: paged, total, pages };
+  const paged = products.slice(offset, offset + perPage);
+  return {
+    data: paged,
+    total,
+    pages,
+    corrected,
+    wasCorrected,
+    originalMatched,
+  };
 }
 
 /**
@@ -151,8 +108,16 @@ export default async function SearchPage({ searchParams }: Props) {
   const qLower = q.toLowerCase();
 
   const results = q.length >= 2
-    ? await searchWithRelevance(q, currentPage, 24)
-    : { data: [] as ScoredProduct[], total: 0, pages: 0 };
+    ? await searchPaginated(q, currentPage, 24)
+    : {
+        data: [] as ScoredProduct[],
+        total: 0,
+        pages: 0,
+        corrected: q,
+        wasCorrected: false,
+        originalMatched: false,
+      };
+  const showCorrection = results.wasCorrected && !results.originalMatched;
 
   // Sugerencias: si hay 0 resultados o pocos (< 8), traemos categorías relacionadas + populares.
   const wantsSuggestions = q && results.total < 8;
@@ -182,6 +147,11 @@ export default async function SearchPage({ searchParams }: Props) {
               <h1 className="text-2xl font-bold text-gray-900">
                 Resultados para &ldquo;{q}&rdquo;
               </h1>
+              {showCorrection && (
+                <p className="text-sm text-gray-600 mt-1">
+                  Mostrando resultados para <strong>{results.corrected}</strong>
+                </p>
+              )}
               <p className="text-gray-500 mt-1">
                 {results.total > 0
                   ? `${results.total} ${results.total === 1 ? "producto" : "productos"} encontrados`
