@@ -148,11 +148,10 @@ function addToConsolidated(bundle: Bundle, item: SplitItem): void {
   const unitWeight = item.weight || SPLIT_RULES.FALLBACK_WEIGHT_G;
   bundle.weightGrams += unitWeight;
   bundle.declaredValue += item.price;
-  // Nota: max() en cada eje subestima el alto real cuando apilás (ej: 3 resmas
-  // apiladas tienen alto=6 pero acá reportamos 2). Trade-off aceptado: beneficia
-  // la cotización; si un paquete real supera, ajustar manualmente. El control
-  // de volumen acumulado en splitIntoBundles previene cajas físicamente
-  // imposibles (ver MAX_CONSOLIDATED_VOLUME_CM3).
+  // Tracking del "envelope" del item más grande contenido. Las dimensiones
+  // finales se reconcilian con el volumen acumulado en finalizeConsolidated
+  // — sin esa reconciliación, apilar 36 tazas de 8×7×9 quedaba declarado
+  // como 8×7×9 en vez de la caja real (~27×27×27).
   bundle.height = Math.max(bundle.height, item.height || SPLIT_RULES.FALLBACK_DIM_CM);
   bundle.width = Math.max(bundle.width, item.width || SPLIT_RULES.FALLBACK_DIM_CM);
   bundle.depth = Math.max(bundle.depth, item.depth || SPLIT_RULES.FALLBACK_DIM_CM);
@@ -164,6 +163,22 @@ function addToConsolidated(bundle: Bundle, item: SplitItem): void {
   if (bundle.items.length === 1 && item.category) {
     bundle.category = item.category;
   }
+}
+
+/**
+ * Reconcilia las dimensiones declaradas del bulto con el volumen acumulado
+ * real de los ítems. addToConsolidated solo guarda el envelope del item más
+ * grande (max por eje); apilando N unidades idénticas eso sub-reporta el
+ * cubicaje N×. Acá inflamos a una caja cúbica equivalente, sin reducir
+ * dimensiones reales (no toca single-item bundles ni a items elongados).
+ */
+function finalizeConsolidated(bundle: Bundle, cumulativeVolume: number): void {
+  const reportedVolume = bundle.height * bundle.width * bundle.depth;
+  if (reportedVolume >= cumulativeVolume) return;
+  const cbrt = Math.ceil(Math.cbrt(cumulativeVolume));
+  bundle.height = Math.max(bundle.height, cbrt);
+  bundle.width = Math.max(bundle.width, cbrt);
+  bundle.depth = Math.max(bundle.depth, cbrt);
 }
 
 /**
@@ -198,6 +213,7 @@ export function splitIntoBundles(items: SplitItem[]): Bundle[] {
         currentVolume + unitVolume > SPLIT_RULES.MAX_CONSOLIDATED_VOLUME_CM3;
 
       if (current.items.length > 0 && (wouldExceedWeight || wouldExceedVolume)) {
+        finalizeConsolidated(current, currentVolume);
         bundles.push(current);
         current = newEmptyBundle();
         currentVolume = 0;
@@ -206,7 +222,10 @@ export function splitIntoBundles(items: SplitItem[]): Bundle[] {
       currentVolume += unitVolume;
     }
   }
-  if (current.items.length > 0) bundles.push(current);
+  if (current.items.length > 0) {
+    finalizeConsolidated(current, currentVolume);
+    bundles.push(current);
+  }
 
   // Validación final: ningún bulto puede superar el tope absoluto.
   // Si un consolidate-bundle quedó por encima (por ejemplo varios fallbacks
@@ -236,15 +255,19 @@ export function forceSingleBundle(items: SplitItem[]): Bundle[] {
 
   const bundle = newEmptyBundle();
   let dominantCategory: string | undefined;
+  let cumulativeVolume = 0;
 
   for (const item of items) {
+    const unitVolume = itemVolume(item);
     for (let i = 0; i < item.quantity; i++) {
       addToConsolidated(bundle, item);
+      cumulativeVolume += unitVolume;
     }
     if (!dominantCategory && item.category) dominantCategory = item.category;
   }
 
   if (dominantCategory) bundle.category = dominantCategory;
+  finalizeConsolidated(bundle, cumulativeVolume);
 
   if (bundle.weightGrams > SPLIT_RULES.ABSOLUTE_MAX_WEIGHT_G) {
     const itemList = bundle.items.map((i) => `${i.quantity}x ${i.name}`).join(", ");
