@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useCart } from "@/components/cart/CartProvider";
 import { cartQualifiesForFreeShipping } from "@/lib/woocommerce/cart";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -97,7 +98,7 @@ const isValidStreetAddress = (s: string) => {
   return t.length >= 5 && /[a-zA-ZáéíóúñÁÉÍÓÚÑ]/.test(t) && /\d/.test(t);
 };
 
-export default function CheckoutPage() {
+function CheckoutInner() {
   const { cart } = useCart();
   const { user, loading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
@@ -388,19 +389,37 @@ export default function CheckoutPage() {
   const couponDiscount = appliedCoupon?.discount_amount || 0;
   const total = Math.max(0, subtotal - couponDiscount + shippingCost);
 
+  // Auto-aplicar cupón si llega por URL (?coupon=CODE), típicamente desde el
+  // flow de recuperación de carrito abandonado. Una sola vez por sesión de
+  // checkout — si el cupón es inválido, queda el error visible en la UI y el
+  // usuario puede cambiarlo manualmente sin que se reintente solo.
+  const searchParams = useSearchParams();
+  const urlCoupon = searchParams.get("coupon");
+  const [autoCouponTried, setAutoCouponTried] = useState(false);
+  useEffect(() => {
+    if (autoCouponTried) return;
+    if (!urlCoupon) return;
+    if (appliedCoupon) return;
+    if (subtotal <= 0) return; // esperar que carguen los items del cart
+    setAutoCouponTried(true);
+    applyCoupon(urlCoupon);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlCoupon, subtotal, appliedCoupon, autoCouponTried]);
+
   function updateField(field: string, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }));
   }
 
-  async function applyCoupon() {
-    if (!couponInput.trim()) return;
+  async function applyCoupon(codeOverride?: string) {
+    const code = (codeOverride ?? couponInput).trim();
+    if (!code) return;
     setCouponLoading(true);
     setCouponError("");
     try {
       const res = await fetch("/api/coupons/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: couponInput.trim(), subtotal }),
+        body: JSON.stringify({ code, subtotal }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -951,7 +970,7 @@ export default function CheckoutPage() {
                       />
                       <button
                         type="button"
-                        onClick={applyCoupon}
+                        onClick={() => applyCoupon()}
                         disabled={couponLoading || !couponInput.trim()}
                         className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50"
                       >
@@ -1108,5 +1127,13 @@ export default function CheckoutPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-gray-50" />}>
+      <CheckoutInner />
+    </Suspense>
   );
 }

@@ -12,6 +12,8 @@ interface RecoveryData {
   items?: { id: number; sku: string; name: string; quantity: number; price: number }[];
   total?: number;
   recovered?: boolean;
+  /** Cupón único asociado al carrito — auto-aplicado al llegar al checkout. */
+  coupon_code?: string | null;
   error?: string;
 }
 
@@ -52,8 +54,13 @@ function RecuperarCarritoInner() {
       }
     }
     setRestoring(false);
-    // Dar tiempo al state para settlear, luego redirigir
-    setTimeout(() => router.push("/carrito"), 600);
+    // Si hay cupón asociado, llevar directo al checkout con coupon en query
+    // para que se auto-aplique (evita la fricción de tipear el código del email).
+    // Si no hay cupón, /carrito como antes.
+    const dest = data?.coupon_code
+      ? `/checkout?coupon=${encodeURIComponent(data.coupon_code)}`
+      : "/carrito";
+    setTimeout(() => router.push(dest), 600);
   }
 
   if (!token) {
