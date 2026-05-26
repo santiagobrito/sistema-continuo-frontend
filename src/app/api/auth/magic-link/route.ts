@@ -14,6 +14,9 @@ import { createSession } from "@/lib/auth/session";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET || "";
+// SITE_URL del env (dominio público). request.url devuelve el URL interno del
+// container (localhost:3000) y rompe los redirects al cliente.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sistemacontinuo.com.ar";
 
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
@@ -23,16 +26,12 @@ export async function GET(request: NextRequest) {
   const safeRedirect = redirect.startsWith("/") ? redirect : "/mi-cuenta";
 
   if (!token || !/^[a-f0-9]{64}$/.test(token)) {
-    return NextResponse.redirect(
-      new URL("/iniciar-sesion?error=invalid_link", request.url)
-    );
+    return NextResponse.redirect(new URL("/iniciar-sesion?error=invalid_link", SITE_URL));
   }
 
   if (!WP_URL || !INTERNAL_SECRET) {
     console.error("[magic-link] WP_URL o INTERNAL_API_SECRET no configurados");
-    return NextResponse.redirect(
-      new URL("/iniciar-sesion?error=config", request.url)
-    );
+    return NextResponse.redirect(new URL("/iniciar-sesion?error=config", SITE_URL));
   }
 
   try {
@@ -49,16 +48,12 @@ export async function GET(request: NextRequest) {
     if (!res.ok) {
       // 410 = expired/used. 404 = not found. Mostrar mensaje específico.
       const errorCode = res.status === 410 ? "expired" : "invalid_link";
-      return NextResponse.redirect(
-        new URL(`/iniciar-sesion?error=${errorCode}`, request.url)
-      );
+      return NextResponse.redirect(new URL(`/iniciar-sesion?error=${errorCode}`, SITE_URL));
     }
 
     const data = await res.json();
     if (!data.valid || !data.user_id) {
-      return NextResponse.redirect(
-        new URL("/iniciar-sesion?error=invalid_link", request.url)
-      );
+      return NextResponse.redirect(new URL("/iniciar-sesion?error=invalid_link", SITE_URL));
     }
 
     await createSession({
@@ -68,11 +63,9 @@ export async function GET(request: NextRequest) {
       role: "customer",
     });
 
-    return NextResponse.redirect(new URL(safeRedirect, request.url));
+    return NextResponse.redirect(new URL(safeRedirect, SITE_URL));
   } catch (err) {
     console.error("[magic-link] verify error:", err);
-    return NextResponse.redirect(
-      new URL("/iniciar-sesion?error=server", request.url)
-    );
+    return NextResponse.redirect(new URL("/iniciar-sesion?error=server", SITE_URL));
   }
 }
