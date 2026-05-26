@@ -272,7 +272,7 @@ async function findReusablePendingOrder(
   return null;
 }
 
-async function createWCOrder(body: CheckoutBody, customerId?: number): Promise<{ id: number; number: string }> {
+async function createWCOrder(body: CheckoutBody, customerId?: number, userCreatedAtCheckout = false): Promise<{ id: number; number: string }> {
   const lineItems = body.items.map((item) => ({
     product_id: item.product_id,
     variation_id: item.variation_id || undefined,
@@ -313,6 +313,7 @@ async function createWCOrder(body: CheckoutBody, customerId?: number): Promise<{
       ...(body.paqar_agency_id ? [{ key: "_sc_paqar_agency_id", value: body.paqar_agency_id }] : []),
       ...(body.shipping_method ? [{ key: "_sc_shipping_method_id", value: body.shipping_method }] : []),
       ...(body.billing.dni_cuit ? [{ key: "_dni_cuit", value: body.billing.dni_cuit }] : []),
+      ...(userCreatedAtCheckout ? [{ key: "_sc_user_created_at_checkout", value: "1" }] : []),
       ...attributionToOrderMeta(body.attribution),
     ],
   };
@@ -404,6 +405,7 @@ export async function POST(request: NextRequest) {
     // Asociar al customer WC si hay sesión; sino buscar por email; sino crear uno.
     // Política: todo pedido debe quedar asociado a un customer, nada de guest orders.
     let customerId: number | undefined;
+    let userCreatedAtCheckout = false; // marca para que backend mande email "Tu cuenta lista"
     const session = await getSession();
     if (session?.id) {
       customerId = session.id;
@@ -417,7 +419,10 @@ export async function POST(request: NextRequest) {
           first_name: body.billing.first_name,
           last_name: body.billing.last_name,
         });
-        if (created?.id) customerId = created.id;
+        if (created?.id) {
+          customerId = created.id;
+          userCreatedAtCheckout = true;
+        }
       }
     }
 
@@ -430,7 +435,7 @@ export async function POST(request: NextRequest) {
       order = { id: reusable.id, number: reusable.number || String(reusable.id) };
       reused = true;
     } else {
-      order = await createWCOrder(body, customerId);
+      order = await createWCOrder(body, customerId, userCreatedAtCheckout);
     }
 
     // 1b. Sincronizar datos al perfil del customer (fire-and-forget, no bloquea pago)
