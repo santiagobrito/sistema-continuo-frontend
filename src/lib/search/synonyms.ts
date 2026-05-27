@@ -17,13 +17,20 @@ export function stripAccents(str: string): string {
 }
 
 // Synonym groups: any word in a group can match any other
-// When a user searches for one word, we also try the others
+// When a user searches for one word, we also try the others.
+//
+// Single-word groups (no synonyms) are used to PROTECT a word from fuzzy
+// correction — e.g. "cinta" without protection would Levenshtein-collapse
+// to "tinta" (dist=1) and a "cinta autoadhesiva" search would surface tintas.
 const SYNONYM_GROUPS: string[][] = [
   // Estampadoras
   ["manual", "mano", "portatil", "portable"],
   ["plancha", "estampadora", "prensa", "sublimadora", "heat press"],
   ["plana", "flat", "plato"],
   ["automatica", "auto", "neumatica"],
+
+  // Protected (no synonyms — exist as real product terms vulnerable to typo collapse)
+  ["cinta"],
 
   // Plotters / Corte
   ["plotter", "cortadora", "cortante", "cutter"],
@@ -235,12 +242,15 @@ export function fuzzyCorrect(word: string): string | null {
   const maxDist = lowerNorm.length >= 5 ? 1 : 0;
   if (maxDist === 0) return null;
 
+  const allKnownWords = SYNONYM_GROUPS.flat();
+  allKnownWords.push(...Object.values(MISSPELLINGS));
+
+  // If the original word IS already a known valid term, never correct it.
+  // Without this guard "cinta" → "tinta" (dist=1) and "pinta" → "tinta" etc.
+  if (allKnownWords.some((k) => stripAccents(k) === lowerNorm)) return null;
+
   let bestMatch: string | null = null;
   let bestDist = maxDist + 1;
-
-  const allKnownWords = SYNONYM_GROUPS.flat();
-  // Also add misspelling targets
-  allKnownWords.push(...Object.values(MISSPELLINGS));
 
   for (const known of allKnownWords) {
     const knownNorm = stripAccents(known);

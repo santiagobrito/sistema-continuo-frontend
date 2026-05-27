@@ -57,12 +57,14 @@ function scoreProduct(
   product: Product,
   originalQuery: string,
   allQueryWords: string[],
+  originalQueryWords: string[],
 ): number {
   const nameNorm = norm(product.name);
   const marcaNorm = norm(product.marca || "");
   const skuNorm = norm(product.sku || "");
   const qNorm = norm(originalQuery);
   const wordsNorm = allQueryWords.map(norm);
+  const originalWordsNorm = originalQueryWords.map(norm);
 
   let score = 0;
 
@@ -93,6 +95,14 @@ function scoreProduct(
         score -= 60;
       }
     }
+  }
+
+  // Boost when the user's ORIGINAL (uncorrected) words all match the name.
+  // Without this, fuzzy correction can let near-typo products (e.g. tintas
+  // for a "cinta" query) crowd out the actual matches that contain the
+  // original spelling.
+  if (originalWordsNorm.length > 0 && originalWordsNorm.every((w) => nameNorm.includes(w))) {
+    score += 80;
   }
 
   // Category match
@@ -162,7 +172,7 @@ export async function searchProducts(query: string): Promise<SearchResult> {
     for (const product of batch) {
       if (seen.has(product.id)) continue;
       seen.add(product.id);
-      const score = scoreProduct(product, corrected, scoringWords);
+      const score = scoreProduct(product, corrected, scoringWords, originalWords);
       if (score >= MIN_SCORE) out.push({ ...product, _score: score });
     }
   }
