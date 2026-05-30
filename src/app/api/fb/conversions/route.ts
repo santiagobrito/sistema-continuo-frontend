@@ -20,6 +20,19 @@ function sha256(v?: string) {
   return crypto.createHash("sha256").update(v.trim().toLowerCase()).digest("hex");
 }
 
+// Meta marca el fbclid como "inactivo" pasados ~7 días aunque la cookie _fbc
+// dure 90. Filtramos antes de mandarlo para no quemar match rate ni acumular
+// avisos en Event Manager. Formato fbc: fb.<subdomainIndex>.<creationMs>.<fbclid>
+function fbcStillFresh(fbc: string | undefined, maxAgeDays = 7): string | undefined {
+  if (!fbc) return undefined;
+  const parts = fbc.split(".");
+  if (parts.length < 4 || parts[0] !== "fb") return undefined;
+  const creationMs = Number(parts[2]);
+  if (!Number.isFinite(creationMs)) return undefined;
+  if (Date.now() - creationMs > maxAgeDays * 24 * 60 * 60 * 1000) return undefined;
+  return fbc;
+}
+
 interface Payload {
   event_name: string;
   event_id?: string;
@@ -46,7 +59,7 @@ export async function POST(request: NextRequest) {
     undefined;
   const userAgent = request.headers.get("user-agent") || undefined;
   const fbp = request.cookies.get("_fbp")?.value;
-  const fbc = request.cookies.get("_fbc")?.value;
+  const fbc = fbcStillFresh(request.cookies.get("_fbc")?.value);
 
   const user_data: Record<string, string | undefined> = {
     client_ip_address: ip,
