@@ -35,6 +35,14 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["@/components", "@/lib"],
   },
+  // Compat: emails antiguos del plugin SC enviaban la magic-link a /auth/magic-link
+  // en lugar de /api/auth/magic-link. El plugin ya está corregido a partir de
+  // v1.7.75, pero los links ya enviados deben seguir funcionando los 30d de TTL.
+  async rewrites() {
+    return [
+      { source: "/auth/magic-link", destination: "/api/auth/magic-link" },
+    ];
+  },
   // Páginas con UI que depende de cookies/auth NO deben cachearse en CDN.
   // Sin esto, Cloudflare cachea el HTML estático (build-time) del checkout
   // y los users ven la versión vieja durante hasta 1 año (s-maxage default de Next).
