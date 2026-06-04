@@ -97,6 +97,7 @@ export interface Product {
   default_attributes?: Record<string, string>;
   related?: Product[];
   cross_sell_ids?: number[];
+  cross_sells?: Product[];
 }
 
 // === Category Types ===

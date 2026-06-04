@@ -286,15 +286,23 @@ async function ProductView({ product, parentSlug }: { product: Product; parentSl
           </div>
         </div>
 
-        {/* Frequently Bought Together */}
-        {!isCatalogProduct(product) && product.related && product.related.length > 0 && (
-          <div className="mt-10">
-            <FrequentlyBoughtTogether
-              currentProduct={product}
-              crossSells={product.related.filter(r => r.price && !isCatalogProduct(r)).slice(0, 3)}
-            />
-          </div>
-        )}
+        {/* Frequently Bought Together — cross-sells manuales (wp-admin) si los hay,
+            fallback a related auto (por taxonomía). */}
+        {(() => {
+          if (isCatalogProduct(product)) return null;
+          const manual = product.cross_sells?.filter(r => r.price && !isCatalogProduct(r)) ?? [];
+          const auto = product.related?.filter(r => r.price && !isCatalogProduct(r)) ?? [];
+          const picks = (manual.length > 0 ? manual : auto).slice(0, 3);
+          if (picks.length === 0) return null;
+          return (
+            <div className="mt-10">
+              <FrequentlyBoughtTogether
+                currentProduct={product}
+                crossSells={picks}
+              />
+            </div>
+          );
+        })()}
 
         {/* Related */}
         {product.related && product.related.length > 0 && (
