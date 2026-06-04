@@ -35,7 +35,7 @@ const ALL_SHIPPING_OPTIONS = [
   {
     id: "moto_caba",
     label: "Moto CABA",
-    price: 4836.85,
+    price: 5610,
     zones: ["C"],
     desc: "Envío en moto a domicilio dentro de CABA. Precio por bulto — según el tamaño/peso real del pedido podemos ajustar el valor. Si no entra en moto, tendrá recargo.",
     time: "Despacho en 24-48hs hábiles",
@@ -43,7 +43,7 @@ const ALL_SHIPPING_OPTIONS = [
   {
     id: "moto_gba1",
     label: "Moto GBA Zona 1",
-    price: 7728.45,
+    price: 8910,
     zones: ["B"],
     desc: "San Fernando, San Isidro, San Martín, Vicente López, Hurlingham, Ituzaingó, Morón, 3 de Febrero, La Matanza Norte, Lomas de Zamora, Lanús, Avellaneda. Precio por bulto — según el pedido puede ajustarse.",
     time: "Despacho en 24-48hs hábiles",
@@ -51,7 +51,7 @@ const ALL_SHIPPING_OPTIONS = [
   {
     id: "moto_gba2",
     label: "Moto GBA Zona 2",
-    price: 10725.20,
+    price: 12650,
     zones: ["B"],
     desc: "Tigre, Malvinas Argentinas, José C. Paz, San Miguel, Moreno, Merlo, Ezeiza, Esteban Echeverría, Almirante Brown, Florencio Varela, Berazategui, Quilmes, Escobar, Pilar, La Plata, Berisso. Precio por bulto — según el pedido puede ajustarse.",
     time: "Despacho en 24-48hs hábiles",
