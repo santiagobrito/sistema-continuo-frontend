@@ -390,21 +390,32 @@ function CheckoutInner() {
   const total = Math.max(0, subtotal - couponDiscount + shippingCost);
 
   // Auto-aplicar cupón si llega por URL (?coupon=CODE), típicamente desde el
-  // flow de recuperación de carrito abandonado. Una sola vez por sesión de
-  // checkout — si el cupón es inválido, queda el error visible en la UI y el
-  // usuario puede cambiarlo manualmente sin que se reintente solo.
+  // flow de recuperación de carrito abandonado. Espera a que haya email cargado
+  // en el form (precargado de Brevo/cookie o tipeado por el usuario) — los
+  // cupones SC-AB-* tienen email_restrictions y fallan sin email. Una sola vez
+  // por sesión de checkout; si falla, queda el error visible y el usuario
+  // puede aplicarlo manualmente.
   const searchParams = useSearchParams();
   const urlCoupon = searchParams.get("coupon");
+  const urlEmail = searchParams.get("email");
+
+  // Precargar email desde la URL si viene de /recuperar-carrito (el cupón
+  // SC-AB-* es personal y necesita matchear el email_restriction).
+  useEffect(() => {
+    if (!urlEmail) return;
+    setFormData((prev) => (prev.email ? prev : { ...prev, email: urlEmail }));
+  }, [urlEmail]);
   const [autoCouponTried, setAutoCouponTried] = useState(false);
   useEffect(() => {
     if (autoCouponTried) return;
     if (!urlCoupon) return;
     if (appliedCoupon) return;
     if (subtotal <= 0) return; // esperar que carguen los items del cart
+    if (!formData.email) return; // esperar a tener email (cupón requiere email_restriction match)
     setAutoCouponTried(true);
     applyCoupon(urlCoupon);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlCoupon, subtotal, appliedCoupon, autoCouponTried]);
+  }, [urlCoupon, subtotal, appliedCoupon, autoCouponTried, formData.email]);
 
   function updateField(field: string, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -419,7 +430,7 @@ function CheckoutInner() {
       const res = await fetch("/api/coupons/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, subtotal }),
+        body: JSON.stringify({ code, subtotal, email: formData.email }),
       });
       const data = await res.json();
       if (!res.ok) {

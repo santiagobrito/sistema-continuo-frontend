@@ -56,9 +56,11 @@ function RecuperarCarritoInner() {
     setRestoring(false);
     // Si hay cupón asociado, llevar directo al checkout con coupon en query
     // para que se auto-aplique (evita la fricción de tipear el código del email).
+    // Email también va en la query — los SC-AB-* tienen email_restrictions y
+    // el auto-apply necesita que el email esté precargado para no rebotar.
     // Si no hay cupón, /carrito como antes.
     const dest = data?.coupon_code
-      ? `/checkout?coupon=${encodeURIComponent(data.coupon_code)}`
+      ? `/checkout?coupon=${encodeURIComponent(data.coupon_code)}&email=${encodeURIComponent(data.email || "")}`
       : "/carrito";
     setTimeout(() => router.push(dest), 600);
   }

@@ -12,7 +12,7 @@ const WC_AUTH = process.env.WC_API_AUTH || "";
 
 export async function POST(request: NextRequest) {
   try {
-    const { code, subtotal } = await request.json();
+    const { code, subtotal, email } = await request.json();
 
     if (!code || typeof code !== "string") {
       return NextResponse.json({ error: "Ingresa un codigo" }, { status: 400 });
@@ -58,6 +58,24 @@ export async function POST(request: NextRequest) {
       if (subtotal < parseFloat(coupon.minimum_amount)) {
         return NextResponse.json({
           error: `Compra minima de $${Math.round(parseFloat(coupon.minimum_amount)).toLocaleString("es-AR")} para este cupon`,
+        }, { status: 400 });
+      }
+    }
+
+    // Check email restrictions — los cupones SC-AB-* son personales (restringidos al
+    // email que recibió el link de recuperación). Si el email no coincide, rechazar
+    // acá para que el cliente vea el mensaje en vez de descubrirlo al confirmar pago.
+    if (Array.isArray(coupon.email_restrictions) && coupon.email_restrictions.length > 0) {
+      const allowed = coupon.email_restrictions.map((e: string) => String(e).toLowerCase().trim());
+      const provided = String(email || "").toLowerCase().trim();
+      if (!provided) {
+        return NextResponse.json({
+          error: "Este cupon es personal — completa tu email primero",
+        }, { status: 400 });
+      }
+      if (!allowed.includes(provided)) {
+        return NextResponse.json({
+          error: "Este cupon esta asociado a otra direccion de email",
         }, { status: 400 });
       }
     }

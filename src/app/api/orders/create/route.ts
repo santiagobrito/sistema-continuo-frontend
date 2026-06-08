@@ -14,6 +14,7 @@ import {
   attributionToOrderMeta,
   type OrderAttributionInput,
 } from "@/lib/wordpress/order-attribution";
+import { resolveCoupon, applyDiscountToItems } from "@/lib/woocommerce/coupons";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
@@ -134,6 +135,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Resolver cupón y prorratear descuento. WC REST no aplica coupon_lines a
+    // los totals automáticamente — hay que mandar line_items con subtotal/total
+    // explícitos y discount_total a mano para que el descuento se persista.
+    const subtotalForCoupon = body.items.reduce((acc, it) => acc + it.price * it.quantity, 0);
+    const resolved = body.coupon_code
+      ? await resolveCoupon(body.coupon_code, subtotalForCoupon, body.billing.email)
+      : null;
+    const discountTotal = resolved?.discount_amount || 0;
+    const itemsAfter = discountTotal > 0 ? applyDiscountToItems(body.items, discountTotal) : null;
+    const effectiveShippingCost = resolved?.free_shipping ? 0 : (body.shipping_cost ?? 0);
+
     const orderData: Record<string, unknown> = {
       status: body.payment_method === "efectivo" ? "on-hold" : "on-hold",
       customer_id: customerId || 0,
@@ -158,15 +170,24 @@ export async function POST(request: NextRequest) {
         postcode: body.billing.postcode || "",
         country: "AR",
       },
-      line_items: body.items.map((item) => ({
-        product_id: item.product_id,
-        variation_id: item.variation_id || undefined,
-        quantity: item.quantity,
-      })),
+      line_items: itemsAfter
+        ? itemsAfter.map((item) => ({
+            product_id: item.product_id,
+            variation_id: item.variation_id || undefined,
+            quantity: item.quantity,
+            subtotal: String(item.line_subtotal_original),
+            total: String(item.line_total_after),
+          }))
+        : body.items.map((item) => ({
+            product_id: item.product_id,
+            variation_id: item.variation_id || undefined,
+            quantity: item.quantity,
+          })),
       payment_method: body.payment_method,
       payment_method_title: paymentTitles[body.payment_method] || body.payment_method,
       set_paid: false,
       coupon_lines: body.coupon_code ? [{ code: body.coupon_code }] : [],
+      discount_total: discountTotal > 0 ? String(discountTotal) : undefined,
       meta_data: [
         ...(body.gclid ? [{ key: "_gclid", value: body.gclid }] : []),
         ...(body.paqar_agency_id ? [{ key: "_sc_paqar_agency_id", value: body.paqar_agency_id }] : []),
@@ -182,7 +203,7 @@ export async function POST(request: NextRequest) {
         {
           method_id: body.shipping_method,
           method_title: shippingMethodTitle(body.shipping_method),
-          total: String(body.shipping_cost),
+          total: String(effectiveShippingCost),
         },
       ];
     }

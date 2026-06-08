@@ -15,6 +15,7 @@ import {
   attributionToOrderMeta,
   type OrderAttributionInput,
 } from "@/lib/wordpress/order-attribution";
+import { resolveCoupon, applyDiscountToItems } from "@/lib/woocommerce/coupons";
 
 /**
  * Lock atómico via WP transient (Redis backend) para evitar race condition.
@@ -272,12 +273,28 @@ async function findReusablePendingOrder(
   return null;
 }
 
-async function createWCOrder(body: CheckoutBody, customerId?: number, userCreatedAtCheckout = false): Promise<{ id: number; number: string }> {
-  const lineItems = body.items.map((item) => ({
-    product_id: item.product_id,
-    variation_id: item.variation_id || undefined,
-    quantity: item.quantity,
-  }));
+async function createWCOrder(
+  body: CheckoutBody,
+  customerId?: number,
+  userCreatedAtCheckout = false,
+  discountTotal = 0,
+  itemsAfterDiscount?: ReturnType<typeof applyDiscountToItems>,
+): Promise<{ id: number; number: string }> {
+  // Si hay descuento, mandamos line_items con subtotal/total explícitos para que
+  // WC no recalcule desde unit_price del producto (sino el descuento se perdería).
+  const lineItems = (itemsAfterDiscount && discountTotal > 0
+    ? itemsAfterDiscount.map((item) => ({
+        product_id: item.product_id,
+        variation_id: item.variation_id || undefined,
+        quantity: item.quantity,
+        subtotal: String(item.line_subtotal_original),
+        total: String(item.line_total_after),
+      }))
+    : body.items.map((item) => ({
+        product_id: item.product_id,
+        variation_id: item.variation_id || undefined,
+        quantity: item.quantity,
+      })));
 
   const orderData: Record<string, unknown> = {
     status: "pending",
@@ -307,7 +324,13 @@ async function createWCOrder(body: CheckoutBody, customerId?: number, userCreate
     payment_method: "mercadopago",
     payment_method_title: "MercadoPago",
     set_paid: false,
+    // coupon_lines como registro/trazabilidad. WC REST ignora `discount` aquí
+    // (es readonly), pero la línea queda en wp_woocommerce_order_items lo que
+    // permite contar canjes. El descuento efectivo viene de los line_items.
     coupon_lines: body.coupon_code ? [{ code: body.coupon_code }] : [],
+    // discount_total explícito para que el resumen del admin y los emails de WC
+    // muestren "Descuento -$X" correctamente.
+    discount_total: discountTotal > 0 ? String(discountTotal) : undefined,
     meta_data: [
       ...(body.gclid ? [{ key: "_gclid", value: body.gclid }] : []),
       ...(body.paqar_agency_id ? [{ key: "_sc_paqar_agency_id", value: body.paqar_agency_id }] : []),
@@ -426,6 +449,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 0. Resolver cupón (si llegó) y prorratear descuento sobre line_items.
+    //    WC REST no recalcula totales por coupon_lines: tenemos que mandar los
+    //    items con subtotal/total explícitos y descontar también a MP, sino
+    //    el cliente paga el precio sin descuento aunque el frontend lo muestre.
+    const subtotalForCoupon = body.items.reduce((acc, it) => acc + it.price * it.quantity, 0);
+    const resolved = body.coupon_code
+      ? await resolveCoupon(body.coupon_code, subtotalForCoupon, body.billing.email)
+      : null;
+    const discountTotal = resolved?.discount_amount || 0;
+    const itemsAfterDiscount = discountTotal > 0
+      ? applyDiscountToItems(body.items, discountTotal)
+      : undefined;
+
     // 1. Reutilizar pending reciente con mismo carrito (anti-duplicado en reintentos MP).
     //    Si no existe, crear orden nueva.
     let order: { id: number; number: string };
@@ -435,7 +471,7 @@ export async function POST(request: NextRequest) {
       order = { id: reusable.id, number: reusable.number || String(reusable.id) };
       reused = true;
     } else {
-      order = await createWCOrder(body, customerId, userCreatedAtCheckout);
+      order = await createWCOrder(body, customerId, userCreatedAtCheckout, discountTotal, itemsAfterDiscount);
     }
 
     // 1b. Sincronizar datos al perfil del customer (fire-and-forget, no bloquea pago)
@@ -457,20 +493,31 @@ export async function POST(request: NextRequest) {
     markCartRecovered(body.billing.email).catch(() => {});
     subscribeNewsletter(body.billing.email, `${body.billing.first_name} ${body.billing.last_name}`).catch(() => {});
 
-    // 2. Create MP preference
-    const mpItems = body.items.map((item) => ({
-      title: item.name,
-      quantity: item.quantity,
-      unit_price: Math.round(item.price),
-      picture_url: item.image,
-    }));
+    // 2. Create MP preference — usar precios DESCONTADOS si hay cupón resuelto.
+    //    MP cobra exactamente lo que mandamos en unit_price * quantity, así que
+    //    si pasamos el precio original con cupón aplicado en WC, el cliente
+    //    paga el precio sin descuento. Bug histórico desde la migración headless.
+    const mpItems = (itemsAfterDiscount
+      ? itemsAfterDiscount.map((item) => ({
+          title: item.name,
+          quantity: item.quantity,
+          unit_price: Math.round(item.unit_price_after),
+          picture_url: item.image,
+        }))
+      : body.items.map((item) => ({
+          title: item.name,
+          quantity: item.quantity,
+          unit_price: Math.round(item.price),
+          picture_url: item.image,
+        })));
 
-    // Add shipping as item if exists
-    if (body.shipping_cost && body.shipping_cost > 0) {
+    // Add shipping as item if exists. Si el cupón es free_shipping, mandar 0.
+    const shippingForMp = resolved?.free_shipping ? 0 : (body.shipping_cost || 0);
+    if (shippingForMp > 0) {
       mpItems.push({
         title: "Envio",
         quantity: 1,
-        unit_price: Math.round(body.shipping_cost),
+        unit_price: Math.round(shippingForMp),
         picture_url: undefined,
       });
     }
