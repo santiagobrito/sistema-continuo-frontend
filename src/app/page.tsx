@@ -129,25 +129,6 @@ export default async function HomePage() {
       {/* Promo activa (HotSale, Black Friday, etc.) — solo si hay campaña vigente */}
       <PromoSection />
 
-      {/* Featured: Combos */}
-      <section className="max-w-7xl mx-auto px-4 py-10">
-        <div className="bg-gradient-to-r from-[#013d5a] to-[#01567a] rounded-2xl p-6 md:p-10 text-white">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-              <p className="text-sm font-semibold text-blue-200 uppercase tracking-widest mb-2">Todo en uno</p>
-              <h2 className="text-2xl md:text-3xl font-bold mb-3">Combos de sublimación</h2>
-              <p className="text-blue-100 text-sm leading-relaxed max-w-md">
-                Estampadora + insumos + artículos sublimables. Todo lo que necesitas para arrancar o potenciar tu negocio en un solo pack con precio especial.
-              </p>
-            </div>
-            <Link href="/estampadoras/combos-de-sublimacion" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-[#013d5a] px-7 py-3.5 rounded-full font-semibold hover:bg-blue-50 transition-all">
-              Ver combos
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* On Sale — urgency */}
       {onSaleProducts.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 py-10">
@@ -189,6 +170,25 @@ export default async function HomePage() {
           </section>
         )
       ))}
+
+      {/* Featured: Combos */}
+      <section className="max-w-7xl mx-auto px-4 py-10">
+        <div className="bg-gradient-to-r from-[#013d5a] to-[#01567a] rounded-2xl p-6 md:p-10 text-white">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <p className="text-sm font-semibold text-blue-200 uppercase tracking-widest mb-2">Todo en uno</p>
+              <h2 className="text-2xl md:text-3xl font-bold mb-3">Combos de sublimación</h2>
+              <p className="text-blue-100 text-sm leading-relaxed max-w-md">
+                Estampadora + insumos + artículos sublimables. Todo lo que necesitas para arrancar o potenciar tu negocio en un solo pack con precio especial.
+              </p>
+            </div>
+            <Link href="/estampadoras/combos-de-sublimacion" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-[#013d5a] px-7 py-3.5 rounded-full font-semibold hover:bg-blue-50 transition-all">
+              Ver combos
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* Brands */}
       {brands.length > 0 && (
