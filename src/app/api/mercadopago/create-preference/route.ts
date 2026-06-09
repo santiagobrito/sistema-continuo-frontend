@@ -73,6 +73,10 @@ function shippingMethodTitle(method: string | undefined): string {
     case "local_pickup":       return "Retiro en local";
     case "correo_domicilio":   return "Correo Argentino a domicilio";
     case "correo_sucursal":    return "Correo Argentino a sucursal";
+    case "moto_z1":            return "Moto CABA (Zona 1)";
+    case "moto_z2":            return "Moto GBA Zona 2";
+    case "moto_z3":            return "Moto GBA Zona 3";
+    case "moto_z4":            return "Moto GBA Zona 4";
     case "moto_caba":          return "Moto CABA";
     case "moto_gba1":          return "Moto GBA Zona 1";
     case "moto_gba2":          return "Moto GBA Zona 2";

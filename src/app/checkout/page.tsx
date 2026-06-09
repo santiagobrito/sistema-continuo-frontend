@@ -33,27 +33,35 @@ const ALL_SHIPPING_OPTIONS = [
     time: "Despacho en 3 días hábiles",
   },
   {
-    id: "moto_caba",
-    label: "Moto CABA",
-    price: 5610,
+    id: "moto_z1",
+    label: "Moto CABA (Zona 1)",
+    price: 7139,
     zones: ["C"],
     desc: "Envío en moto a domicilio dentro de CABA. Precio por bulto — según el tamaño/peso real del pedido podemos ajustar el valor. Si no entra en moto, tendrá recargo.",
     time: "Despacho en 24-48hs hábiles",
   },
   {
-    id: "moto_gba1",
-    label: "Moto GBA Zona 1",
-    price: 8910,
+    id: "moto_z2",
+    label: "Moto GBA Zona 2",
+    price: 7139,
     zones: ["B"],
-    desc: "San Fernando, San Isidro, San Martín, Vicente López, Hurlingham, Ituzaingó, Morón, 3 de Febrero, La Matanza Norte, Lomas de Zamora, Lanús, Avellaneda. Precio por bulto — según el pedido puede ajustarse.",
+    desc: "Vicente López, San Martín, Tres de Febrero, Matanza Norte, Lomas de Zamora, Lanús, Avellaneda. Precio por bulto — según el pedido puede ajustarse.",
     time: "Despacho en 24-48hs hábiles",
   },
   {
-    id: "moto_gba2",
-    label: "Moto GBA Zona 2",
-    price: 12650,
+    id: "moto_z3",
+    label: "Moto GBA Zona 3",
+    price: 9559,
     zones: ["B"],
-    desc: "Tigre, Malvinas Argentinas, José C. Paz, San Miguel, Moreno, Merlo, Ezeiza, Esteban Echeverría, Almirante Brown, Florencio Varela, Berazategui, Quilmes, Escobar, Pilar, La Plata, Berisso. Precio por bulto — según el pedido puede ajustarse.",
+    desc: "Tigre, San Isidro, San Fernando, Malvinas Argentinas, San Miguel, José C. Paz, Moreno, Morón, Ituzaingó, Hurlingham, Merlo, Matanza Sur, Ezeiza, Esteban Echeverría, Almirante Brown, Quilmes, Florencio Varela, Berazategui. Precio por bulto — según el pedido puede ajustarse.",
+    time: "Despacho en 24-48hs hábiles",
+  },
+  {
+    id: "moto_z4",
+    label: "Moto GBA Zona 4",
+    price: 10989,
+    zones: ["B"],
+    desc: "Zárate, Campana, Escobar, Pilar, Luján, General Rodríguez, Marcos Paz, Cañuelas, San Vicente, Presidente Perón, La Plata, Ensenada, Berisso. Precio por bulto — según el pedido puede ajustarse.",
     time: "Despacho en 24-48hs hábiles",
   },
   {
@@ -745,7 +753,7 @@ function CheckoutInner() {
                         // Métodos que requieren coordinación humana muestran un bloque
                         // extra cuando se seleccionan: sucursal CA → selector de sucursal;
                         // moto/transporte → textarea con detalles de entrega.
-                        const isMoto = opt.id === "moto_caba" || opt.id === "moto_gba1" || opt.id === "moto_gba2";
+                        const isMoto = opt.id.startsWith("moto_");
                         const isTransporte = opt.id === "transporte";
                         const isExpanded = isSelected && (opt.id === "correo_sucursal" || isMoto || isTransporte);
 
