@@ -3,10 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
-    // Next 16: por defecto solo permite quality=75. Para usar quality={60}/{65}
-    // en components, hay que listar valores acá. La key existe en runtime pero
-    // los types de next 16.2.x aún no la incluyen → @ts-expect-error.
-    // @ts-expect-error qualities está en runtime pero no en types de next 16.2
+    // Next 16: por defecto solo permite quality=75 (rechaza q=60/65 con 400).
+    // Listar los valores permitidos para que los <Image quality={N}> funcionen.
     qualities: [50, 60, 65, 72, 75, 85],
     remotePatterns: [
       {
