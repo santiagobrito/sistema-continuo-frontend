@@ -43,6 +43,17 @@ const nextConfig: NextConfig = {
       { source: "/auth/magic-link", destination: "/api/auth/magic-link" },
     ];
   },
+  // Canonical = sin-www. www.* → 301 a apex para evitar duplicate content.
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.sistemacontinuo.com.ar" }],
+        destination: "https://sistemacontinuo.com.ar/:path*",
+        permanent: true,
+      },
+    ];
+  },
   // Páginas con UI que depende de cookies/auth NO deben cachearse en CDN.
   // Sin esto, Cloudflare cachea el HTML estático (build-time) del checkout
   // y los users ven la versión vieja durante hasta 1 año (s-maxage default de Next).
