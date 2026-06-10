@@ -61,6 +61,7 @@ export default async function ProductCard({ product, hideBrand, hideOutOfStockBa
             fill
             className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 50vw, 25vw"
+            quality={65}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
