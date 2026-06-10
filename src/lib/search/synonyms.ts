@@ -16,6 +16,21 @@ export function stripAccents(str: string): string {
   return str.normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
+/**
+ * Colapsa patrones dimensionales a la forma canónica "NxM":
+ *   "38 x 38" / "38×38" / "38 X 38" / "38x 38" → "38x38"
+ *
+ * Sin esto, "38 x 38" se tokeniza por espacios y el backend recibe solo "38",
+ * matcheando medio catálogo. Con esto, queda un solo token "38x38" que el
+ * backend normaliza también al comparar contra títulos (REGEXP_REPLACE).
+ *
+ * Reportado por Gabriel del equipo SC (2026-06-10): buscar "38x38" devolvía
+ * 6 resultados, faltando "Senko Blue 38 x 38", "PREMIUM 38×38".
+ */
+export function normalizeDimensions(str: string): string {
+  return str.replace(/(\d+)\s*[x×X]\s*(\d+)/g, "$1x$2");
+}
+
 // Synonym groups: any word in a group can match any other
 // When a user searches for one word, we also try the others.
 //
@@ -273,6 +288,10 @@ export function processSearchQuery(query: string): {
   variants: string[];
   wasCorrected: boolean;
 } {
+  // Step 0: Normalizar dimensiones ("38 x 38" → "38x38") para que no se rompan
+  // en el tokenize por espacios. El backend hace lo mismo al comparar títulos.
+  query = normalizeDimensions(query);
+
   // Step 1: Fix known misspellings
   let corrected = fixMisspellings(query);
   let wasCorrected = corrected !== query;

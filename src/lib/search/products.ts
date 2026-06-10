@@ -14,7 +14,7 @@
  */
 
 import type { Product } from "@/lib/wordpress/types";
-import { processSearchQuery, stripAccents } from "@/lib/search/synonyms";
+import { processSearchQuery, stripAccents, normalizeDimensions } from "@/lib/search/synonyms";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const API_BASE = `${WP_URL}/wp-json/sistema-continuo/v1`;
@@ -127,7 +127,9 @@ function scoreProduct(
 const MIN_SCORE = 15;
 
 export async function searchProducts(query: string): Promise<SearchResult> {
-  const q = query.trim();
+  // Pre-normalize dimensions BEFORE trim/tokenize/scoring para garantizar que
+  // "38 x 38" se trate como "38x38" en todos los pasos (tokens, score, etc).
+  const q = normalizeDimensions(query.trim());
   if (q.length < 2) {
     return { products: [], corrected: q, wasCorrected: false, originalMatched: false };
   }
