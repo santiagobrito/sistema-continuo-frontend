@@ -20,10 +20,10 @@
     "sharp": "^0.34.5"
   },
   "browserslist": [
-    "chrome >= 87",
-    "firefox >= 78",
-    "safari >= 14",
-    "edge >= 88"
+    "chrome >= 93",
+    "firefox >= 92",
+    "safari >= 15.4",
+    "edge >= 93"
   ],
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
