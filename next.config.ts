@@ -3,9 +3,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
-    // Quality default 72 (vs Next default 75): -10-15% peso, perceptualmente igual.
-    // Q75 es lo que pide manualmente cada <Image quality={X}> si no, usa este default.
-    qualities: [50, 60, 72, 85, 95],
     remotePatterns: [
       {
         protocol: "https",
