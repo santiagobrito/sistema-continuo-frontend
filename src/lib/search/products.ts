@@ -19,7 +19,11 @@ import { processSearchQuery, stripAccents, normalizeDimensions } from "@/lib/sea
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const API_BASE = `${WP_URL}/wp-json/sistema-continuo/v1`;
 
-const norm = (s: string) => stripAccents(s.toLowerCase());
+// Normalizamos también dimensiones aquí para que el scoring de nombres
+// matchee "38x38" del query con productos cuyo nombre tenga "38 x 38" o
+// "38×38". Sin esto el backend devolvía el producto OK pero el frontend
+// lo descartaba por score bajo (no había substring match).
+const norm = (s: string) => normalizeDimensions(stripAccents(s.toLowerCase()));
 
 export type ScoredProduct = Product & { _score: number };
 

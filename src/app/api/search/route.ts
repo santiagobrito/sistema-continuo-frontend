@@ -7,12 +7,12 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { searchProducts } from "@/lib/search/products";
-import { stripAccents } from "@/lib/search/synonyms";
+import { stripAccents, normalizeDimensions } from "@/lib/search/synonyms";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const API_BASE = `${WP_URL}/wp-json/sistema-continuo/v1`;
 
-const norm = (s: string) => stripAccents(s.toLowerCase());
+const norm = (s: string) => normalizeDimensions(stripAccents(s.toLowerCase()));
 
 interface SearchProduct {
   id: number;
