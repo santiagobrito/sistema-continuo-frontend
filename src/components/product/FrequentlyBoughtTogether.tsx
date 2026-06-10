@@ -59,7 +59,7 @@ export function FrequentlyBoughtTogether({ currentProduct, crossSells }: Props) 
         <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
           <div className="w-14 h-14 relative flex-shrink-0">
             {currentProduct.images[0] && (
-              <Image src={currentProduct.images[0].url} alt={currentProduct.name} fill className="object-contain" sizes="56px" />
+              <Image src={currentProduct.images[0].url} alt={currentProduct.name} fill className="object-contain" sizes="56px" quality={60} />
             )}
           </div>
           <div>
@@ -89,7 +89,7 @@ export function FrequentlyBoughtTogether({ currentProduct, crossSells }: Props) 
               />
               <div className="w-14 h-14 relative flex-shrink-0">
                 {product.images[0] && (
-                  <Image src={product.images[0].url} alt={product.name} fill className="object-contain" sizes="56px" />
+                  <Image src={product.images[0].url} alt={product.name} fill className="object-contain" sizes="56px" quality={60} />
                 )}
               </div>
               <div>
