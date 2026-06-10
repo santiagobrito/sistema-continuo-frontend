@@ -37,6 +37,11 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   experimental: {
     optimizePackageImports: ["@/components", "@/lib"],
+    // Inlinear CSS en <head> elimina request render-blocking (~430ms en mobile).
+    // Recomendado para Tailwind (atomic CSS, ~21 KiB). Tradeoff: returning
+    // visitors re-descargan styles con cada HTML; aceptable porque el HTML está
+    // cached en CF edge y los styles totales son pequeños.
+    inlineCss: true,
   },
   // Compat: emails antiguos del plugin SC enviaban la magic-link a /auth/magic-link
   // en lugar de /api/auth/magic-link. El plugin ya está corregido a partir de
