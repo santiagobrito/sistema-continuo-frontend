@@ -84,11 +84,11 @@ const nextConfig: NextConfig = {
         key: "Content-Security-Policy",
         value: [
           "default-src 'self'",
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://www.googletagmanager.com https://www.google-analytics.com https://sdk.mercadopago.com https://connect.facebook.net https://www.googleadservices.com https://googleads.g.doubleclick.net https://*.googletagmanager.com https://apis.google.com https://www.gstatic.com https://*.gstatic.com",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://www.googletagmanager.com https://www.google-analytics.com https://sdk.mercadopago.com https://connect.facebook.net https://www.googleadservices.com https://googleads.g.doubleclick.net https://*.googletagmanager.com https://apis.google.com https://www.gstatic.com https://*.gstatic.com https://www.clarity.ms https://*.clarity.ms",
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
           "img-src 'self' data: blob: https: http://localhost",
           "font-src 'self' data: https://fonts.gstatic.com",
-          "connect-src 'self' https://api.sistemacontinuo.com.ar https://sistema-continuo-wp.a7lflv.easypanel.host https://*.mercadopago.com https://api.mercadopago.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://*.googletagmanager.com https://stats.g.doubleclick.net https://www.facebook.com https://connect.facebook.net https://accounts.google.com https://oauth2.googleapis.com",
+          "connect-src 'self' https://api.sistemacontinuo.com.ar https://sistema-continuo-wp.a7lflv.easypanel.host https://*.mercadopago.com https://api.mercadopago.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://*.googletagmanager.com https://stats.g.doubleclick.net https://www.facebook.com https://connect.facebook.net https://accounts.google.com https://oauth2.googleapis.com https://*.clarity.ms",
           "frame-src 'self' https://www.youtube.com https://*.mercadopago.com https://accounts.google.com",
           "frame-ancestors 'self'",
           "form-action 'self' https://*.mercadopago.com",
