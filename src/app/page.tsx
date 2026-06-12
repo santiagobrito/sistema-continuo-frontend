@@ -114,7 +114,7 @@ export default async function HomePage() {
               <Link
                 key={cat.slug}
                 href={`/${cat.slug}`}
-                className="group flex items-center gap-2 bg-white rounded-xl p-2 shadow-sm hover:shadow-md border border-gray-100 hover:border-[#013d5a]/20 transition-all"
+                className="group flex items-center justify-center gap-2 bg-white rounded-xl p-2 shadow-sm hover:shadow-md border border-gray-100 hover:border-[#013d5a]/20 transition-all"
               >
                 <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0">
                   {img ? (
