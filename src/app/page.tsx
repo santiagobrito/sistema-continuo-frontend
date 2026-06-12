@@ -14,15 +14,13 @@ export const metadata: Metadata = {
   openGraph: { url: "https://sistemacontinuo.com.ar" },
 };
 
-const MAIN_CATEGORIES = [
-  { slug: "estampadoras", label: "Estampadoras", icon: "M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" },
-  { slug: "impresoras", label: "Impresoras", icon: "M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" },
-  { slug: "silhouette", label: "Silhouette", icon: "M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" },
-  { slug: "sublimables", label: "Sublimables", icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" },
-  { slug: "tintas", label: "Tintas", icon: "M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" },
-  { slug: "papel", label: "Papeles", icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
-  { slug: "vinilos", label: "Vinilos", icon: "M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" },
-  { slug: "gran-formato", label: "Gran Formato", icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" },
+const MAIN_CATEGORIES: { slug: string; label: string }[] = [
+  { slug: "sublimables", label: "Sublimables" },
+  { slug: "estampadoras", label: "Estampadoras" },
+  { slug: "silhouette", label: "Silhouette" },
+  { slug: "papel", label: "Papeles" },
+  { slug: "tintas", label: "Tintas" },
+  { slug: "impresoras", label: "Impresoras" },
 ];
 
 export default async function HomePage() {
@@ -106,23 +104,45 @@ export default async function HomePage() {
       </section>
       )}
 
-      {/* Categories grid */}
+      {/* Categories grid — horizontal cards with category image */}
       <section className="max-w-7xl mx-auto px-4 -mt-10 relative z-10 mb-12">
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-          {MAIN_CATEGORIES.map((cat) => (
-            <Link
-              key={cat.slug}
-              href={`/${cat.slug}`}
-              className="group flex flex-col items-center gap-2.5 bg-white rounded-xl p-4 shadow-sm hover:shadow-md border border-gray-100 hover:border-[#013d5a]/20 transition-all"
-            >
-              <div className="w-11 h-11 rounded-lg bg-[#013d5a]/5 group-hover:bg-[#013d5a]/10 flex items-center justify-center transition-colors">
-                <svg className="w-5 h-5 text-[#013d5a]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d={cat.icon} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {MAIN_CATEGORIES.map((cat) => {
+            const wpCat = categoriesData.flat.find((c) => c.slug === cat.slug);
+            const img = wpCat?.image;
+            return (
+              <Link
+                key={cat.slug}
+                href={`/${cat.slug}`}
+                className="group flex items-center gap-4 bg-white rounded-xl p-3 shadow-sm hover:shadow-md border border-gray-100 hover:border-[#013d5a]/20 transition-all"
+              >
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-lg bg-gray-50 overflow-hidden">
+                  {img ? (
+                    <Image
+                      src={img.url}
+                      alt={img.alt || cat.label}
+                      fill
+                      className="object-contain p-1.5 group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 640px) 80px, 96px"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 group-hover:text-[#013d5a] transition-colors text-base">{cat.label}</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Ver productos</p>
+                </div>
+                <svg className="w-5 h-5 text-gray-300 group-hover:text-[#013d5a] group-hover:translate-x-1 transition-all flex-shrink-0 mr-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>
-              </div>
-              <span className="text-xs font-semibold text-gray-700 group-hover:text-[#013d5a] text-center transition-colors">{cat.label}</span>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       </section>
 
