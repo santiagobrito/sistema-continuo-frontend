@@ -12,12 +12,24 @@ interface Tab {
 export function ProductTabs({ tabs }: { tabs: Tab[] }) {
   const [active, setActive] = useState(tabs[0]?.id);
 
-  // Activar tab "reviews" al llegar con ?review=1 (desde email post-compra).
+  // Activar tab "reviews" al llegar con ?review=1 (email post-compra) o con hash
+  // #reviews (click en las estrellas de la ficha de producto). hashchange escucha
+  // re-clicks cuando ya estás en #reviews.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("review") === "1" && tabs.some((t) => t.id === "reviews")) {
-      setActive("reviews");
+    const hasReviews = tabs.some((t) => t.id === "reviews");
+    if (!hasReviews) return;
+
+    function applyFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const hash = window.location.hash.replace(/^#/, "");
+      if (params.get("review") === "1" || hash === "reviews") {
+        setActive("reviews");
+      }
     }
+
+    applyFromUrl();
+    window.addEventListener("hashchange", applyFromUrl);
+    return () => window.removeEventListener("hashchange", applyFromUrl);
   }, [tabs]);
 
   const visibleTabs = tabs.filter((t) => t.content);

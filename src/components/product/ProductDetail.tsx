@@ -98,7 +98,20 @@ export function ProductDetail({
         )}
 
         {product.review_count > 0 && (
-          <div className="flex items-center gap-2 mb-5">
+          <button
+            type="button"
+            onClick={() => {
+              if (window.location.hash !== "#reviews") {
+                window.location.hash = "reviews";
+              } else {
+                // Hash ya está — re-disparar para que ProductTabs reaccione si ya estaba abierto
+                window.dispatchEvent(new HashChangeEvent("hashchange"));
+                document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }
+            }}
+            className="flex items-center gap-2 mb-5 cursor-pointer group/rating"
+            aria-label={`Ver ${product.review_count} opiniones`}
+          >
             <div className="flex text-yellow-400">
               {[1, 2, 3, 4, 5].map((s) => (
                 <svg
@@ -110,8 +123,10 @@ export function ProductDetail({
                 </svg>
               ))}
             </div>
-            <span className="text-sm text-gray-500">({product.review_count})</span>
-          </div>
+            <span className="text-sm text-gray-500 group-hover/rating:text-[#013d5a] group-hover/rating:underline transition-colors">
+              ({product.review_count} {product.review_count === 1 ? "opinión" : "opiniones"})
+            </span>
+          </button>
         )}
 
         <ProductActions

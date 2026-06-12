@@ -280,8 +280,8 @@ async function ProductView({ product, parentSlug }: { product: Product; parentSl
             <ProductDetail product={product} productUrl={productUrl} />
           )}
 
-          {/* Tabs */}
-          <div className="border-t border-gray-100 px-6 lg:px-8">
+          {/* Tabs — id="reviews" es el ancla del scroll cuando se clickean las estrellas en ProductDetail */}
+          <div id="reviews" className="border-t border-gray-100 px-6 lg:px-8 scroll-mt-24">
             <ProductTabs tabs={tabs} />
           </div>
         </div>
