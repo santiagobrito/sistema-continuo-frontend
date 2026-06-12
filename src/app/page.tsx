@@ -106,7 +106,7 @@ export default async function HomePage() {
 
       {/* Categories grid — horizontal cards with category image */}
       <section className="max-w-7xl mx-auto px-4 -mt-10 relative z-10 mb-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
           {MAIN_CATEGORIES.map((cat) => {
             const wpCat = categoriesData.flat.find((c) => c.slug === cat.slug);
             const img = wpCat?.image;
@@ -114,32 +114,26 @@ export default async function HomePage() {
               <Link
                 key={cat.slug}
                 href={`/${cat.slug}`}
-                className="group flex items-center gap-4 bg-white rounded-xl p-3 shadow-sm hover:shadow-md border border-gray-100 hover:border-[#013d5a]/20 transition-all"
+                className="group flex items-center gap-2 bg-white rounded-xl p-2 shadow-sm hover:shadow-md border border-gray-100 hover:border-[#013d5a]/20 transition-all"
               >
-                <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-lg bg-gray-50 overflow-hidden">
+                <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0">
                   {img ? (
                     <Image
                       src={img.url}
                       alt={img.alt || cat.label}
                       fill
-                      className="object-contain p-1.5 group-hover:scale-105 transition-transform duration-300"
-                      sizes="(max-width: 640px) 80px, 96px"
+                      className="object-contain group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 640px) 56px, 64px"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300">
-                      <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                       </svg>
                     </div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 group-hover:text-[#013d5a] transition-colors text-base">{cat.label}</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">Ver productos</p>
-                </div>
-                <svg className="w-5 h-5 text-gray-300 group-hover:text-[#013d5a] group-hover:translate-x-1 transition-all flex-shrink-0 mr-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
+                <h3 className="font-semibold text-gray-900 group-hover:text-[#013d5a] transition-colors text-sm leading-tight">{cat.label}</h3>
               </Link>
             );
           })}
