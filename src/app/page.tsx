@@ -27,18 +27,19 @@ export default async function HomePage() {
   const emptyPaginated = { data: [], total: 0, pages: 0, page: 1 };
 
   const [categoriesData, onSaleData, brandsData, blogData,
-    estampadorasData, tintasData, papelesData, sublimablesData, silhouetteData,
+    cameoData, combosData, estampadorasData, sublimablesData, papelesData, tintasData,
     heroSlidesData
   ] = await Promise.all([
     getCategories().catch(() => ({ data: [], flat: [] })),
     getProducts({ per_page: 4, on_sale: "1", in_stock: "1" }).catch(() => emptyPaginated),
     getBrands().catch(() => []),
     getBlogPosts({ per_page: 3 }).catch(() => emptyPaginated),
+    getProducts({ category: "cameo", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
+    getProducts({ category: "combos-de-sublimacion", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
     getProducts({ category: "estampadoras", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
-    getProducts({ category: "tintas", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
-    getProducts({ category: "papel", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
     getProducts({ category: "sublimables", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
-    getProducts({ category: "silhouette", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
+    getProducts({ category: "papel", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
+    getProducts({ category: "tintas", per_page: 4, orderby: "popularity", in_stock: "1" }).catch(() => emptyPaginated),
     getHeroSlides().catch(() => ({ data: [] })),
   ]);
   const heroSlides = heroSlidesData.data || [];
@@ -48,11 +49,12 @@ export default async function HomePage() {
   const blogPosts = blogData.data;
 
   const categorySections = [
+    { title: "Silhouette", slug: "silhouette/cameo", desc: "Plotters Cameo 5, Curio 2 y accesorios oficiales", products: cameoData.data, total: cameoData.total },
+    { title: "Combos de sublimación", slug: "estampadoras/combos-de-sublimacion", desc: "Estampadora + insumos + sublimables en un solo pack", products: combosData.data, total: combosData.total },
     { title: "Estampadoras", slug: "estampadoras", desc: "Planas, gorras, tazas, 8en1 y automaticas", products: estampadorasData.data, total: estampadorasData.total },
-    { title: "Tintas profesionales", slug: "tintas", desc: "OCP, Artanium, KIIAN para Epson, HP y Canon", products: tintasData.data, total: tintasData.total },
-    { title: "Papeles", slug: "papel", desc: "Sublimacion, transfer, fotografico y autoadhesivo", products: papelesData.data, total: papelesData.total },
     { title: "Sublimables", slug: "sublimables", desc: "Tazas, remeras, gorras, madera, polímero y más", products: sublimablesData.data, total: sublimablesData.total },
-    { title: "Silhouette", slug: "silhouette", desc: "Plotters Cameo 5, Curio 2, cuchillas y accesorios", products: silhouetteData.data, total: silhouetteData.total },
+    { title: "Papeles", slug: "papel", desc: "Sublimacion, transfer, fotografico y autoadhesivo", products: papelesData.data, total: papelesData.total },
+    { title: "Tintas profesionales", slug: "tintas", desc: "OCP, Artanium, KIIAN para Epson, HP y Canon", products: tintasData.data, total: tintasData.total },
   ];
 
   return (
@@ -184,25 +186,6 @@ export default async function HomePage() {
           </section>
         )
       ))}
-
-      {/* Featured: Combos */}
-      <section className="max-w-7xl mx-auto px-4 py-10">
-        <div className="bg-gradient-to-r from-[#013d5a] to-[#01567a] rounded-2xl p-6 md:p-10 text-white">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-              <p className="text-sm font-semibold text-blue-200 uppercase tracking-widest mb-2">Todo en uno</p>
-              <h2 className="text-2xl md:text-3xl font-bold mb-3">Combos de sublimación</h2>
-              <p className="text-blue-100 text-sm leading-relaxed max-w-md">
-                Estampadora + insumos + artículos sublimables. Todo lo que necesitas para arrancar o potenciar tu negocio en un solo pack con precio especial.
-              </p>
-            </div>
-            <Link href="/estampadoras/combos-de-sublimacion" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-[#013d5a] px-7 py-3.5 rounded-full font-semibold hover:bg-blue-50 transition-all">
-              Ver combos
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* Brands */}
       {brands.length > 0 && (
