@@ -4,6 +4,20 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import type { Review } from "@/lib/wordpress/types";
 
+// review.date llega del backend como "YYYY-MM-DD HH:MM:SS" (comment_date WP).
+// Tomamos solo Y-M-D para evitar drift de timezone entre server y cliente —
+// para una reseña importa el día, no la hora.
+function formatReviewDate(raw: string): string {
+  const dateOnly = raw.split(" ")[0].split("T")[0];
+  const [y, m, d] = dateOnly.split("-").map(Number);
+  if (!y || !m || !d) return "";
+  return new Date(y, m - 1, d).toLocaleDateString("es-AR", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 interface Props {
   reviews: Review[];
   totalReviews: number;
@@ -108,23 +122,33 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
         <div className="space-y-4 mb-6">
           {reviews.map((review) => (
             <div key={review.id} className="bg-gray-50 rounded-xl p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 bg-[#013d5a]/10 rounded-full flex items-center justify-center text-xs font-bold text-[#013d5a]">
-                  {review.author.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{review.author}</p>
-                  <div className="flex items-center gap-2">
-                    <div className="flex text-yellow-400">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <svg key={s} className={`w-3 h-3 ${s <= review.rating ? "fill-current" : "text-gray-200 fill-current"}`} viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 bg-[#013d5a]/10 rounded-full flex items-center justify-center text-xs font-bold text-[#013d5a] flex-shrink-0">
+                    {review.author.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{review.author}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex text-yellow-400">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <svg key={s} className={`w-3 h-3 ${s <= review.rating ? "fill-current" : "text-gray-200 fill-current"}`} viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                      {review.verified && <span className="text-[10px] text-green-600 font-medium">Compra verificada</span>}
                     </div>
-                    {review.verified && <span className="text-[10px] text-green-600 font-medium">Compra verificada</span>}
                   </div>
                 </div>
+                {review.date && (
+                  <time
+                    dateTime={review.date}
+                    className="text-xs text-gray-400 whitespace-nowrap flex-shrink-0"
+                  >
+                    {formatReviewDate(review.date)}
+                  </time>
+                )}
               </div>
               <div className="text-sm text-gray-600" dangerouslySetInnerHTML={{ __html: review.content }} />
             </div>
