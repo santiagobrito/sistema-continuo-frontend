@@ -40,6 +40,13 @@ export function CartDrawer({ open, onClose }: Props) {
   );
   const lostFreeShipping = hasFreeShippingItem && !freeShipping;
 
+  // Cuotas sin interés disponibles para el carrito = mínimo de los items.
+  // Si algún item tiene 0, no se ofrecen cuotas SI (cualquier carrito mixto degrada al mínimo).
+  const cuotasSinInteresMax = items.length > 0
+    ? Math.min(...items.map((i) => Number(i.extensions?.["sistema-continuo-core"]?.cuotas_sin_interes_max ?? 0)))
+    : 0;
+  const cartTotalNumber = parseInt(cart?.totals?.total_price ?? "0", 10);
+
   return (
     <>
       {/* Backdrop */}
@@ -139,6 +146,12 @@ export function CartDrawer({ open, onClose }: Props) {
               <span className="text-gray-500">Subtotal</span>
               <span className="font-bold text-gray-900 text-lg">{formatStorePrice(cart.totals.total_price)}</span>
             </div>
+            {cuotasSinInteresMax > 0 && cartTotalNumber > 0 && (
+              <p className="text-xs text-green-700">
+                <span className="font-semibold">{cuotasSinInteresMax} cuotas sin interés</span>
+                {" "}de {formatStorePrice(String(Math.round(cartTotalNumber / cuotasSinInteresMax)))}
+              </p>
+            )}
             <p className={`text-xs ${freeShipping ? "text-green-700 font-semibold" : "text-gray-400"}`}>
               {freeShipping ? "Envío gratis incluido" : "Envío se calcula en el checkout"}
             </p>

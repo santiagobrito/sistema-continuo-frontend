@@ -162,6 +162,12 @@ export function ProductActions({
               </>
             )}
           </div>
+          {product.cuotas_sin_interes_max > 0 && unitPrice > 0 && (
+            <p className="mt-1.5 text-sm text-green-700">
+              <span className="font-semibold">Hasta {product.cuotas_sin_interes_max} cuotas sin interés</span>
+              {" "}de {formatPrice(Math.round(unitPrice / product.cuotas_sin_interes_max))}
+            </p>
+          )}
         </div>
       )}
 

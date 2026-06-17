@@ -27,6 +27,15 @@ export async function createPreference(options: {
   notification_url?: string;
   auto_return?: "approved" | "all";
   statement_descriptor?: string;
+  /**
+   * Si se pasa, MP solo ofrece hasta este número de cuotas para este carrito.
+   * Combinado con el plan "Cuotas sin interés" activado en panel MP a nivel cuenta,
+   * permite ofrecer N cuotas sin interés solo cuando los items del carrito lo permiten.
+   * Ej: installments=3 + plan 3 SI activado → "3 cuotas sin interés" disponible.
+   * Si NO se quiere ofrecer cuotas SI para este carrito, pasar el N - 1 del plan global
+   * (ej. si plan global = 3 SI, pasar installments=2 → no aparece la promo, máx 2 cuotas).
+   */
+  installments?: number;
 }): Promise<MPPreference> {
   const res = await fetch(`${MP_BASE_URL}/checkout/preferences`, {
     method: "POST",
@@ -42,6 +51,12 @@ export async function createPreference(options: {
       })),
       auto_return: options.auto_return || "approved",
       statement_descriptor: options.statement_descriptor || "SISTEMA CONTINUO",
+      // payment_methods.installments limita el máximo de cuotas ofrecidas.
+      // Si está activado el plan "Cuotas sin interés" en panel MP, MP las ofrece
+      // automáticamente para los carritos donde installments >= N del plan.
+      ...(options.installments && options.installments > 0
+        ? { payment_methods: { installments: options.installments } }
+        : {}),
     }),
   });
 

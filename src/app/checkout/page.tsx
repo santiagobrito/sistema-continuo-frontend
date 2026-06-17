@@ -487,6 +487,7 @@ function CheckoutInner() {
         quantity: item.quantity,
         price: parseInt(item.prices.price),
         image: item.images[0]?.src,
+        cuotas_sin_interes_max: Number(item.extensions?.["sistema-continuo-core"]?.cuotas_sin_interes_max ?? 0),
       }));
 
       const orderPayload = {

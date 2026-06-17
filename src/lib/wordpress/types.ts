@@ -76,6 +76,7 @@ export interface Product {
   unidad_venta: "" | "metro" | "rollo" | "par" | "juego" | "kit" | "pack" | "paquete" | "litro" | "kg";
   precio_usd: number | null;
   quantity_discounts: QuantityDiscount[];
+  cuotas_sin_interes_max: number;
   in_active_campaign?: boolean;
   is_pinned?: boolean;
 

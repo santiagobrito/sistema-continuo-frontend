@@ -81,6 +81,11 @@ export async function POST(request: NextRequest) {
     }
 
     const billing = order.billing || {};
+    // Regenerate corre cuando el cliente vuelve atrás y reintenta. Para no abrir caja
+    // financiera por error, regeneramos SIN cuotas SI (installments = plan_global - 1).
+    // El piloto es para órdenes nuevas; si el regenerate necesita SI, hay que
+    // reconstruir el min desde meta_data del producto (TODO si hace falta).
+    const SC_MP_PLAN_SI = parseInt(process.env.SC_MP_PLAN_SI || "3", 10);
     const preference = await createPreference({
       items,
       payer: {
@@ -95,6 +100,7 @@ export async function POST(request: NextRequest) {
         pending: `${SITE_URL}/pedido-confirmado?order=${order.id}&status=pending&email=${encodeURIComponent(billing.email || "")}`,
       },
       notification_url: MP_WEBHOOK_URL || undefined,
+      installments: Math.max(1, SC_MP_PLAN_SI - 1),
     });
 
     // Guardar preference_id como meta de la orden (best-effort).

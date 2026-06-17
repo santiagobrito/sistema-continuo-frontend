@@ -96,6 +96,7 @@ interface CheckoutItem {
   quantity: number;
   price: number;
   image?: string;
+  cuotas_sin_interes_max?: number;
 }
 
 interface CheckoutBody {
@@ -526,6 +527,19 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Cuotas sin interés selectivas: el carrito hereda el MÍNIMO de los items.
+    // Si todos los items tienen N > 0, pasamos installments=N → MP ofrece N cuotas SI.
+    // Si algún item tiene 0 (no debería absorberse), pasamos installments = plan_global - 1
+    // para que MP NO llegue al threshold del plan SI y sólo ofrezca cuotas con interés.
+    // El plan_global vive en panel MP — hardcodeado a 3 acá como referencia del piloto.
+    const SC_MP_PLAN_SI = parseInt(process.env.SC_MP_PLAN_SI || "3", 10);
+    const cuotasMin = body.items.length > 0
+      ? Math.min(...body.items.map((i) => Number(i.cuotas_sin_interes_max ?? 0)))
+      : 0;
+    const installmentsForMp = cuotasMin > 0
+      ? cuotasMin
+      : Math.max(1, SC_MP_PLAN_SI - 1);
+
     const preference = await createPreference({
       items: mpItems,
       payer: {
@@ -540,6 +554,7 @@ export async function POST(request: NextRequest) {
         pending: `${SITE_URL}/pedido-confirmado?order=${order.id}&status=pending&email=${encodeURIComponent(body.billing.email || "")}`,
       },
       notification_url: MP_WEBHOOK_URL || undefined,
+      installments: installmentsForMp,
     });
 
     return NextResponse.json({

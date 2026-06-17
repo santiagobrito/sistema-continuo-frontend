@@ -78,6 +78,7 @@ export interface CartItem {
   extensions?: {
     "sistema-continuo-core"?: {
       envio_gratis?: boolean;
+      cuotas_sin_interes_max?: number;
     };
   };
 }
