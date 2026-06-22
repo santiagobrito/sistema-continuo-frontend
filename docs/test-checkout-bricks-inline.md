@@ -86,6 +86,28 @@ Si el Brick falla en Chrome → el feature queda bloqueado por MP, dejar el flag
 
 ---
 
+## ⚠️ Gotchas confirmados en el primer test (2026-06-22)
+
+1. **CSP** — el brick necesita `https://http2.mlstatic.com` en `script-src`
+   (además de `sdk.mercadopago.com`). Sin él se queda en "Cargando medios de
+   pago…". Ya está agregado en `next.config.ts` (+ mlstatic/mercadolibre/
+   events.mercadopago en style/font/connect/frame).
+
+2. **El dev local apunta al BACKEND DE PRODUCCIÓN.** `.env.local` tiene
+   `WP_URL` = WP prod y credenciales MP **prod** (`APP_USR-`). Consecuencia:
+   **todo pago completado en el test es real** — crea una orden real en prod y
+   cobra plata de verdad. NO completar pagos reales en el test local. Para
+   validar pagos de verdad: creds TEST + (idealmente) WP de staging.
+
+3. **`NEXT_PUBLIC_SITE_URL` en `.env.local` está STALE** = `https://nueva.
+   sistemacontinuo.com.ar` (dominio muerto pre-DNS-switch). De ahí salen las
+   `back_urls` Y el `notification_url` del webhook. En local:
+   - Wallet/redirect vuelve a un dominio muerto.
+   - El webhook de MP va al dominio muerto → la orden **nunca pasa a processing**.
+   Producción NO tiene este problema (su env tiene el dominio correcto). El
+   webhook además **nunca puede llegar a localhost**, así que el ciclo completo
+   pago→webhook→orden solo se valida en un **preview deployado con URL pública**.
+
 ## Para apagarlo / revertir
 
 - **Apagar:** quitar `NEXT_PUBLIC_MP_INLINE` (o ponerlo en `0`) y redeploy → vuelve
