@@ -547,21 +547,14 @@ export async function POST(request: NextRequest) {
       ? cuotasMin
       : Math.max(1, SC_MP_PLAN_SI - 1);
 
-    // Modo Bricks inline: la orden ya está creada arriba; no hace falta preferencia.
-    // El monto autoritativo se recalcula de mpItems (mismos precios con cupón que MP).
-    // El frontend lo usa solo para renderizar el brick — process-payment lo re-lee del
-    // total de la orden en WC para cobrar, así el cliente no puede manipularlo.
-    if (body.inline) {
-      const amount = mpItems.reduce((sum, it) => sum + it.unit_price * it.quantity, 0);
-      return NextResponse.json({
-        orderId: order.id,
-        orderNumber: order.number,
-        amount,
-        maxInstallments: installmentsForMp,
-        reused,
-      });
-    }
+    // Monto del carrito recalculado de mpItems (mismos precios con cupón que MP).
+    // El brick lo usa solo para display — process-payment lo re-lee del total de la
+    // orden en WC para cobrar, así el cliente no puede manipularlo.
+    const amount = mpItems.reduce((sum, it) => sum + it.unit_price * it.quantity, 0);
 
+    // Creamos la preferencia SIEMPRE (también en modo inline): el Payment Brick la
+    // necesita para el método "Dinero en cuenta" (wallet), que se cobra vía
+    // preferencia + login de MP, no con token de tarjeta.
     const preference = await createPreference({
       items: mpItems,
       payer: {
@@ -585,6 +578,9 @@ export async function POST(request: NextRequest) {
       preferenceId: preference.id,
       initPoint: preference.init_point,
       sandboxInitPoint: preference.sandbox_init_point,
+      // Para el checkout inline (Bricks): monto + cuotas máx para renderizar el brick.
+      amount,
+      maxInstallments: installmentsForMp,
       reused,
     });
     } finally {

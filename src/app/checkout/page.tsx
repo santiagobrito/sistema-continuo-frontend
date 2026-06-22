@@ -143,6 +143,8 @@ function CheckoutInner() {
     orderNumber: string;
     amount: number;
     maxInstallments: number;
+    preferenceId?: string;
+    initPoint?: string;
   } | null>(null);
 
   // Coupon state
@@ -553,6 +555,8 @@ function CheckoutInner() {
           orderNumber: data.orderNumber,
           amount: data.amount,
           maxInstallments: data.maxInstallments,
+          preferenceId: data.preferenceId,
+          initPoint: data.initPoint,
         });
         setSubmitting(false);
         return;
@@ -1229,6 +1233,8 @@ function CheckoutInner() {
               maxInstallments={brickData.maxInstallments}
               payerEmail={formData.email}
               shippingMethod={shippingMethod}
+              preferenceId={brickData.preferenceId}
+              initPoint={brickData.initPoint}
               onCancel={() => setBrickData(null)}
             />
           </div>

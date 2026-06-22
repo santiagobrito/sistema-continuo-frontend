@@ -33,9 +33,23 @@ interface BrickFormData {
   installments?: number;
   payer?: {
     email?: string;
+    first_name?: string;
+    last_name?: string;
     identification?: { type?: string; number?: string };
   };
 }
+
+// Métodos que cobramos server-side vía /v1/payments (tarjeta con token, efectivo
+// y transferencia sin token). El resto (wallet / dinero en cuenta) requiere login
+// de MP y se resuelve redirigiendo a la preferencia.
+const SERVER_CHARGE_METHODS = new Set([
+  "credit_card",
+  "debit_card",
+  "prepaid_card",
+  "ticket",
+  "bank_transfer",
+  "atm",
+]);
 
 interface Props {
   orderId: number;
@@ -44,6 +58,8 @@ interface Props {
   maxInstallments: number;
   payerEmail: string;
   shippingMethod: string;
+  preferenceId?: string;
+  initPoint?: string;
   onCancel: () => void;
 }
 
@@ -53,6 +69,8 @@ export default function MercadoPagoBrick({
   maxInstallments,
   payerEmail,
   shippingMethod,
+  preferenceId,
+  initPoint,
   onCancel,
 }: Props) {
   const [ready, setReady] = useState(false);
@@ -67,12 +85,27 @@ export default function MercadoPagoBrick({
     }
   }, []);
 
-  async function handleSubmit({ formData }: { formData: BrickFormData }): Promise<void> {
+  async function handleSubmit(
+    { selectedPaymentMethod, formData }: { selectedPaymentMethod: string; formData: BrickFormData }
+  ): Promise<void> {
     if (processingRef.current) return;
     processingRef.current = true;
     setError("");
 
     try {
+      // Dinero en cuenta / wallet de MP: no se cobra con token, necesita login de
+      // MP. Redirigimos a la preferencia (init_point) que ya creamos. El cliente
+      // paga con su cuenta y vuelve por las back_urls.
+      if (!SERVER_CHARGE_METHODS.has(selectedPaymentMethod)) {
+        if (initPoint) {
+          window.location.href = initPoint;
+          return;
+        }
+        processingRef.current = false;
+        setError("Ese medio de pago no está disponible ahora. Probá con tarjeta o efectivo.");
+        return;
+      }
+
       const res = await fetch("/api/mercadopago/process-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -84,6 +117,8 @@ export default function MercadoPagoBrick({
           installments: formData.installments,
           payer: {
             email: formData.payer?.email || payerEmail,
+            first_name: formData.payer?.first_name,
+            last_name: formData.payer?.last_name,
             identification: formData.payer?.identification,
           },
         }),
@@ -92,6 +127,14 @@ export default function MercadoPagoBrick({
 
       if (!res.ok) {
         throw new Error(data.error || "No se pudo procesar el pago");
+      }
+
+      // Efectivo / transferencia: MP devuelve el cupón a pagar. Lo abrimos para que
+      // el cliente obtenga el código (Rapipago/Pago Fácil). La orden queda pending
+      // hasta que pague; el webhook la actualiza.
+      if (data.couponUrl) {
+        window.location.href = data.couponUrl;
+        return;
       }
 
       const status: string = data.status;
@@ -142,12 +185,17 @@ export default function MercadoPagoBrick({
       <Payment
         initialization={{
           amount,
+          // preferenceId habilita "Dinero en cuenta" (wallet) dentro del brick.
+          ...(preferenceId ? { preferenceId } : {}),
           payer: { email: payerEmail || undefined },
         }}
         customization={{
           paymentMethods: {
             creditCard: "all",
             debitCard: "all",
+            ticket: "all",          // efectivo: Rapipago / Pago Fácil
+            bankTransfer: "all",    // transferencia
+            mercadoPago: "all",     // dinero en cuenta / wallet
             maxInstallments,
           },
           visual: { hidePaymentButton: false },

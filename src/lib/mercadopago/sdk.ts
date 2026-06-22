@@ -107,6 +107,16 @@ export interface MPPayment {
     total_paid_amount?: number;
     net_received_amount?: number;
     installment_amount?: number;
+    // Para pagos en efectivo (Rapipago/Pago Fácil): URL del cupón a pagar.
+    external_resource_url?: string;
+  };
+  // Algunos métodos offline exponen el cupón/QR acá en vez de transaction_details.
+  point_of_interaction?: {
+    transaction_data?: {
+      ticket_url?: string;
+      qr_code?: string;
+      qr_code_base64?: string;
+    };
   };
 }
 
@@ -135,9 +145,10 @@ export async function getPayment(paymentId: string): Promise<MPPayment> {
 export async function createPayment(
   options: {
     transaction_amount: number;
-    token: string;
+    // Tarjeta: token + installments. Efectivo/transferencia: sin token ni cuotas.
+    token?: string;
     description?: string;
-    installments: number;
+    installments?: number;
     payment_method_id: string;
     issuer_id?: string | number;
     external_reference: string;
@@ -145,6 +156,8 @@ export async function createPayment(
     statement_descriptor?: string;
     payer: {
       email: string;
+      first_name?: string;
+      last_name?: string;
       identification?: { type?: string; number?: string };
     };
   },
@@ -159,9 +172,10 @@ export async function createPayment(
     },
     body: JSON.stringify({
       transaction_amount: options.transaction_amount,
-      token: options.token,
+      // token/installments solo para tarjeta; efectivo/transferencia van sin ellos.
+      ...(options.token ? { token: options.token } : {}),
+      ...(options.installments ? { installments: options.installments } : {}),
       description: options.description,
-      installments: options.installments,
       payment_method_id: options.payment_method_id,
       ...(options.issuer_id ? { issuer_id: options.issuer_id } : {}),
       external_reference: options.external_reference,

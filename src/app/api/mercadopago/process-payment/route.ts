@@ -32,12 +32,15 @@ const PAYABLE_STATUSES = new Set(["pending", "checkout-draft"]);
 
 interface ProcessPaymentBody {
   orderId: number | string;
-  token: string;
+  // Tarjeta: token + installments + issuer. Efectivo/transferencia: sin token.
+  token?: string;
   payment_method_id: string;
-  installments: number;
+  installments?: number;
   issuer_id?: string | number;
   payer?: {
     email?: string;
+    first_name?: string;
+    last_name?: string;
     identification?: { type?: string; number?: string };
   };
 }
@@ -54,7 +57,8 @@ export async function POST(request: NextRequest) {
   try {
     const body: ProcessPaymentBody = await request.json();
 
-    if (!body.orderId || !body.token || !body.payment_method_id) {
+    // token es opcional: las tarjetas lo traen; efectivo/transferencia no.
+    if (!body.orderId || !body.payment_method_id) {
       return NextResponse.json({ error: "Faltan datos del pago" }, { status: 400 });
     }
 
@@ -90,34 +94,46 @@ export async function POST(request: NextRequest) {
     //    reintenta el mismo pago, MP devuelve el mismo resultado en vez de cobrar
     //    dos veces. El token cambia por intento, pero la clave la fijamos nosotros.
     const idempotencyKey = createHash("sha256")
-      .update(`sc-pay|${order.id}|${amount}|${body.payment_method_id}|${body.installments}`)
+      .update(`sc-pay|${order.id}|${amount}|${body.payment_method_id}|${body.installments ?? ""}`)
       .digest("hex");
 
     // 3. Cobrar. transaction_amount = total de la orden (server-side, no del cliente).
+    //    Tarjeta → token + cuotas. Efectivo/transferencia → sin token; MP devuelve
+    //    un pago `pending` con la URL del cupón a pagar.
     const payment = await createPayment(
       {
         transaction_amount: amount,
         token: body.token,
         description: `Sistema Continuo — Orden #${order.number}`,
-        installments: Number(body.installments) || 1,
+        installments: body.installments ? Number(body.installments) : undefined,
         payment_method_id: body.payment_method_id,
         issuer_id: body.issuer_id,
         external_reference: String(order.id),
         notification_url: MP_WEBHOOK_URL || undefined,
         payer: {
           email: payerEmail,
+          first_name: body.payer?.first_name,
+          last_name: body.payer?.last_name,
           identification: body.payer?.identification,
         },
       },
       idempotencyKey
     );
 
+    // Cupón de pago para efectivo/transferencia (Rapipago, Pago Fácil): MP lo
+    // expone en transaction_details o en point_of_interaction según el método.
+    const couponUrl =
+      payment.transaction_details?.external_resource_url ||
+      payment.point_of_interaction?.transaction_data?.ticket_url ||
+      null;
+
     // La actualización de la orden la hace el webhook (notification_url). Acá solo
     // reportamos el resultado para el redirect del cliente a /pedido-confirmado.
     return NextResponse.json({
       paymentId: payment.id,
-      status: payment.status,             // approved | in_process | rejected | ...
+      status: payment.status,             // approved | in_process | pending | rejected | ...
       statusDetail: payment.status_detail,
+      couponUrl,                          // != null para efectivo/transferencia
       orderId: order.id,
       orderNumber: order.number,
     });
