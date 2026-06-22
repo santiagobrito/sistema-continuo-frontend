@@ -126,6 +126,16 @@ export async function POST(request: NextRequest) {
     }
 
     const { items: enrichedItems, zeroWeightIds } = await enrichItemsWithDims(items);
+
+    // Peso total real del pedido (gramos) con los pesos enriquecidos desde WP.
+    // Se usa en el front para vetar el envío en moto a partir de cierto umbral.
+    // Nota: ítems con _weight no cargado en WP (zeroWeightIds) caen al fallback
+    // y subestiman el total — eso es problema de datos, no de esta lógica.
+    const totalWeightG = enrichedItems.reduce(
+      (sum, it) => sum + (Number(it.weight) || 0) * (Number(it.quantity) || 1),
+      0
+    );
+
     const bundles = splitIntoBundles(enrichedItems);
     const quote = quoteShipment({
       bundles,
@@ -142,6 +152,7 @@ export async function POST(request: NextRequest) {
       bundles: bundles.length,
       hasZeroWeight: zeroWeightIds.length > 0,
       zeroWeightIds,
+      totalWeightKg: Math.round((totalWeightG / 1000) * 100) / 100,
       options: quote.options.map((o) => ({
         deliveryType: o.deliveryType,
         total: o.total,

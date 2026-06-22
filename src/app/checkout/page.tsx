@@ -1,17 +1,27 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "@/components/cart/CartProvider";
 import { cartQualifiesForFreeShipping } from "@/lib/woocommerce/cart";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { formatStorePrice } from "@/lib/utils/format";
+import { formatStorePrice, formatPrice } from "@/lib/utils/format";
 import Image from "next/image";
 import Link from "next/link";
 import { getGclid } from "@/components/analytics/GclidCapture";
 import { getAttribution } from "@/components/analytics/AttributionCapture";
 import { fbPixelTrack } from "@/lib/fbpixel/client";
 import { trackBeginCheckout } from "@/lib/analytics/gtm";
+
+// Checkout MP embebido (Bricks) detrás de flag. OFF por default → redirect a
+// Checkout Pro como siempre. Cargado dinámico (ssr:false) para no traer el SDK
+// de MP salvo que el flag esté activo y el cliente llegue a pagar con tarjeta.
+const MP_INLINE = process.env.NEXT_PUBLIC_MP_INLINE === "1";
+const MercadoPagoBrick = dynamic(
+  () => import("@/components/checkout/MercadoPagoBrick"),
+  { ssr: false }
+);
 
 // All shipping options with zone restrictions and descriptions.
 // Orden: opciones a domicilio/sucursal primero (mayor uso), retiro y transporte al final.
@@ -126,6 +136,14 @@ function CheckoutInner() {
   const [paymentMethod, setPaymentMethod] = useState<"mercadopago" | "transferencia" | "efectivo">("mercadopago");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  // Datos para el Payment Brick inline (flag MP_INLINE). Cuando != null, la orden
+  // ya está creada (pending) y mostramos el formulario de tarjeta embebido.
+  const [brickData, setBrickData] = useState<{
+    orderId: number;
+    orderNumber: string;
+    amount: number;
+    maxInstallments: number;
+  } | null>(null);
 
   // Coupon state
   const [couponInput, setCouponInput] = useState("");
@@ -150,6 +168,7 @@ function CheckoutInner() {
         service?: string;
         error?: string;
         hasZeroWeight?: boolean;
+        totalWeightKg?: number;
       }
   >(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
@@ -275,6 +294,7 @@ function CheckoutInner() {
           sucursal: suc ? { total: suc.total, warning: suc.warning } : undefined,
           service: data.service,
           hasZeroWeight: Boolean(data.hasZeroWeight),
+          totalWeightKg: typeof data.totalWeightKg === "number" ? data.totalWeightKg : undefined,
         });
       } catch (err) {
         setPaqarQuote({
@@ -345,6 +365,16 @@ function CheckoutInner() {
       ? Boolean((paqarQuote as { hasZeroWeight?: boolean }).hasZeroWeight)
       : false;
 
+  // Peso a partir del cual el pedido no entra en moto (la moto no carga pedidos
+  // grandes/pesados). Se evalúa contra el peso real del pedido cotizado por PAQ.AR.
+  const MOTO_MAX_WEIGHT_KG = 25;
+  const orderWeightKg =
+    paqarQuote && !("loading" in paqarQuote && paqarQuote.loading)
+      ? (paqarQuote as { totalWeightKg?: number }).totalWeightKg
+      : undefined;
+  const tooHeavyForMoto =
+    typeof orderWeightKg === "number" && orderWeightKg >= MOTO_MAX_WEIGHT_KG;
+
   // Filter shipping options based on selected province + product constraints + payment method.
   // REGLA: si paga en efectivo en local, sólo puede retirar en local. No tiene sentido
   // que el cliente venga al local a pagar y nos pida que despachemos a su casa.
@@ -360,12 +390,15 @@ function CheckoutInner() {
     return ALL_SHIPPING_OPTIONS.filter((opt) => {
       const isCorreo = opt.id === "correo_domicilio" || opt.id === "correo_sucursal";
       if (isCorreo && hasZeroWeightItem) return false;
+      // Pedidos de 25kg+ no entran en moto.
+      const isMoto = opt.id.startsWith("moto_");
+      if (isMoto && tooHeavyForMoto) return false;
       if (opt.zones.includes("all")) return true;
       if (opt.zones.includes(province)) return true;
       if (opt.zones.includes("interior") && province !== "C") return true;
       return false;
     });
-  }, [formData.state, hasZeroWeightItem, paymentMethod]);
+  }, [formData.state, hasZeroWeightItem, tooHeavyForMoto, paymentMethod]);
 
   // Auto-select first available shipping when province or payment method changes.
   // Si el usuario tenía elegido correo y cambia a efectivo, forzamos local_pickup.
@@ -501,6 +534,29 @@ function CheckoutInner() {
         coupon_code: appliedCoupon?.code || undefined,
         attribution: getAttribution(),
       };
+
+      if (paymentMethod === "mercadopago" && MP_INLINE) {
+        // Checkout embebido (Bricks): creamos la orden (modo inline, sin preferencia)
+        // y mostramos el Payment Brick en un overlay. El cobro ocurre en
+        // /api/mercadopago/process-payment con el token de la tarjeta. El flag
+        // OFF deja el flujo redirect de abajo intacto.
+        const res = await fetch("/api/mercadopago/create-preference", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...orderPayload, inline: true }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Error al procesar el pedido");
+
+        setBrickData({
+          orderId: data.orderId,
+          orderNumber: data.orderNumber,
+          amount: data.amount,
+          maxInstallments: data.maxInstallments,
+        });
+        setSubmitting(false);
+        return;
+      }
 
       if (paymentMethod === "mercadopago") {
         // Cache de initPoint: si el mismo cart_hash ya tiene una preference MP
@@ -715,6 +771,15 @@ function CheckoutInner() {
                       }
                       return null;
                     })()}
+
+                    {/* Aviso cuando el pedido es demasiado pesado para moto (25kg+). */}
+                    {tooHeavyForMoto && (formData.state === "C" || formData.state === "B") && (
+                      <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                        <strong>Envío en moto no disponible:</strong> tu pedido supera los {MOTO_MAX_WEIGHT_KG} kg y no entra en moto.
+                        Elegí <strong>Correo Argentino</strong>, <strong>Transporte</strong> o <strong>Retiro en local</strong>, o coordinamos por{" "}
+                        <a href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_GENERAL || "5491130793862"}`} target="_blank" rel="noopener noreferrer" className="underline font-semibold">WhatsApp</a>.
+                      </div>
+                    )}
 
                     <div className="space-y-2">
                       {availableShipping.map((opt) => {
@@ -1146,6 +1211,29 @@ function CheckoutInner() {
           </div>
         </form>
       </div>
+
+      {/* Payment Brick inline (flag MP_INLINE). La orden ya está creada; acá el
+          cliente ingresa la tarjeta y se cobra sin salir del sitio. */}
+      {brickData && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-start sm:items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-md w-full p-5 my-8 shadow-xl">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-base font-semibold text-gray-900">Pagar con tarjeta</h3>
+              <span className="text-sm font-bold text-[#013d5a]">{formatPrice(brickData.amount)}</span>
+            </div>
+            <p className="text-xs text-gray-500 mb-4">Orden #{brickData.orderNumber} — pago seguro procesado por MercadoPago.</p>
+            <MercadoPagoBrick
+              orderId={brickData.orderId}
+              orderNumber={brickData.orderNumber}
+              amount={brickData.amount}
+              maxInstallments={brickData.maxInstallments}
+              payerEmail={formData.email}
+              shippingMethod={shippingMethod}
+              onCancel={() => setBrickData(null)}
+            />
+          </div>
+        </div>
+      )}
     </main>
   );
 }

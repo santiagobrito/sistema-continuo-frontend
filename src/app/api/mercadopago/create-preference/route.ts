@@ -119,6 +119,13 @@ interface CheckoutBody {
   gclid?: string;
   coupon_code?: string;
   attribution?: OrderAttributionInput;
+  /**
+   * Modo Bricks inline (flag NEXT_PUBLIC_MP_INLINE). Cuando es true, se crea la
+   * orden WC (con todo el dedup/lock/cupón habitual) pero NO se crea preferencia
+   * de Checkout Pro: el pago se cobra después vía /api/mercadopago/process-payment
+   * con el token del Payment Brick. Devolvemos orderId + amount + maxInstallments.
+   */
+  inline?: boolean;
 }
 
 /**
@@ -539,6 +546,21 @@ export async function POST(request: NextRequest) {
     const installmentsForMp = cuotasMin > 0
       ? cuotasMin
       : Math.max(1, SC_MP_PLAN_SI - 1);
+
+    // Modo Bricks inline: la orden ya está creada arriba; no hace falta preferencia.
+    // El monto autoritativo se recalcula de mpItems (mismos precios con cupón que MP).
+    // El frontend lo usa solo para renderizar el brick — process-payment lo re-lee del
+    // total de la orden en WC para cobrar, así el cliente no puede manipularlo.
+    if (body.inline) {
+      const amount = mpItems.reduce((sum, it) => sum + it.unit_price * it.quantity, 0);
+      return NextResponse.json({
+        orderId: order.id,
+        orderNumber: order.number,
+        amount,
+        maxInstallments: installmentsForMp,
+        reused,
+      });
+    }
 
     const preference = await createPreference({
       items: mpItems,

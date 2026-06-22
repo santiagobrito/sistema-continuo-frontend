@@ -117,3 +117,67 @@ export async function getPayment(paymentId: string): Promise<MPPayment> {
   if (!res.ok) throw new Error(`MP payment error ${res.status}`);
   return res.json();
 }
+
+/**
+ * Crea un pago directo vía /v1/payments (flujo Bricks inline).
+ *
+ * A diferencia de createPreference (Checkout Pro / redirect), acá el frontend
+ * tokeniza la tarjeta con el Payment Brick y nos manda el `token` + método +
+ * cuotas. Nosotros cobramos server-side con ESTE endpoint y MP devuelve el
+ * status del pago de forma SÍNCRONA (approved / rejected / in_process).
+ *
+ * El `transaction_amount` NUNCA se toma del cliente — el caller lo lee del total
+ * de la orden en WC. Acá solo se reenvía lo que el caller decidió.
+ *
+ * `idempotencyKey` (X-Idempotency-Key) evita doble cobro si el cliente reintenta
+ * el submit del brick o hay un retry de red. MP devuelve el mismo pago.
+ */
+export async function createPayment(
+  options: {
+    transaction_amount: number;
+    token: string;
+    description?: string;
+    installments: number;
+    payment_method_id: string;
+    issuer_id?: string | number;
+    external_reference: string;
+    notification_url?: string;
+    statement_descriptor?: string;
+    payer: {
+      email: string;
+      identification?: { type?: string; number?: string };
+    };
+  },
+  idempotencyKey: string
+): Promise<MPPayment> {
+  const res = await fetch(`${MP_BASE_URL}/v1/payments`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
+      "Content-Type": "application/json",
+      "X-Idempotency-Key": idempotencyKey,
+    },
+    body: JSON.stringify({
+      transaction_amount: options.transaction_amount,
+      token: options.token,
+      description: options.description,
+      installments: options.installments,
+      payment_method_id: options.payment_method_id,
+      ...(options.issuer_id ? { issuer_id: options.issuer_id } : {}),
+      external_reference: options.external_reference,
+      ...(options.notification_url ? { notification_url: options.notification_url } : {}),
+      statement_descriptor: options.statement_descriptor || "SISTEMA CONTINUO",
+      payer: options.payer,
+    }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    // MP devuelve { message, cause: [{ code, description }] } en errores.
+    const cause = Array.isArray(data?.cause) && data.cause[0]?.description
+      ? data.cause[0].description
+      : data?.message;
+    throw new Error(`MP payment error ${res.status}: ${cause || JSON.stringify(data).slice(0, 200)}`);
+  }
+  return data;
+}
