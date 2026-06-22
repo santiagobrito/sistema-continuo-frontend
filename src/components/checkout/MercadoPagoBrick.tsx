@@ -59,7 +59,6 @@ interface Props {
   payerEmail: string;
   shippingMethod: string;
   preferenceId?: string;
-  initPoint?: string;
   onCancel: () => void;
 }
 
@@ -70,7 +69,6 @@ export default function MercadoPagoBrick({
   payerEmail,
   shippingMethod,
   preferenceId,
-  initPoint,
   onCancel,
 }: Props) {
   const [ready, setReady] = useState(false);
@@ -93,16 +91,12 @@ export default function MercadoPagoBrick({
     setError("");
 
     try {
-      // Dinero en cuenta / wallet de MP: no se cobra con token, necesita login de
-      // MP. Redirigimos a la preferencia (init_point) que ya creamos. El cliente
-      // paga con su cuenta y vuelve por las back_urls.
+      // Dinero en cuenta / wallet de MP: el propio Payment Brick maneja el redirect
+      // a MP usando la preferenceId (login + pago con cuenta). NO redirigimos
+      // nosotros — hacerlo abría una segunda ventana. Soltamos el lock por si el
+      // cliente vuelve y elige otro método.
       if (!SERVER_CHARGE_METHODS.has(selectedPaymentMethod)) {
-        if (initPoint) {
-          window.location.href = initPoint;
-          return;
-        }
         processingRef.current = false;
-        setError("Ese medio de pago no está disponible ahora. Probá con tarjeta o efectivo.");
         return;
       }
 
@@ -195,7 +189,9 @@ export default function MercadoPagoBrick({
             debitCard: "all",
             ticket: "all",          // efectivo: Rapipago / Pago Fácil
             bankTransfer: "all",    // transferencia
-            mercadoPago: "all",     // dinero en cuenta / wallet
+            // Solo "Dinero en cuenta" (wallet). "all" sumaba Mercado Crédito /
+            // "Cuotas sin tarjeta", que Santi pidió sacar (ya está dentro del wallet).
+            mercadoPago: ["wallet_purchase"],
             maxInstallments,
           },
           visual: { hidePaymentButton: false },
