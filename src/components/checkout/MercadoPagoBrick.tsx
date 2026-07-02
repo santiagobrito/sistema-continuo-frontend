@@ -192,7 +192,8 @@ export default function MercadoPagoBrick({
             // Solo "Dinero en cuenta" (wallet). "all" sumaba Mercado Crédito /
             // "Cuotas sin tarjeta", que Santi pidió sacar (ya está dentro del wallet).
             mercadoPago: ["wallet_purchase"],
-            maxInstallments,
+            // 0 = sin tope → omitir para que MP ofrezca su default de cuotas.
+            ...(maxInstallments > 0 ? { maxInstallments } : {}),
           },
           visual: { hidePaymentButton: false },
         }}

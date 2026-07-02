@@ -536,16 +536,15 @@ export async function POST(request: NextRequest) {
 
     // Cuotas sin interés selectivas: el carrito hereda el MÍNIMO de los items.
     // Si todos los items tienen N > 0, pasamos installments=N → MP ofrece N cuotas SI.
-    // Si algún item tiene 0 (no debería absorberse), pasamos installments = plan_global - 1
-    // para que MP NO llegue al threshold del plan SI y sólo ofrezca cuotas con interés.
-    // El plan_global vive en panel MP — hardcodeado a 3 acá como referencia del piloto.
-    const SC_MP_PLAN_SI = parseInt(process.env.SC_MP_PLAN_SI || "3", 10);
+    // Si algún item tiene 0, NO mandamos el parámetro: payment_methods.installments
+    // es un tope duro de TODAS las cuotas (con y sin interés), no un umbral del plan SI.
+    // Mandar plan_global - 1 acá capó el checkout a 2 cuotas para todos los clientes
+    // entre el 17/6 y el 2/7 (ver log 2026-07-02). Sin el parámetro, MP ofrece su
+    // default (cuotas con interés hasta el máximo de la cuenta).
     const cuotasMin = body.items.length > 0
       ? Math.min(...body.items.map((i) => Number(i.cuotas_sin_interes_max ?? 0)))
       : 0;
-    const installmentsForMp = cuotasMin > 0
-      ? cuotasMin
-      : Math.max(1, SC_MP_PLAN_SI - 1);
+    const installmentsForMp = cuotasMin > 0 ? cuotasMin : undefined;
 
     // Monto del carrito recalculado de mpItems (mismos precios con cupón que MP).
     // El brick lo usa solo para display — process-payment lo re-lee del total de la
@@ -579,8 +578,9 @@ export async function POST(request: NextRequest) {
       initPoint: preference.init_point,
       sandboxInitPoint: preference.sandbox_init_point,
       // Para el checkout inline (Bricks): monto + cuotas máx para renderizar el brick.
+      // 0 = sin tope (el brick omite maxInstallments y MP ofrece su default).
       amount,
-      maxInstallments: installmentsForMp,
+      maxInstallments: installmentsForMp ?? 0,
       reused,
     });
     } finally {
