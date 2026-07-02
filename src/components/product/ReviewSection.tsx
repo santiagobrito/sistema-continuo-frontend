@@ -18,6 +18,33 @@ function formatReviewDate(raw: string): string {
   });
 }
 
+// Avatar de reseña: foto propia / Google / Gravatar (cascada resuelta en backend).
+// <img> plano a propósito: las fuentes viven en hosts distintos (googleusercontent,
+// media WP, gravatar) y son 32px — no vale whitelistear remotePatterns ni optimizar.
+// onError cae a la inicial (cubre el Gravatar default=404 cuando el email no tiene foto).
+function ReviewAvatar({ src, name }: { src?: string; name: string }) {
+  const [failed, setFailed] = useState(false);
+  if (src && !failed) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={name}
+        width={32}
+        height={32}
+        loading="lazy"
+        onError={() => setFailed(true)}
+        className="w-8 h-8 rounded-full object-cover bg-gray-100 flex-shrink-0"
+      />
+    );
+  }
+  return (
+    <div className="w-8 h-8 bg-[#013d5a]/10 rounded-full flex items-center justify-center text-xs font-bold text-[#013d5a] flex-shrink-0">
+      {name.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
 interface Props {
   reviews: Review[];
   totalReviews: number;
@@ -124,9 +151,7 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
             <div key={review.id} className="bg-gray-50 rounded-xl p-4">
               <div className="flex items-start justify-between gap-3 mb-2">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 bg-[#013d5a]/10 rounded-full flex items-center justify-center text-xs font-bold text-[#013d5a] flex-shrink-0">
-                    {review.author.charAt(0).toUpperCase()}
-                  </div>
+                  <ReviewAvatar src={review.avatar_url} name={review.author} />
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{review.author}</p>
                     <div className="flex items-center gap-2 flex-wrap">
