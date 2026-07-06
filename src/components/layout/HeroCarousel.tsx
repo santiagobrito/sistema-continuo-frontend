@@ -105,6 +105,11 @@ function HeroSlideContent({ slide }: { slide: HeroSlide }) {
   const textColor = slide.overlay_style === "light" ? "text-gray-900" : "text-white";
   const textShadow = slide.overlay_style === "none" ? "drop-shadow(0 2px 8px rgba(0,0,0,0.6))" : undefined;
 
+  // El alto del hero se adapta a la relacion real de la imagen subida (no recorta,
+  // sin layout shift). Fallback a los ratios historicos si falta el dato.
+  const desktopRatio = desktop?.width && desktop?.height ? `${desktop.width}/${desktop.height}` : "12/5";
+  const mobileRatio = mobile?.width && mobile?.height ? `${mobile.width}/${mobile.height}` : "4/5";
+
   const Wrapper: React.ElementType = slide.cta_url && !slide.cta_label ? Link : "div";
   const wrapperProps = slide.cta_url && !slide.cta_label
     ? { href, ...(isExternal && { target: "_blank", rel: "noopener noreferrer" }) }
@@ -114,7 +119,7 @@ function HeroSlideContent({ slide }: { slide: HeroSlide }) {
     <Wrapper {...wrapperProps} className="block relative w-full">
       {/* Imagen desktop (ratio 12:5) */}
       {desktop && (
-        <div className="hidden md:block relative w-full" style={{ aspectRatio: "12/5" }}>
+        <div className="hidden md:block relative w-full" style={{ aspectRatio: desktopRatio }}>
           <Image
             src={desktop.url}
             alt={desktop.alt}
@@ -127,7 +132,7 @@ function HeroSlideContent({ slide }: { slide: HeroSlide }) {
       )}
       {/* Imagen mobile (ratio 4:5) */}
       {mobile && (
-        <div className="block md:hidden relative w-full" style={{ aspectRatio: "4/5" }}>
+        <div className="block md:hidden relative w-full" style={{ aspectRatio: mobileRatio }}>
           <Image
             src={mobile.url}
             alt={mobile.alt}

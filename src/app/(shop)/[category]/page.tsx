@@ -119,11 +119,6 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           </div>
         )}
 
-        {/* SEO Content */}
-        {category.seo_content && (
-          <div className="prose prose-sm max-w-none mb-8 bg-white rounded-xl p-6 border border-gray-100" dangerouslySetInnerHTML={{ __html: category.seo_content }} />
-        )}
-
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar filters */}
           <FilterSidebar slug={slug} products={allProducts} />
@@ -164,6 +159,11 @@ export default async function CategoryPage({ params, searchParams }: Props) {
             )}
           </div>
         </div>
+
+        {/* SEO Content (debajo del listado: mantiene valor SEO sin tapar los productos) */}
+        {category.seo_content && (
+          <div className="prose prose-sm max-w-none mt-12 bg-white rounded-xl p-6 border border-gray-100" dangerouslySetInnerHTML={{ __html: category.seo_content }} />
+        )}
       </div>
     </main>
   );
