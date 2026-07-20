@@ -26,17 +26,25 @@ export function generateProductSchema(product: Product, url: string, reviews?: R
   // Offers
   if (product.price && !product.is_catalog_only) {
     if (product.type === "variable" && product.variations?.length) {
-      const prices = product.variations.map((v) => Number(v.price)).filter(Boolean);
-      schema.offers = {
-        "@type": "AggregateOffer",
-        lowPrice: Math.min(...prices),
-        highPrice: Math.max(...prices),
-        priceCurrency: "ARS",
-        offerCount: product.variations.length,
-        availability: product.stock_status === "instock"
-          ? "https://schema.org/InStock"
-          : "https://schema.org/OutOfStock",
-      };
+      // Un Offer por variación con SU propio stock. El AggregateOffer anterior emitía
+      // un único availability heredado del padre: si el padre tenía stock en alguna
+      // variante, las agotadas figuraban InStock y Google lo marcaba como
+      // "Mismatched product availability" contra el feed (que sí va por variación).
+      schema.offers = product.variations
+        .filter((v) => Number(v.price))
+        .map((v) => ({
+          "@type": "Offer",
+          price: Number(v.price),
+          priceCurrency: "ARS",
+          sku: v.sku || undefined,
+          availability:
+            v.stock_status === "instock"
+              ? "https://schema.org/InStock"
+              : v.stock_status === "onbackorder"
+                ? "https://schema.org/BackOrder"
+                : "https://schema.org/OutOfStock",
+          seller: { "@type": "Organization", name: "Sistema Continuo" },
+        }));
     } else {
       schema.offers = {
         "@type": "Offer",
