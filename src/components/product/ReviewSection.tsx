@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import type { Review } from "@/lib/wordpress/types";
+import { compressPhoto, MAX_PHOTOS, ALLOWED_PHOTO_TYPES } from "@/lib/image/compress";
 
 // review.date llega del backend como "YYYY-MM-DD HH:MM:SS" (comment_date WP).
 // Tomamos solo Y-M-D para evitar drift de timezone entre server y cliente —
@@ -16,37 +17,6 @@ function formatReviewDate(raw: string): string {
     month: "short",
     year: "numeric",
   });
-}
-
-const MAX_PHOTOS = 3;
-const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
-
-// Comprime/redimensiona la foto en el cliente antes de subirla (máx ~1400px, JPEG).
-// Baja el peso de fotos de celular de varios MB a ~200-400KB. Si el navegador no
-// puede decodificar el formato (p.ej. HEIC en Chrome desktop), devuelve null y el
-// caller descarta el archivo con un aviso — en Safari iOS el HEIC sí decodifica.
-async function compressPhoto(file: File, maxDim = 1400, quality = 0.82): Promise<File | null> {
-  try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
-    const w = Math.round(bitmap.width * scale);
-    const h = Math.round(bitmap.height * scale);
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return null;
-    ctx.drawImage(bitmap, 0, 0, w, h);
-    bitmap.close?.();
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, "image/jpeg", quality),
-    );
-    if (!blob) return null;
-    const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
-    return new File([blob], name, { type: "image/jpeg" });
-  } catch {
-    return null;
-  }
 }
 
 // Avatar de reseña: foto propia / Google / Gravatar (cascada resuelta en backend).
@@ -95,6 +65,10 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
   const [photos, setPhotos] = useState<{ file: File; preview: string }[]>([]);
   const [processingPhotos, setProcessingPhotos] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [showQr, setShowQr] = useState(false);
+  const [handoff, setHandoff] = useState<{ token: string; qr: string } | null>(null);
+  const [handoffLoading, setHandoffLoading] = useState(false);
+  const [handoffPhotos, setHandoffPhotos] = useState<{ id: number; thumb: string }[]>([]);
   const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const loginCtaRef = useRef<HTMLDivElement>(null);
@@ -115,7 +89,7 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
 
     setProcessingPhotos(true);
     setError("");
-    const room = MAX_PHOTOS - photos.length;
+    const room = MAX_PHOTOS - photos.length - handoffPhotos.length;
     const next: { file: File; preview: string }[] = [];
     let skipped = false;
 
@@ -150,6 +124,48 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
       return prev.filter((_, i) => i !== index);
     });
   }
+
+  // Handoff QR (desktop→móvil): crea la sesión de forma lazy al abrir el panel.
+  async function openHandoff() {
+    setShowQr(true);
+    if (handoff || handoffLoading) return;
+    setHandoffLoading(true);
+    try {
+      const res = await fetch("/api/review-photo/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_slug: productSlug }),
+      });
+      const data = await res.json();
+      if (res.ok) setHandoff({ token: data.token, qr: data.qr });
+      else setError(data.error || "No se pudo generar el código");
+    } catch {
+      setError("Error de conexión");
+    }
+    setHandoffLoading(false);
+  }
+
+  // Poll del estado del token mientras el panel QR está abierto: las fotos que
+  // suba el celular aparecen acá solas.
+  useEffect(() => {
+    if (!showQr || !handoff?.token) return;
+    let stop = false;
+    const tick = async () => {
+      try {
+        const res = await fetch(`/api/review-photo/${handoff.token}`, { cache: "no-store" });
+        const data = await res.json();
+        if (!stop && res.ok) setHandoffPhotos(data.images || []);
+      } catch {
+        /* reintenta en el próximo tick */
+      }
+    };
+    tick();
+    const id = setInterval(tick, 3000);
+    return () => {
+      stop = true;
+      clearInterval(id);
+    };
+  }, [showQr, handoff?.token]);
 
   // Build login link with redirect al producto actual + ?review=1 para retomar flow post-login.
   useEffect(() => {
@@ -196,6 +212,10 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
       payload.append("rating", String(formData.rating));
       payload.append("content", formData.content);
       photos.forEach((p) => payload.append("photos", p.file, p.file.name));
+      // Fotos subidas desde el celular vía QR: el backend las adopta por el token.
+      if (handoff?.token && handoffPhotos.length > 0) {
+        payload.append("handoff_token", handoff.token);
+      }
 
       const res = await fetch(`/api/reviews`, {
         method: "POST",
@@ -207,6 +227,9 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
       } else {
         photos.forEach((p) => URL.revokeObjectURL(p.preview));
         setPhotos([]);
+        setHandoff(null);
+        setHandoffPhotos([]);
+        setShowQr(false);
         setSubmitted(true);
       }
     } catch {
@@ -360,7 +383,15 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
                   </button>
                 </div>
               ))}
-              {photos.length < MAX_PHOTOS && (
+              {/* Fotos que entraron desde el celular vía QR (badge teléfono) */}
+              {handoffPhotos.map((h) => (
+                <div key={h.id} className="relative w-16 h-16">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={h.thumb} alt="Foto desde el celular" className="w-16 h-16 rounded-lg object-cover border border-gray-200" />
+                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#013d5a] text-white rounded-full text-[10px] leading-none flex items-center justify-center" title="Subida desde el celular">📱</span>
+                </div>
+              ))}
+              {photos.length + handoffPhotos.length < MAX_PHOTOS && (
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -383,6 +414,44 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
               onChange={handlePhotosSelected}
               className="hidden"
             />
+
+            {/* Handoff QR: subir desde el celular. Solo en desktop (en móvil ya se
+                usa el botón de arriba, que abre la cámara directo). */}
+            {photos.length + handoffPhotos.length < MAX_PHOTOS && (
+              <div className="hidden sm:block mt-2">
+                {!showQr ? (
+                  <button
+                    type="button"
+                    onClick={openHandoff}
+                    className="text-sm text-[#013d5a] font-medium hover:underline cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
+                    ¿Estás en la compu? Sacá la foto con el celular
+                  </button>
+                ) : (
+                  <div className="bg-white border border-gray-200 rounded-xl p-4 flex gap-4 items-center">
+                    <div className="flex-shrink-0 w-[110px] h-[110px] flex items-center justify-center bg-gray-50 rounded-lg">
+                      {handoff?.qr ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={handoff.qr} alt="Código QR para subir foto" width={110} height={110} className="w-[110px] h-[110px]" />
+                      ) : (
+                        <span className="text-[11px] text-gray-400">{handoffLoading ? "Generando…" : "..."}</span>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-600 min-w-0">
+                      <p className="font-medium text-gray-900 mb-1">Escaneá con la cámara del celular</p>
+                      <p className="text-xs leading-snug">Se abre la cámara, sacás la foto y aparece acá sola. No hace falta email ni descargar nada.</p>
+                      {handoffPhotos.length > 0 ? (
+                        <p className="text-xs text-green-600 font-medium mt-2">{handoffPhotos.length} foto{handoffPhotos.length > 1 ? "s" : ""} recibida{handoffPhotos.length > 1 ? "s" : ""} ✓</p>
+                      ) : (
+                        <p className="text-xs text-gray-400 mt-2">Esperando la foto…</p>
+                      )}
+                      <button type="button" onClick={() => setShowQr(false)} className="text-xs text-gray-400 hover:underline mt-2 cursor-pointer">Ocultar</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {error && (
