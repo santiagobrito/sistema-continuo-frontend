@@ -18,6 +18,37 @@ function formatReviewDate(raw: string): string {
   });
 }
 
+const MAX_PHOTOS = 3;
+const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+// Comprime/redimensiona la foto en el cliente antes de subirla (máx ~1400px, JPEG).
+// Baja el peso de fotos de celular de varios MB a ~200-400KB. Si el navegador no
+// puede decodificar el formato (p.ej. HEIC en Chrome desktop), devuelve null y el
+// caller descarta el archivo con un aviso — en Safari iOS el HEIC sí decodifica.
+async function compressPhoto(file: File, maxDim = 1400, quality = 0.82): Promise<File | null> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close?.();
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", quality),
+    );
+    if (!blob) return null;
+    const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+    return new File([blob], name, { type: "image/jpeg" });
+  } catch {
+    return null;
+  }
+}
+
 // Avatar de reseña: foto propia / Google / Gravatar (cascada resuelta en backend).
 // <img> plano a propósito: las fuentes viven en hosts distintos (googleusercontent,
 // media WP, gravatar) y son 32px — no vale whitelistear remotePatterns ni optimizar.
@@ -61,9 +92,64 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
   const [error, setError] = useState("");
   const [highlight, setHighlight] = useState(false);
   const [loginRedirect, setLoginRedirect] = useState("/iniciar-sesion");
+  const [photos, setPhotos] = useState<{ file: File; preview: string }[]>([]);
+  const [processingPhotos, setProcessingPhotos] = useState(false);
+  const [lightbox, setLightbox] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const loginCtaRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Liberar los object URLs de las previews al desmontar.
+  useEffect(() => {
+    return () => {
+      photos.forEach((p) => URL.revokeObjectURL(p.preview));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function handlePhotosSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = ""; // permite re-seleccionar el mismo archivo
+    if (!files.length) return;
+
+    setProcessingPhotos(true);
+    setError("");
+    const room = MAX_PHOTOS - photos.length;
+    const next: { file: File; preview: string }[] = [];
+    let skipped = false;
+
+    for (const raw of files) {
+      if (next.length >= room) {
+        skipped = true;
+        break;
+      }
+      const compressed = await compressPhoto(raw);
+      if (compressed && ALLOWED_PHOTO_TYPES.includes(compressed.type)) {
+        next.push({ file: compressed, preview: URL.createObjectURL(compressed) });
+      } else {
+        skipped = true;
+      }
+    }
+
+    if (next.length) setPhotos((prev) => [...prev, ...next]);
+    if (skipped) {
+      setError(
+        photos.length + next.length >= MAX_PHOTOS
+          ? `Podés subir hasta ${MAX_PHOTOS} fotos.`
+          : "Alguna foto no se pudo procesar (formato no soportado).",
+      );
+    }
+    setProcessingPhotos(false);
+  }
+
+  function removePhoto(index: number) {
+    setPhotos((prev) => {
+      const target = prev[index];
+      if (target) URL.revokeObjectURL(target.preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  }
 
   // Build login link with redirect al producto actual + ?review=1 para retomar flow post-login.
   useEffect(() => {
@@ -104,19 +190,23 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
     setSubmitting(true);
     setError("");
     try {
+      // multipart: no seteamos Content-Type, el browser arma el boundary.
+      const payload = new FormData();
+      payload.append("product_slug", productSlug);
+      payload.append("rating", String(formData.rating));
+      payload.append("content", formData.content);
+      photos.forEach((p) => payload.append("photos", p.file, p.file.name));
+
       const res = await fetch(`/api/reviews`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          product_slug: productSlug,
-          rating: formData.rating,
-          content: formData.content,
-        }),
+        body: payload,
       });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Error al enviar");
       } else {
+        photos.forEach((p) => URL.revokeObjectURL(p.preview));
+        setPhotos([]);
         setSubmitted(true);
       }
     } catch {
@@ -176,6 +266,27 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
                 )}
               </div>
               <div className="text-sm text-gray-600" dangerouslySetInnerHTML={{ __html: review.content }} />
+              {review.images && review.images.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {review.images.map((img, i) => (
+                    <button
+                      key={img.full}
+                      type="button"
+                      onClick={() => setLightbox(img.full)}
+                      className="cursor-zoom-in"
+                      aria-label="Ver foto de la reseña"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={img.thumb}
+                        alt={`Foto de ${review.author} ${i + 1}`}
+                        loading="lazy"
+                        className="w-20 h-20 rounded-lg object-cover border border-gray-200 hover:opacity-90 transition-opacity"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -228,6 +339,52 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
             rows={3}
             className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#013d5a]"
           />
+
+          {/* Fotos "así me quedó" — opcional, hasta 3 */}
+          <div>
+            <label className="block text-sm text-gray-600 mb-1.5">
+              Sumá una foto de cómo te quedó <span className="text-gray-400">(opcional)</span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {photos.map((p, i) => (
+                <div key={p.preview} className="relative w-16 h-16">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.preview} alt={`Foto ${i + 1}`} className="w-16 h-16 rounded-lg object-cover border border-gray-200" />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(i)}
+                    aria-label="Quitar foto"
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-900 text-white rounded-full text-xs leading-none flex items-center justify-center cursor-pointer hover:bg-black"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {photos.length < MAX_PHOTOS && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={processingPhotos}
+                  className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 text-gray-400 flex items-center justify-center hover:border-[#013d5a] hover:text-[#013d5a] transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {processingPhotos ? (
+                    <span className="text-[10px]">...</span>
+                  ) : (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                  )}
+                </button>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handlePhotosSelected}
+              className="hidden"
+            />
+          </div>
+
           {error && (
             <div className="bg-red-50 border border-red-100 rounded-lg p-3 text-sm text-red-600">{error}</div>
           )}
@@ -239,6 +396,26 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
         <button onClick={() => setShowForm(true)} className="text-sm font-semibold text-[#013d5a] hover:underline cursor-pointer">
           Escribir una opinión
         </button>
+      )}
+
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setLightbox(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={lightbox} alt="Foto de la reseña" className="max-w-full max-h-full rounded-lg object-contain" />
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            aria-label="Cerrar"
+            className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full text-2xl leading-none flex items-center justify-center cursor-pointer"
+          >
+            ×
+          </button>
+        </div>
       )}
     </div>
   );

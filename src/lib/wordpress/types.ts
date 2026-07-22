@@ -165,6 +165,9 @@ export interface Review {
   // Cascada backend: foto propia (subida o Google) → Gravatar → '' (inicial).
   // Puede 404ear (Gravatar default=404): el componente cae a la inicial vía onError.
   avatar_url?: string;
+  // Fotos "así me quedó" adjuntadas por el comprador (0-3). Solo llegan las de
+  // reseñas aprobadas (el backend filtra status='approve').
+  images?: { full: string; thumb: string }[];
 }
 
 // === API Response Types ===
