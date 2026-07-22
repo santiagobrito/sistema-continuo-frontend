@@ -366,7 +366,7 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
           {/* Fotos "así me quedó" — opcional, hasta 3 */}
           <div>
             <label className="block text-sm text-gray-600 mb-1.5">
-              Sumá una foto de cómo te quedó <span className="text-gray-400">(opcional)</span>
+              Sumá una foto de tu compra <span className="text-gray-400">(opcional)</span>
             </label>
             <div className="flex flex-wrap gap-2">
               {photos.map((p, i) => (

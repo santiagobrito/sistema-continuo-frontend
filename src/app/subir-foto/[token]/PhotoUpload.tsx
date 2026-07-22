@@ -103,7 +103,7 @@ export function PhotoUpload({ token }: { token: string }) {
           <div className="bg-white rounded-2xl p-6 border border-gray-100 space-y-5">
             {productName && (
               <p className="text-center text-gray-700">
-                Mostranos cómo te quedó <strong>{productName}</strong>
+                Sumá una foto de <strong>{productName}</strong>
               </p>
             )}
 
