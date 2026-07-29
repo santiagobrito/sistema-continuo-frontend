@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ProductGallery } from "./ProductGallery";
 import { ProductActions } from "./ProductActions";
 import { ShortDescription } from "./ShortDescription";
@@ -22,6 +22,10 @@ export function ProductDetail({
   productUrl: string;
 }) {
   const [variationImage, setVariationImage] = useState<SCImage | null>(null);
+  // El feed de Google Shopping lista las VARIACIONES (g:id = id de variación),
+  // no el padre. Sin este view_item por variación, el remarketing dinámico no
+  // puede matchear los productos variables (tintas individuales, sobre todo).
+  const trackedVariations = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     const price = Number(product.price) || 0;
@@ -47,6 +51,18 @@ export function ProductDetail({
       setVariationImage(variation.image);
     } else {
       setVariationImage(null);
+    }
+
+    if (variation && !trackedVariations.current.has(variation.id)) {
+      trackedVariations.current.add(variation.id);
+      trackViewItem({
+        item_id: String(variation.id),
+        item_name: product.name,
+        item_brand: product.marca,
+        item_variant: Object.values(variation.attributes).join(" / "),
+        price: Number(variation.price) || 0,
+        quantity: 1,
+      });
     }
   }
 
