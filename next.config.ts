@@ -88,7 +88,13 @@ const nextConfig: NextConfig = {
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
           "img-src 'self' data: blob: https: http://localhost",
           "font-src 'self' data: https://fonts.gstatic.com",
-          "connect-src 'self' https://api.sistemacontinuo.com.ar https://sistema-continuo-wp.a7lflv.easypanel.host https://*.mercadopago.com https://api.mercadopago.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://*.googletagmanager.com https://stats.g.doubleclick.net https://www.facebook.com https://connect.facebook.net https://accounts.google.com https://oauth2.googleapis.com https://*.clarity.ms",
+          // connect-src debe incluir los endpoints a los que la etiqueta de Google
+          // Ads MANDA datos (fetch/sendBeacon), no solo desde donde carga el script.
+          // Sin google.com / googleadservices / doubleclick acá, gtag.js carga pero
+          // sus beacons de conversión y de listas de remarketing quedan bloqueados:
+          // Google lo reporta como "Calidad de Etiqueta / Urgente" y las audiencias
+          // de remarketing no se pueblan. Detectado 2026-08-05.
+          "connect-src 'self' https://api.sistemacontinuo.com.ar https://sistema-continuo-wp.a7lflv.easypanel.host https://*.mercadopago.com https://api.mercadopago.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://*.googletagmanager.com https://stats.g.doubleclick.net https://googleads.g.doubleclick.net https://*.doubleclick.net https://www.google.com https://www.google.com.ar https://www.googleadservices.com https://pagead2.googlesyndication.com https://www.facebook.com https://connect.facebook.net https://accounts.google.com https://oauth2.googleapis.com https://*.clarity.ms",
           "frame-src 'self' https://www.youtube.com https://*.mercadopago.com https://accounts.google.com",
           "frame-ancestors 'self'",
           "form-action 'self' https://*.mercadopago.com",
