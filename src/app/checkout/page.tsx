@@ -375,6 +375,42 @@ function CheckoutInner() {
     }
   }, [availableShipping, shippingMethod]);
 
+  // ⚠️ Todo hook va ARRIBA del early return de abajo. Si un hook queda debajo, el
+  // componente pasa de N a N+X hooks en cuanto el CartProvider trae el carrito
+  // (primer render: cart = null → sale por el early return) y React tira el error
+  // #310 "Rendered more hooks than during the previous render", que revienta la
+  // página entera con el error boundary. Pasó con los hooks del auto-cupón.
+  const subtotal = parseInt(cart?.totals.total_items || "0");
+
+  // Auto-aplicar cupón si llega por URL (?coupon=CODE), típicamente desde el
+  // flow de recuperación de carrito abandonado. Espera a que haya email cargado
+  // en el form (precargado de Brevo/cookie o tipeado por el usuario) — los
+  // cupones SC-AB-* tienen email_restrictions y fallan sin email. Una sola vez
+  // por sesión de checkout; si falla, queda el error visible y el usuario
+  // puede aplicarlo manualmente.
+  const searchParams = useSearchParams();
+  const urlCoupon = searchParams.get("coupon");
+  const urlEmail = searchParams.get("email");
+
+  // Precargar email desde la URL si viene de /recuperar-carrito (el cupón
+  // SC-AB-* es personal y necesita matchear el email_restriction).
+  useEffect(() => {
+    if (!urlEmail) return;
+    setFormData((prev) => (prev.email ? prev : { ...prev, email: urlEmail }));
+  }, [urlEmail]);
+
+  const [autoCouponTried, setAutoCouponTried] = useState(false);
+  useEffect(() => {
+    if (autoCouponTried) return;
+    if (!urlCoupon) return;
+    if (appliedCoupon) return;
+    if (subtotal <= 0) return; // esperar que carguen los items del cart
+    if (!formData.email) return; // esperar a tener email (cupón requiere email_restriction match)
+    setAutoCouponTried(true);
+    applyCoupon(urlCoupon);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlCoupon, subtotal, appliedCoupon, autoCouponTried, formData.email]);
+
   if (!cart || cart.items.length === 0) {
     return (
       <main className="bg-gray-50 min-h-screen flex items-center justify-center">
@@ -393,37 +429,8 @@ function CheckoutInner() {
   const productFreeShipping = cartQualifiesForFreeShipping(cart);
   const shippingIsFree = productFreeShipping || !!appliedCoupon?.free_shipping;
   const shippingCost = (shippingIsFree && shippingMethod) ? 0 : selectedShippingPrice;
-  const subtotal = parseInt(cart.totals.total_items || "0");
   const couponDiscount = appliedCoupon?.discount_amount || 0;
   const total = Math.max(0, subtotal - couponDiscount + shippingCost);
-
-  // Auto-aplicar cupón si llega por URL (?coupon=CODE), típicamente desde el
-  // flow de recuperación de carrito abandonado. Espera a que haya email cargado
-  // en el form (precargado de Brevo/cookie o tipeado por el usuario) — los
-  // cupones SC-AB-* tienen email_restrictions y fallan sin email. Una sola vez
-  // por sesión de checkout; si falla, queda el error visible y el usuario
-  // puede aplicarlo manualmente.
-  const searchParams = useSearchParams();
-  const urlCoupon = searchParams.get("coupon");
-  const urlEmail = searchParams.get("email");
-
-  // Precargar email desde la URL si viene de /recuperar-carrito (el cupón
-  // SC-AB-* es personal y necesita matchear el email_restriction).
-  useEffect(() => {
-    if (!urlEmail) return;
-    setFormData((prev) => (prev.email ? prev : { ...prev, email: urlEmail }));
-  }, [urlEmail]);
-  const [autoCouponTried, setAutoCouponTried] = useState(false);
-  useEffect(() => {
-    if (autoCouponTried) return;
-    if (!urlCoupon) return;
-    if (appliedCoupon) return;
-    if (subtotal <= 0) return; // esperar que carguen los items del cart
-    if (!formData.email) return; // esperar a tener email (cupón requiere email_restriction match)
-    setAutoCouponTried(true);
-    applyCoupon(urlCoupon);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlCoupon, subtotal, appliedCoupon, autoCouponTried, formData.email]);
 
   function updateField(field: string, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }));
