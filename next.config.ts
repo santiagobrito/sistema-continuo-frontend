@@ -60,6 +60,10 @@ const nextConfig: NextConfig = {
         destination: "https://sistemacontinuo.com.ar/:path*",
         permanent: true,
       },
+      // URLs de plotters heredadas del WP viejo: hoy dan 404 y se llevan la
+      // autoridad de los enlaces que apuntaban ahí. Van a la categoría real.
+      { source: "/16-plotter", destination: "/plotter/plotters-de-corte", permanent: true },
+      { source: "/plotter", destination: "/plotter/plotters-de-corte", permanent: true },
     ];
   },
   // Páginas con UI que depende de cookies/auth NO deben cachearse en CDN.
