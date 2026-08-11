@@ -16,8 +16,8 @@
  *
  * Precio al cliente: SIEMPRE con IVA incluido (21%), sin desglose.
  *
- * Peso volumétrico: se compara peso_real vs peso_volumétrico (cm³/6000) y
- * se usa el mayor para elegir bracket (regla del tarifario, pág 3).
+ * Peso volumétrico: se compara peso_real vs peso_volumétrico (cm³/VOLUMETRIC_COEFFICIENT)
+ * y se usa el mayor para elegir bracket (regla del tarifario, pág 3).
  */
 
 import type { Bundle } from "./split";

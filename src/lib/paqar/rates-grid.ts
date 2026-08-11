@@ -217,5 +217,19 @@ export function lookupPrice(
 /** IVA Argentina. Aplicar al precio sin IVA para obtener el precio final al consumidor. */
 export const IVA_RATE = 0.21;
 
-/** Peso volumétrico: dim(cm³) / coeficiente. Coef estándar CA = 6000 cm³/kg. */
-export const VOLUMETRIC_COEFFICIENT = 6000;
+/**
+ * Peso volumétrico: dim(cm³) / coeficiente.
+ *
+ * **4000, medido contra la factura, no 6000.** El tarifario de CA describe la fórmula
+ * ("comparar el peso volumétrico y el peso real, tomando el mayor de los dos") pero NO
+ * publica el coeficiente, así que hasta agosto de 2026 acá había un 6000, que es el
+ * estándar de courier internacional (IATA) y no el de Correo Argentino.
+ *
+ * El detalle por envío de la factura de julio 2026 (159 bultos) lo fija en 4000:
+ * en 97 de 159 el peso aforado es exactamente alto*ancho*largo/4000, y no hay ninguna
+ * fila donde el aforado quede por debajo de ese piso. Con 6000 no coincide ninguna.
+ * Costo del error: $195.512 netos en julio, el 76% de la diferencia del mes.
+ *
+ * Ver reports/2026-08-11-detalle-envios-correo-julio.md
+ */
+export const VOLUMETRIC_COEFFICIENT = 4000;
