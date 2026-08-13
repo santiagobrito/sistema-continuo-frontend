@@ -226,9 +226,23 @@ export const IVA_RATE = 0.21;
  * estándar de courier internacional (IATA) y no el de Correo Argentino.
  *
  * El detalle por envío de la factura de julio 2026 (159 bultos) lo fija en 4000:
- * en 97 de 159 el peso aforado es exactamente alto*ancho*largo/4000, y no hay ninguna
- * fila donde el aforado quede por debajo de ese piso. Con 6000 no coincide ninguna.
+ * en 87 de 159 el peso aforado es exactamente alto*ancho*largo/4000 (redondeado a 3
+ * decimales, que es como lo emite CA), y no hay ninguna fila donde el aforado quede por
+ * debajo de ese piso. Con 6000 no coincide ninguna.
  * Costo del error: $195.512 netos en julio, el 76% de la diferencia del mes.
+ *
+ * ⚠ DISPUTADO (2026-08-11). Sabrina, de Correo Argentino, dice verbalmente que el
+ * volumétrico es cm³/6000. La factura dice lo contrario, y las medidas del detalle son
+ * las que declaramos nosotros por API (hay bultos de 1-2 cm de alto: CA no remide, copia
+ * lo que le mandamos), así que el divisor no se explica por las cajas reales de SC.
+ * Se mantiene 4000 porque es lo que CA efectivamente cobró sobre 159 guías: cotizar con
+ * 6000 volvería a perder ~$195k/mes mientras dure la discusión.
+ * Si CA confirma 6000 por escrito: volver a 6000 acá y reclamar nota de crédito por
+ * $222.660 netos de julio (78 bultos subieron de escalón; el $150.663 que figuraba
+ * antes era un piso, salía de un tarifario derivado de la propia factura y dejaba sin
+ * precio de referencia a los bultos cuyo escalón alternativo no aparecía en el mes).
+ * Consulta enviada en
+ * data/correo-argentino/consulta-sabrina-coeficiente-aforo-2026-08-11.txt
  *
  * Ver reports/2026-08-11-detalle-envios-correo-julio.md
  */
