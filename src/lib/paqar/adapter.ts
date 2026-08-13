@@ -36,6 +36,8 @@ export interface WcOrderLike {
     _dimensions?: { length?: string; width?: string; height?: string };
     _weight?: string;
     _category?: string;
+    /** Caja de apilado del producto (ACF `pack_*` en WP). Ver split.ts. */
+    _pack?: { qty: number; length: number; width: number; height: number };
   }>;
   shipping: {
     first_name: string;
@@ -216,6 +218,10 @@ export function wcItemsToSplitItems(order: WcOrderLike): SplitItem[] {
       depth: Number(dims.length || 0),
       price: Number(li.price || 0),
       category: li._category,
+      packQty:    li._pack?.qty,
+      packHeight: li._pack?.height,
+      packWidth:  li._pack?.width,
+      packDepth:  li._pack?.length,
     };
   });
 }

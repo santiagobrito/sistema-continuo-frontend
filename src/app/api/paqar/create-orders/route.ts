@@ -30,6 +30,42 @@ async function fetchWcOrder(orderId: number): Promise<WcOrderLike> {
   return res.json();
 }
 
+/**
+ * Cajas de apilado de los productos, desde el mismo endpoint que usa la
+ * cotización del checkout (`sc/v1/product-dims`).
+ *
+ * Se lee de ahí y no de `wc/v3/products/{id}` a propósito: en una variación el
+ * meta ACF vive en el producto padre y `wc/v3` devuelve `meta_data: []`. Si la
+ * etiqueta usara otra fuente que la cotización, cobraríamos una caja y
+ * despacharíamos otra.
+ */
+async function fetchPackBoxes(
+  ids: number[]
+): Promise<Map<number, { qty: number; length: number; width: number; height: number }>> {
+  const out = new Map<number, { qty: number; length: number; width: number; height: number }>();
+  if (ids.length === 0) return out;
+
+  try {
+    const res = await fetch(
+      `${WP_URL}/wp-json/sc/v1/product-dims?ids=${ids.join(",")}`,
+      { cache: "no-store" }
+    );
+    if (!res.ok) {
+      console.warn("[paqar/create-orders] product-dims fail:", res.status);
+      return out;
+    }
+    const data = (await res.json()) as {
+      dims?: Record<string, { pack?: { qty: number; length: number; width: number; height: number } | null }>;
+    };
+    for (const [id, d] of Object.entries(data.dims || {})) {
+      if (d?.pack) out.set(Number(id), d.pack);
+    }
+  } catch (err) {
+    console.warn("[paqar/create-orders] product-dims error:", err);
+  }
+  return out;
+}
+
 async function enrichWithProductDims(order: WcOrderLike): Promise<WcOrderLike> {
   const ids = [
     ...new Set(
@@ -37,16 +73,19 @@ async function enrichWithProductDims(order: WcOrderLike): Promise<WcOrderLike> {
     ),
   ];
 
-  const products = await Promise.all(
-    ids.map(async (id) => {
-      const res = await fetch(`${WP_URL}/wp-json/wc/v3/products/${id}`, {
-        headers: { Authorization: `Basic ${WC_API_AUTH}` },
-        cache: "no-store",
-      });
-      if (!res.ok) return null;
-      return res.json();
-    })
-  );
+  const [products, packs] = await Promise.all([
+    Promise.all(
+      ids.map(async (id) => {
+        const res = await fetch(`${WP_URL}/wp-json/wc/v3/products/${id}`, {
+          headers: { Authorization: `Basic ${WC_API_AUTH}` },
+          cache: "no-store",
+        });
+        if (!res.ok) return null;
+        return res.json();
+      })
+    ),
+    fetchPackBoxes(ids),
+  ]);
 
   const byId = new Map(products.filter(Boolean).map((p) => [p.id, p]));
 
@@ -55,12 +94,14 @@ async function enrichWithProductDims(order: WcOrderLike): Promise<WcOrderLike> {
     line_items: order.line_items.map((li) => {
       const pid = li.variation_id || li.product_id;
       const p = byId.get(pid);
-      if (!p) return li;
+      const pack = packs.get(pid);
+      if (!p) return pack ? { ...li, _pack: pack } : li;
       return {
         ...li,
         _weight: p.weight,
         _dimensions: p.dimensions,
         _category: p.categories?.[0]?.name,
+        _pack: pack,
       };
     }),
   };

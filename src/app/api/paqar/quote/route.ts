@@ -36,7 +36,17 @@ import type { DeliveryType, ProvinceCode } from "@/lib/paqar/types";
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 
 interface DimsResponse {
-  dims: Record<string, { weight: string | null; length: string | null; width: string | null; height: string | null }>;
+  dims: Record<
+    string,
+    {
+      weight: string | null;
+      length: string | null;
+      width: string | null;
+      height: string | null;
+      /** Caja de apilado del producto (ACF `pack_*`). null si no está cargada. */
+      pack?: { qty: number; length: number; width: number; height: number } | null;
+    }
+  >;
 }
 
 /**
@@ -83,6 +93,12 @@ async function enrichItemsWithDims(
         height: d.height ? Number(d.height) : it.height,
         width:  d.width  ? Number(d.width)  : it.width,
         depth:  d.length ? Number(d.length) : it.depth,
+        // La caja de apilado sale SIEMPRE de WP, nunca de lo que manda el
+        // browser: es lo que decide cuánto se le cobra de envío al cliente.
+        packQty:    d.pack ? d.pack.qty    : undefined,
+        packHeight: d.pack ? d.pack.height : undefined,
+        packWidth:  d.pack ? d.pack.width  : undefined,
+        packDepth:  d.pack ? d.pack.length : undefined,
       };
     });
     return { items: enriched, zeroWeightIds };
@@ -125,7 +141,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { items: enrichedItems, zeroWeightIds } = await enrichItemsWithDims(items);
+    // Endpoint público: la caja de apilado se ignora si viene del browser y se
+    // resuelve contra WP en enrichItemsWithDims. Si no, cualquiera podría
+    // mandar un pack inventado y pagar menos envío del que sale.
+    const sanitized = items.map((it) => ({
+      ...it,
+      packQty: undefined,
+      packHeight: undefined,
+      packWidth: undefined,
+      packDepth: undefined,
+    }));
+
+    const { items: enrichedItems, zeroWeightIds } = await enrichItemsWithDims(sanitized);
     const bundles = splitIntoBundles(enrichedItems);
     const quote = quoteShipment({
       bundles,

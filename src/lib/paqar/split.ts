@@ -33,6 +33,22 @@ export interface SplitItem {
   price: number;
   /** Categoría principal para `productCategory` del API. */
   category?: string;
+  /**
+   * Apilado (opcional). Productos que se encastran ocupan MUCHO menos que la
+   * suma de sus unidades: 5 gorras no son 5 cajas de gorra, son una caja algo
+   * más grande que una. Se carga en el producto (ACF `pack_qty` + `pack_*`)
+   * midiendo una caja real: "5 gorras entran en 25×14×20".
+   *
+   * Sin estos campos el cálculo es el de siempre (cada unidad suma su volumen
+   * entero), que es lo correcto para lo que NO se encastra.
+   */
+  packQty?: number;
+  /** Alto de la caja de `packQty` unidades, en cm. */
+  packHeight?: number;
+  /** Ancho de la caja de `packQty` unidades, en cm. */
+  packWidth?: number;
+  /** Largo de la caja de `packQty` unidades, en cm. */
+  packDepth?: number;
 }
 
 export interface Bundle {
@@ -103,6 +119,54 @@ function itemVolume(item: SplitItem): number {
   return h * w * d;
 }
 
+/**
+ * Caja de apilado declarada en el producto, o null si no está cargada o los
+ * datos no cierran. Se ignora (y se cae al cálculo de siempre) cuando:
+ * - la cantidad de referencia es menor a 2 — no describe ningún apilado;
+ * - falta alguna dimensión;
+ * - la caja del pack es más chica que una unidad suelta, o más grande que
+ *   `packQty` unidades sueltas. Ahí el dato está mal cargado y creerle sería
+ *   sub-declarar (nos lo factura Correo igual) o inflar el envío al cliente.
+ */
+function packBox(
+  item: SplitItem
+): { qty: number; height: number; width: number; depth: number; volume: number } | null {
+  const qty = item.packQty || 0;
+  if (qty < 2) return null;
+
+  const h = item.packHeight || 0;
+  const w = item.packWidth || 0;
+  const d = item.packDepth || 0;
+  if (h <= 0 || w <= 0 || d <= 0) return null;
+
+  const volume = h * w * d;
+  const unit = itemVolume(item);
+  if (volume < unit || volume > unit * qty) return null;
+
+  return { qty, height: h, width: w, depth: d, volume };
+}
+
+/**
+ * Volumen que suma la unidad número `unitIndex` (0-based) de un ítem dentro de
+ * un bulto. La primera unidad de cada pack ocupa su volumen entero; las
+ * siguientes, solo el incremento medido en la caja del pack.
+ *
+ * Ejemplo real (gorras): 1 unidad 18×11×20 = 3.960 cm³, caja de 5 = 25×14×20 =
+ * 7.000 cm³ → cada unidad extra suma 760 cm³, no 3.960.
+ *
+ * El módulo por `packQty` es deliberado: pasada la cantidad medida arranca un
+ * pack nuevo (10 gorras = 2 cajas de 5). Extrapolar el incremento al infinito
+ * declararía una caja que no existe, y Correo factura lo que declaramos.
+ */
+function unitVolumeAt(item: SplitItem, unitIndex: number): number {
+  const unit = itemVolume(item);
+  const pack = packBox(item);
+  if (!pack) return unit;
+  if (unitIndex % pack.qty === 0) return unit;
+
+  return (pack.volume - unit) / (pack.qty - 1);
+}
+
 function isBulky(item: SplitItem): boolean {
   const weight = item.weight || SPLIT_RULES.FALLBACK_WEIGHT_G;
   if (weight > SPLIT_RULES.MAX_CONSOLIDATED_WEIGHT_G) return true;
@@ -171,14 +235,55 @@ function addToConsolidated(bundle: Bundle, item: SplitItem): void {
  * grande (max por eje); apilando N unidades idénticas eso sub-reporta el
  * cubicaje N×. Acá inflamos a una caja cúbica equivalente, sin reducir
  * dimensiones reales (no toca single-item bundles ni a items elongados).
+ *
+ * Caso exacto: si el bulto lleva un solo producto en la cantidad exacta de su
+ * caja de apilado, declaramos las medidas que midió depósito en vez de la
+ * aproximación cúbica. Es el caso típico ("me llevo 5 gorras") y ahí no hay
+ * por qué aproximar nada.
  */
-function finalizeConsolidated(bundle: Bundle, cumulativeVolume: number): void {
+function finalizeConsolidated(
+  bundle: Bundle,
+  cumulativeVolume: number,
+  itemsById?: Map<string, SplitItem>
+): void {
+  const exact = itemsById && exactPackBox(bundle, itemsById);
+  if (exact) {
+    bundle.height = exact.height;
+    bundle.width = exact.width;
+    bundle.depth = exact.depth;
+    return;
+  }
+
   const reportedVolume = bundle.height * bundle.width * bundle.depth;
   if (reportedVolume >= cumulativeVolume) return;
   const cbrt = Math.ceil(Math.cbrt(cumulativeVolume));
   bundle.height = Math.max(bundle.height, cbrt);
   bundle.width = Math.max(bundle.width, cbrt);
   bundle.depth = Math.max(bundle.depth, cbrt);
+}
+
+/**
+ * Devuelve la caja de apilado si el bulto es exactamente eso: un único
+ * producto, en la cantidad exacta que se midió.
+ *
+ * Con una cantidad distinta (3 gorras de un pack de 5, o 7) no aplica: la caja
+ * real es otra y la aproximación por volumen queda más cerca que estirar o
+ * encoger una medida que nadie tomó.
+ */
+function exactPackBox(
+  bundle: Bundle,
+  itemsById: Map<string, SplitItem>
+): { height: number; width: number; depth: number } | null {
+  if (bundle.items.length !== 1) return null;
+
+  const entry = bundle.items[0];
+  const item = itemsById.get(entry.id);
+  if (!item) return null;
+
+  const pack = packBox(item);
+  if (!pack || entry.quantity !== pack.qty) return null;
+
+  return { height: pack.height, width: pack.width, depth: pack.depth };
 }
 
 /**
@@ -201,29 +306,37 @@ export function splitIntoBundles(items: SplitItem[]): Bundle[] {
     }
   }
 
+  const itemsById = new Map(items.map((it) => [it.id, it]));
+
   let current = newEmptyBundle();
   let currentVolume = 0;
   for (const item of small) {
-    const unitVolume = itemVolume(item);
+    // Unidades de ESTE ítem ya cargadas en el bulto actual. Se reinicia al
+    // cortar caja: la primera unidad de un bulto nuevo vuelve a ocupar entero,
+    // porque es una caja nueva.
+    let unitsInBundle = 0;
     for (let i = 0; i < item.quantity; i++) {
       const unitWeight = item.weight || SPLIT_RULES.FALLBACK_WEIGHT_G;
+      const unitVolume = unitVolumeAt(item, unitsInBundle);
       const wouldExceedWeight =
         current.weightGrams + unitWeight > SPLIT_RULES.MAX_CONSOLIDATED_WEIGHT_G;
       const wouldExceedVolume =
         currentVolume + unitVolume > SPLIT_RULES.MAX_CONSOLIDATED_VOLUME_CM3;
 
       if (current.items.length > 0 && (wouldExceedWeight || wouldExceedVolume)) {
-        finalizeConsolidated(current, currentVolume);
+        finalizeConsolidated(current, currentVolume, itemsById);
         bundles.push(current);
         current = newEmptyBundle();
         currentVolume = 0;
+        unitsInBundle = 0;
       }
       addToConsolidated(current, item);
-      currentVolume += unitVolume;
+      currentVolume += unitVolumeAt(item, unitsInBundle);
+      unitsInBundle++;
     }
   }
   if (current.items.length > 0) {
-    finalizeConsolidated(current, currentVolume);
+    finalizeConsolidated(current, currentVolume, itemsById);
     bundles.push(current);
   }
 
@@ -258,16 +371,15 @@ export function forceSingleBundle(items: SplitItem[]): Bundle[] {
   let cumulativeVolume = 0;
 
   for (const item of items) {
-    const unitVolume = itemVolume(item);
     for (let i = 0; i < item.quantity; i++) {
       addToConsolidated(bundle, item);
-      cumulativeVolume += unitVolume;
+      cumulativeVolume += unitVolumeAt(item, i);
     }
     if (!dominantCategory && item.category) dominantCategory = item.category;
   }
 
   if (dominantCategory) bundle.category = dominantCategory;
-  finalizeConsolidated(bundle, cumulativeVolume);
+  finalizeConsolidated(bundle, cumulativeVolume, new Map(items.map((it) => [it.id, it])));
 
   if (bundle.weightGrams > SPLIT_RULES.ABSOLUTE_MAX_WEIGHT_G) {
     const itemList = bundle.items.map((i) => `${i.quantity}x ${i.name}`).join(", ");
