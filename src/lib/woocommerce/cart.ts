@@ -84,21 +84,33 @@ export interface CartItem {
 }
 
 /**
- * El carrito califica para envío gratis si TODOS los items son del mismo
- * producto (mismo product_id, ignorando variaciones) y ese producto está
- * marcado como `envio_gratis`. Cualquier cantidad cuenta.
+ * Estado de envío gratis del carrito.
  *
- * Nota: usamos `id` del CartItem porque para variaciones la Store API
- * devuelve el variation_id ahí, y el envio_gratis vive a nivel producto.
- * Igualmente la extension del plugin lee `product_id` del cart_item, así
- * que todas las variaciones del mismo producto comparten el mismo flag.
+ * - `all`: todos los items están bonificados → el envío es gratis, con
+ *   cualquier método de envío.
+ * - `some`: hay bonificados y hay otros → se cobra solo la diferencia. El
+ *   descuento lo calcula el server en /api/paqar/quote (cotiza el carrito
+ *   completo y le resta lo que costaría enviar solo lo bonificado); acá no se
+ *   puede saber, porque depende del peso, del volumen y del destino.
+ * - `none`: no hay nada bonificado.
+ *
+ * El flag lo inyecta el plugin por item (SC_Store_API_Extensions) resolviendo
+ * por variación, así que un talle puede estar bonificado y otro no.
  */
-export function cartQualifiesForFreeShipping(cart: Cart | null): boolean {
-  if (!cart || cart.items.length === 0) return false;
-  const allFreeShipping = cart.items.every(
+export type CartFreeShipping = "all" | "some" | "none";
+
+export function cartFreeShippingState(cart: Cart | null): CartFreeShipping {
+  if (!cart || cart.items.length === 0) return "none";
+  const free = cart.items.filter(
     (i) => i.extensions?.["sistema-continuo-core"]?.envio_gratis === true
   );
-  return allFreeShipping;
+  if (free.length === 0) return "none";
+  return free.length === cart.items.length ? "all" : "some";
+}
+
+/** El carrito entero viaja gratis (cualquier método de envío). */
+export function cartQualifiesForFreeShipping(cart: Cart | null): boolean {
+  return cartFreeShippingState(cart) === "all";
 }
 
 export interface Cart {

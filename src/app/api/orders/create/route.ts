@@ -15,6 +15,7 @@ import {
   type OrderAttributionInput,
 } from "@/lib/wordpress/order-attribution";
 import { resolveCoupon, applyDiscountToItems } from "@/lib/woocommerce/coupons";
+import { computeShippingCost, splitItemsFromOrder } from "@/lib/paqar/quote-service";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
@@ -50,7 +51,10 @@ interface OrderBody {
     postcode?: string;
   };
   shipping_method?: string;
+  /** Envío SIN bonificar. El descuento por envío gratis se calcula acá. */
   shipping_cost?: number;
+  /** Lo que el checkout le mostró al cliente, solo para detectar desvíos. */
+  shipping_cost_expected?: number;
   paqar_agency_id?: string;
   customer_note?: string;
   payment_method: "transferencia" | "efectivo";
@@ -148,7 +152,29 @@ export async function POST(request: NextRequest) {
       : null;
     const discountTotal = resolved?.discount_amount || 0;
     const itemsAfter = discountTotal > 0 ? applyDiscountToItems(body.items, discountTotal) : null;
-    const effectiveShippingCost = resolved?.free_shipping ? 0 : (body.shipping_cost ?? 0);
+
+    // Envío gratis por producto/variación: el descuento se calcula acá, contra
+    // WP, nunca con lo que diga el browser. body.shipping_cost llega sin
+    // bonificar.
+    const grossShipping = body.shipping_cost ?? 0;
+    const { cost: shippingAfterFree, credit: shippingCredit } = await computeShippingCost({
+      items: splitItemsFromOrder(body.items),
+      destState: body.billing.state || "",
+      destZip: body.billing.postcode || "",
+      method: body.shipping_method || "",
+      grossCost: grossShipping,
+    });
+    const effectiveShippingCost = resolved?.free_shipping ? 0 : shippingAfterFree;
+
+    if (
+      body.shipping_cost_expected !== undefined &&
+      !resolved?.free_shipping &&
+      body.shipping_cost_expected !== effectiveShippingCost
+    ) {
+      console.warn(
+        `[orders/create] envío recalculado distinto al mostrado: cliente vio ${body.shipping_cost_expected}, se cobra ${effectiveShippingCost} (bruto ${grossShipping}, crédito ${shippingCredit})`
+      );
+    }
 
     const orderData: Record<string, unknown> = {
       status: body.payment_method === "efectivo" ? "on-hold" : "on-hold",

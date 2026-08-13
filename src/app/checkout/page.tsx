@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "@/components/cart/CartProvider";
-import { cartQualifiesForFreeShipping } from "@/lib/woocommerce/cart";
+import { cartFreeShippingState } from "@/lib/woocommerce/cart";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { formatStorePrice } from "@/lib/utils/format";
 import Image from "next/image";
@@ -145,8 +145,11 @@ function CheckoutInner() {
     | { loading: true }
     | {
         loading: false;
-        domicilio?: { total: number; warning?: string };
-        sucursal?: { total: number; warning?: string };
+        // `total` viene con el envío gratis ya descontado; `gross` es el envío
+        // sin bonificar y `credit` lo que se bonificó (los tres los calcula el
+        // server, ver lib/paqar/quote-service.ts).
+        domicilio?: { total: number; gross: number; credit: number; warning?: string };
+        sucursal?: { total: number; gross: number; credit: number; warning?: string };
         service?: string;
         error?: string;
         hasZeroWeight?: boolean;
@@ -267,12 +270,15 @@ function CheckoutInner() {
           setPaqarQuote({ loading: false, error: data.error || "No se pudo cotizar" });
           return;
         }
-        const dom = data.options.find((o: { deliveryType: string }) => o.deliveryType === "homeDelivery");
-        const suc = data.options.find((o: { deliveryType: string }) => o.deliveryType === "agency");
+        type QuoteOpt = { deliveryType: string; total: number; gross?: number; credit?: number; warning?: string };
+        const shape = (o?: QuoteOpt) =>
+          o ? { total: o.total, gross: o.gross ?? o.total, credit: o.credit ?? 0, warning: o.warning } : undefined;
+        const dom = data.options.find((o: QuoteOpt) => o.deliveryType === "homeDelivery");
+        const suc = data.options.find((o: QuoteOpt) => o.deliveryType === "agency");
         setPaqarQuote({
           loading: false,
-          domicilio: dom ? { total: dom.total, warning: dom.warning } : undefined,
-          sucursal: suc ? { total: suc.total, warning: suc.warning } : undefined,
+          domicilio: shape(dom),
+          sucursal: shape(suc),
           service: data.service,
           hasZeroWeight: Boolean(data.hasZeroWeight),
         });
@@ -324,6 +330,29 @@ function CheckoutInner() {
   }, [agencies, agencyQuery]);
 
   // Precio efectivo por opción de envío (incluye cotización online de Correo cuando aplica).
+  /** Precio del método SIN aplicar el envío gratis. */
+  function getShippingGrossPrice(optId: string, basePrice: number): number {
+    if (optId === "correo_domicilio") {
+      return paqarQuote && "domicilio" in paqarQuote && paqarQuote.domicilio
+        ? paqarQuote.domicilio.gross
+        : 0;
+    }
+    if (optId === "correo_sucursal") {
+      return paqarQuote && "sucursal" in paqarQuote && paqarQuote.sucursal
+        ? paqarQuote.sucursal.gross
+        : 0;
+    }
+    return basePrice;
+  }
+
+  /**
+   * Precio a cobrar por el método, con el envío gratis ya descontado.
+   *
+   * En Correo el neto lo calcula el server. En moto y transporte, que tienen
+   * precio fijo de tabla, se descuenta lo que habría costado mandar por Correo
+   * a domicilio los productos bonificados: es el costo que el envío gratis le
+   * ahorra al cliente, y no depende del método que elija después.
+   */
   function getShippingPrice(optId: string, basePrice: number): number {
     if (optId === "correo_domicilio") {
       return paqarQuote && "domicilio" in paqarQuote && paqarQuote.domicilio
@@ -334,6 +363,13 @@ function CheckoutInner() {
       return paqarQuote && "sucursal" in paqarQuote && paqarQuote.sucursal
         ? paqarQuote.sucursal.total
         : 0;
+    }
+    if (basePrice > 0) {
+      const credit =
+        paqarQuote && "domicilio" in paqarQuote && paqarQuote.domicilio
+          ? paqarQuote.domicilio.credit
+          : 0;
+      return Math.max(0, basePrice - credit);
     }
     return basePrice;
   }
@@ -423,12 +459,28 @@ function CheckoutInner() {
   }
 
   const selectedShipping = ALL_SHIPPING_OPTIONS.find((o) => o.id === shippingMethod);
+  // Precio a cobrar por el método elegido: en Correo ya viene con el envío
+  // gratis descontado desde el server; en moto/transporte se descuenta acá
+  // (ver getShippingPrice).
   const selectedShippingPrice = selectedShipping
     ? getShippingPrice(selectedShipping.id, selectedShipping.price)
     : 0;
-  const productFreeShipping = cartQualifiesForFreeShipping(cart);
+  const selectedShippingGross = selectedShipping
+    ? getShippingGrossPrice(selectedShipping.id, selectedShipping.price)
+    : 0;
+  const freeShippingState = cartFreeShippingState(cart);
+  // Carrito entero bonificado: gratis con cualquier método, como siempre.
+  const productFreeShipping = freeShippingState === "all";
   const shippingIsFree = productFreeShipping || !!appliedCoupon?.free_shipping;
   const shippingCost = (shippingIsFree && shippingMethod) ? 0 : selectedShippingPrice;
+  // Cuánto se bonificó sobre el envío que se está cobrando, para mostrarlo.
+  const shippingDiscount = shippingIsFree
+    ? selectedShippingGross
+    : Math.max(0, selectedShippingGross - selectedShippingPrice);
+  // Un envío en $0 puede ser "no se pudo cotizar" o "está bonificado", y los dos
+  // casos se ven igual mirando el precio final. El bruto los distingue: si el
+  // server cotizó, hay un precio antes del descuento.
+  const shippingQuoted = selectedShippingGross > 0 || shippingIsFree;
   const couponDiscount = appliedCoupon?.discount_amount || 0;
   const total = Math.max(0, subtotal - couponDiscount + shippingCost);
 
@@ -501,7 +553,13 @@ function CheckoutInner() {
         items,
         billing: formData,  // incluye dni_cuit; los endpoints lo persisten como meta _dni_cuit
         shipping_method: shippingMethod,
-        shipping_cost: shippingCost,
+        // Se manda el envío SIN bonificar: el descuento por envío gratis lo
+        // recalcula el server contra WP. Si viajara ya descontado, cualquiera
+        // podría pedir la bonificación de un producto que no la tiene.
+        shipping_cost: selectedShippingGross,
+        // Solo para detectar desvíos: si el server llega a otro número que el
+        // que vio el cliente, queda en el log.
+        shipping_cost_expected: shippingCost,
         paqar_agency_id: shippingMethod === "correo_sucursal" ? selectedAgencyId : undefined,
         customer_note: shippingNote.trim() || undefined,
         gclid: getGclid() || undefined,
@@ -605,12 +663,19 @@ function CheckoutInner() {
           )
         )}
 
-        {productFreeShipping && (
+        {freeShippingState !== "none" && (
           <div className="mb-5 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm flex items-center gap-3 text-green-800">
             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
-            <span><strong>Envío gratis incluido.</strong> Aplica a todos los métodos de envío pagos.</span>
+            {productFreeShipping ? (
+              <span><strong>Envío gratis incluido.</strong> Aplica a todos los métodos de envío pagos.</span>
+            ) : (
+              <span>
+                <strong>Tu pedido tiene envío gratis en parte.</strong> El envío de los productos bonificados
+                ya está descontado: pagás solo la diferencia por el resto.
+              </span>
+            )}
           </div>
         )}
 
@@ -741,8 +806,23 @@ function CheckoutInner() {
                         const exceedsMaxWeight = isCorreo && quoteWarning && /supera|m.ximo/i.test(quoteWarning);
                         if (exceedsMaxWeight) return null;
 
+                        const grossPrice = getShippingGrossPrice(opt.id, opt.price);
+
                         let priceLabel: React.ReactNode;
                         if (productFreeShipping) {
+                          priceLabel = <span className="text-green-600">Gratis</span>;
+                        } else if (livePrice > 0 && grossPrice > livePrice) {
+                          // Bonificado en parte: se muestra el precio tachado para
+                          // que se vea el descuento, si no parece un precio raro.
+                          priceLabel = (
+                            <span className="flex items-center gap-1.5">
+                              <span className="text-gray-400 line-through text-xs">
+                                ${grossPrice.toLocaleString("es-AR")}
+                              </span>
+                              <span className="text-green-700">${livePrice.toLocaleString("es-AR")}</span>
+                            </span>
+                          );
+                        } else if (livePrice === 0 && grossPrice > 0) {
                           priceLabel = <span className="text-green-600">Gratis</span>;
                         } else if (livePrice > 0) {
                           priceLabel = `$${livePrice.toLocaleString("es-AR")}`;
@@ -1028,6 +1108,8 @@ function CheckoutInner() {
                         ? <span className="text-green-600">Gratis</span>
                         : appliedCoupon?.free_shipping
                         ? <span className="text-green-600">Gratis (cupón)</span>
+                        : shippingCost === 0 && shippingDiscount > 0
+                        ? <span className="text-green-600">Gratis</span>
                         : shippingCost > 0
                         ? `$${shippingCost.toLocaleString("es-AR")}`
                         : selectedShipping?.id === "local_pickup"
@@ -1037,6 +1119,16 @@ function CheckoutInner() {
                         : "A cotizar"}
                     </span>
                   </div>
+                  {/* Bonificación parcial: sin esta línea el envío aparece más
+                      barato que la cotización y no se entiende por qué. */}
+                  {!shippingIsFree && shippingCost > 0 && shippingDiscount > 0 && (
+                    <div className="flex justify-between text-green-600 text-xs">
+                      <span>Envío gratis aplicado</span>
+                      <span className="font-medium">
+                        -${shippingDiscount.toLocaleString("es-AR")} sobre ${selectedShippingGross.toLocaleString("es-AR")}
+                      </span>
+                    </div>
+                  )}
                   <div className="border-t border-gray-100 pt-3 flex justify-between items-baseline">
                     <span className="font-bold text-gray-900">Total</span>
                     <span className="text-2xl font-bold text-gray-900">${total.toLocaleString("es-AR")}</span>
@@ -1065,7 +1157,7 @@ function CheckoutInner() {
                     // dirección del comprador.
                     !isValidStreetAddress(formData.address_1) ||
                     !formData.postcode.trim() ||
-                    ((shippingMethod === "correo_domicilio" || shippingMethod === "correo_sucursal") && selectedShippingPrice <= 0) ||
+                    ((shippingMethod === "correo_domicilio" || shippingMethod === "correo_sucursal") && !shippingQuoted) ||
                     (shippingMethod === "correo_sucursal" && !selectedAgencyId) ||
                     (shippingMethod === "transporte" && !shippingNote.trim())
                   }
@@ -1120,7 +1212,7 @@ function CheckoutInner() {
                   }
                   return null;
                 })()}
-                {(shippingMethod === "correo_domicilio" || shippingMethod === "correo_sucursal") && selectedShippingPrice <= 0 && !submitting && (
+                {(shippingMethod === "correo_domicilio" || shippingMethod === "correo_sucursal") && !shippingQuoted && !submitting && (
                   <p className="mt-2 text-center text-xs text-amber-600 font-medium">
                     {!formData.postcode || formData.postcode.length < 4
                       ? "Ingresá tu código postal para cotizar el envío"
@@ -1129,7 +1221,7 @@ function CheckoutInner() {
                       : "No pudimos cotizar el envío, probá otro método o contactanos"}
                   </p>
                 )}
-                {shippingMethod === "correo_sucursal" && selectedShippingPrice > 0 && !selectedAgencyId && !submitting && (
+                {shippingMethod === "correo_sucursal" && shippingQuoted && !selectedAgencyId && !submitting && (
                   <p className="mt-2 text-center text-xs text-amber-600 font-medium">
                     Elegí una sucursal de Correo Argentino para continuar
                   </p>

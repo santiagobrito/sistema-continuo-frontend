@@ -21,6 +21,15 @@ export function ProductActions({
   const [added, setAdded] = useState(false);
 
   const isVariable = product.type === "variable";
+  // El envío gratis se marca por variación: hasta que el cliente elija una, en
+  // un producto con solo algunas bonificadas no se puede prometer nada.
+  const freeShipping: "yes" | "some" | "no" = product.envio_gratis
+    ? "yes"
+    : isVariable
+      ? selectedVariation
+        ? (selectedVariation.envio_gratis ? "yes" : "no")
+        : (product.envio_gratis_parcial ? "some" : "no")
+      : "no";
   const activePrice = isVariable && selectedVariation ? Number(selectedVariation.price) : Number(product.price);
   const activeRegularPrice = isVariable && selectedVariation ? Number(selectedVariation.regular_price) : Number(product.regular_price);
   const isOnSale = isVariable && selectedVariation ? selectedVariation.on_sale : product.on_sale;
@@ -134,7 +143,7 @@ export function ProductActions({
             </>
           )}
         </div>
-        <ShippingPaymentInfo envioGratis={!!product.envio_gratis} />
+        <ShippingPaymentInfo freeShipping={freeShipping} />
       </div>
     );
   }
@@ -287,15 +296,15 @@ export function ProductActions({
         </div>
       )}
 
-      <ShippingPaymentInfo envioGratis={!!product.envio_gratis} />
+      <ShippingPaymentInfo freeShipping={freeShipping} />
     </div>
   );
 }
 
-function ShippingPaymentInfo({ envioGratis = false }: { envioGratis?: boolean }) {
+function ShippingPaymentInfo({ freeShipping = "no" }: { freeShipping?: "yes" | "some" | "no" }) {
   return (
     <div className="border border-gray-100 rounded-xl divide-y divide-gray-100 bg-white">
-      {envioGratis ? (
+      {freeShipping !== "no" ? (
         <div className="flex items-center gap-3 px-4 py-3 bg-green-50/50">
           <div className="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
             <svg className="w-4.5 h-4.5 text-green-700" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -304,8 +313,14 @@ function ShippingPaymentInfo({ envioGratis = false }: { envioGratis?: boolean })
             </svg>
           </div>
           <div>
-            <p className="text-sm font-bold text-green-800">Envío gratis a todo el país</p>
-            <p className="text-xs text-green-700/80">Si llevás solo este producto. Aplica a todos los métodos pagos.</p>
+            <p className="text-sm font-bold text-green-800">
+              {freeShipping === "some" ? "Envío gratis en opciones seleccionadas" : "Envío gratis a todo el país"}
+            </p>
+            <p className="text-xs text-green-700/80">
+              {freeShipping === "some"
+                ? "Elegí una opción para ver si tiene el envío bonificado."
+                : "Aplica a todos los métodos pagos. Si sumás otros productos, pagás solo la diferencia."}
+            </p>
           </div>
         </div>
       ) : (

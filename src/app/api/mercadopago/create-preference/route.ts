@@ -16,6 +16,7 @@ import {
   type OrderAttributionInput,
 } from "@/lib/wordpress/order-attribution";
 import { resolveCoupon, applyDiscountToItems } from "@/lib/woocommerce/coupons";
+import { computeShippingCost, splitItemsFromOrder } from "@/lib/paqar/quote-service";
 
 /**
  * Lock atómico via WP transient (Redis backend) para evitar race condition.
@@ -113,7 +114,10 @@ interface CheckoutBody {
     postcode?: string;
   };
   shipping_method?: string;
+  /** Envío SIN bonificar. El descuento por envío gratis se calcula acá. */
   shipping_cost?: number;
+  /** Lo que el checkout le mostró al cliente, solo para detectar desvíos. */
+  shipping_cost_expected?: number;
   paqar_agency_id?: string;
   customer_note?: string;
   gclid?: string;
@@ -417,6 +421,30 @@ export async function POST(request: NextRequest) {
     }
 
     // Lock atómico: previene race condition cuando el cliente apreta "Pagar" dos veces
+    // Envío gratis por producto/variación: body.shipping_cost llega SIN
+    // bonificar y el descuento se calcula acá contra WP, nunca con lo que diga
+    // el browser. Se sobrescribe antes del hash del carrito para que el pedido
+    // en WC, el cobro en MP y el anti-duplicado usen todos el mismo número.
+    const grossShipping = body.shipping_cost ?? 0;
+    if (grossShipping > 0) {
+      const { cost, credit } = await computeShippingCost({
+        items: splitItemsFromOrder(body.items),
+        destState: body.billing.state || "",
+        destZip: body.billing.postcode || "",
+        method: body.shipping_method || "",
+        grossCost: grossShipping,
+      });
+      if (
+        body.shipping_cost_expected !== undefined &&
+        body.shipping_cost_expected !== cost
+      ) {
+        console.warn(
+          `[create-preference] envío recalculado distinto al mostrado: cliente vio ${body.shipping_cost_expected}, se cobra ${cost} (bruto ${grossShipping}, crédito ${credit})`
+        );
+      }
+      body.shipping_cost = cost;
+    }
+
     // o mandan dos requests simultáneas. La key es sha256(email + cart_hash) — única por
     // intento de checkout. El lock dura 30s, suficiente para que la primera request termine.
     const cartHash = computeCartHash(body);

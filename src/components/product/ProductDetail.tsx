@@ -22,10 +22,21 @@ export function ProductDetail({
   productUrl: string;
 }) {
   const [variationImage, setVariationImage] = useState<SCImage | null>(null);
+  // El envío gratis puede estar marcado en una variación puntual, así que el
+  // cartel de arriba tiene que seguir a la opción elegida.
+  const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
   // El feed de Google Shopping lista las VARIACIONES (g:id = id de variación),
   // no el padre. Sin este view_item por variación, el remarketing dinámico no
   // puede matchear los productos variables (tintas individuales, sobre todo).
   const trackedVariations = useRef<Set<number>>(new Set());
+
+  const freeShipping: "yes" | "some" | "no" = product.envio_gratis
+    ? "yes"
+    : product.type === "variable"
+      ? selectedVariation
+        ? (selectedVariation.envio_gratis ? "yes" : "no")
+        : (product.envio_gratis_parcial ? "some" : "no")
+      : "no";
 
   useEffect(() => {
     const price = Number(product.price) || 0;
@@ -47,6 +58,7 @@ export function ProductDetail({
   }, [product.id]);
 
   function handleVariationChange(variation: ProductVariation | null) {
+    setSelectedVariation(variation);
     if (variation?.image) {
       setVariationImage(variation.image);
     } else {
@@ -96,15 +108,24 @@ export function ProductDetail({
           {product.name}
         </h1>
 
-        {product.envio_gratis && product.stock_status !== "outofstock" && (
+        {freeShipping !== "no" && product.stock_status !== "outofstock" && (
           <div className="mb-3 inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-800 rounded-lg px-3 py-2">
             <svg className="w-5 h-5 text-green-700 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
             </svg>
             <div className="text-sm">
-              <span className="font-bold">Envío gratis</span>
-              <span className="text-green-700/80"> — comprando solo este producto. Si agregás otros items al carrito, se cotiza envío del carrito completo.</span>
+              {freeShipping === "some" ? (
+                <>
+                  <span className="font-bold">Envío gratis en opciones seleccionadas</span>
+                  <span className="text-green-700/80"> — elegí una opción para ver si tiene el envío bonificado.</span>
+                </>
+              ) : (
+                <>
+                  <span className="font-bold">Envío gratis</span>
+                  <span className="text-green-700/80"> — si sumás otros productos al carrito, pagás solo la diferencia del envío.</span>
+                </>
+              )}
             </div>
           </div>
         )}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/components/cart/CartProvider";
 import { formatStorePrice } from "@/lib/utils/format";
-import { cartQualifiesForFreeShipping } from "@/lib/woocommerce/cart";
+import { cartFreeShippingState } from "@/lib/woocommerce/cart";
 
 export default function CartPage() {
   const { cart, loading, updateItem, removeItem } = useCart();
@@ -27,11 +27,11 @@ export default function CartPage() {
   }
 
   const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-  const freeShipping = cartQualifiesForFreeShipping(cart);
-  const hasFreeShippingItem = cart.items.some(
-    (i) => i.extensions?.["sistema-continuo-core"]?.envio_gratis === true
-  );
-  const lostFreeShipping = hasFreeShippingItem && !freeShipping;
+  const freeShippingState = cartFreeShippingState(cart);
+  const freeShipping = freeShippingState === "all";
+  // Bonificación parcial: el descuento exacto depende del peso, del volumen y
+  // del destino, así que el número recién aparece en el checkout.
+  const partialFreeShipping = freeShippingState === "some";
 
   return (
     <main className="bg-gray-50 min-h-screen">
@@ -47,13 +47,14 @@ export default function CartPage() {
             <p className="text-sm font-semibold">¡Tu carrito tiene envío gratis incluido!</p>
           </div>
         )}
-        {lostFreeShipping && (
-          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3 text-amber-900">
-            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z" />
+        {partialFreeShipping && (
+          <div className="mb-6 bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-start gap-3 text-green-800">
+            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
             <p className="text-sm">
-              <span className="font-semibold">Perdiste el envío gratis.</span> Para que sea gratis, dejá solo el producto marcado como envío gratis (cualquier cantidad).
+              <span className="font-semibold">Tu carrito tiene envío gratis en parte.</span> El envío de los productos
+              bonificados se descuenta en el checkout: pagás solo la diferencia por el resto.
             </p>
           </div>
         )}
@@ -139,6 +140,8 @@ export default function CartPage() {
                   <span className="text-gray-500">Envío</span>
                   {freeShipping ? (
                     <span className="text-green-700 text-xs font-semibold">Gratis</span>
+                  ) : partialFreeShipping ? (
+                    <span className="text-green-700 text-xs font-semibold">Bonificado en parte</span>
                   ) : (
                     <span className="text-gray-400 text-xs">Se calcula en checkout</span>
                   )}

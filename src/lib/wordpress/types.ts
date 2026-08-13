@@ -30,6 +30,8 @@ export interface ProductVariation {
   attributes: Record<string, string>;
   image: SCImage | null;
   weight: string;
+  /** Envío bonificado para esta variación (o para el producto entero). */
+  envio_gratis?: boolean;
 }
 
 export interface ProductAttribute {
@@ -73,6 +75,8 @@ export interface Product {
   catalog_contact_message: string;
   shipping_category: "standard" | "heavy" | "oversized" | "fragile";
   envio_gratis: boolean;
+  /** Variable con solo algunas variaciones bonificadas (el producto entero, no). */
+  envio_gratis_parcial?: boolean;
   unidad_venta: "" | "metro" | "rollo" | "par" | "juego" | "kit" | "pack" | "paquete" | "litro" | "kg";
   precio_usd: number | null;
   quantity_discounts: QuantityDiscount[];
