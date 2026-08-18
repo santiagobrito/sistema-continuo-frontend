@@ -19,6 +19,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPayment, type MPPayment } from "@/lib/mercadopago/sdk";
 import { record as debugRecord } from "@/lib/_debug-buffer";
 import crypto from "crypto";
+import { paqarClient } from "@/lib/paqar/client";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
@@ -340,16 +341,39 @@ async function triggerPaqarCreate(orderId: string, shippingMethod: string, agenc
 
 /**
  * Cuando la auto-creación falla, dejamos rastro visible:
+ *  - Meta `_sc_paqar_autocreate_failed_at`, que es lo que barre el cron
+ *    `paqar-retry-pendientes` para reintentar solo
  *  - Nota interna en la orden (visible en WP admin)
- *  - Email a admin para alertar inmediato (no esperar al reporte diario)
+ *  - Email a admin, PERO solo pidiendo acción manual cuando de verdad hace falta
+ *
+ * La distinción importa: si el que está caído es Correo Argentino, el metabox de
+ * WP admin pega contra el mismo endpoint y falla igual. Un aviso que manda a
+ * hacer algo que no puede funcionar entrena a ignorar los avisos. Incidente del
+ * 2026-08-18 (orden #18214).
  */
 async function reportPaqarFailure(orderId: string, detail: string): Promise<void> {
-  const noteText = `⚠️ [PAQ.AR] Auto-creación falló: ${detail}\nNecesita generación manual desde el panel Correo Argentino.`;
+  const proveedorCaido = await paqarClient.isProviderDown().catch(() => false);
+
+  // Marca para el reintento automático. Sin esto el cron no sabe qué órdenes
+  // debía haber creado el webhook y no puede distinguirlas de las que el equipo
+  // despacha por otro canal.
+  await markPaqarAutocreateFailed(orderId, detail).catch(() => {});
+
+  const causa = proveedorCaido
+    ? "Correo Argentino no está respondiendo (no es el pedido)"
+    : detail;
+  const noteText = proveedorCaido
+    ? `⚠️ [PAQ.AR] Auto-creación falló porque Correo Argentino no responde: ${detail}\nNO hace falta hacer nada: se reintenta solo cada 15 min.`
+    : `⚠️ [PAQ.AR] Auto-creación falló: ${detail}\nNecesita generación manual desde el panel Correo Argentino.`;
   await addOrderNote(orderId, noteText);
 
-  // Email alerta admin — usa el mismo wp_mail rooteado por Resend
-  const subject = `⚠️ PAQ.AR auto-create falló — orden #${orderId}`;
-  const body = `<p>La auto-creación de la etiqueta PAQ.AR falló para la orden <a href="https://api.sistemacontinuo.com.ar/wp-admin/post.php?post=${orderId}&action=edit"><strong>#${orderId}</strong></a>.</p><p><strong>Detalle:</strong> ${detail}</p><p>Acción: abrir el pedido en WP admin → metabox PAQ.AR → generar etiqueta manual.</p>`;
+  const subject = proveedorCaido
+    ? `⏳ PAQ.AR caído — orden #${orderId} en cola de reintento`
+    : `⚠️ PAQ.AR auto-create falló — orden #${orderId}`;
+  const accion = proveedorCaido
+    ? `<p><strong>No hay que hacer nada.</strong> El que está caído es Correo Argentino, así que generar la etiqueta a mano desde el metabox falla igual: es el mismo endpoint. El reintento automático corre cada 15 min y avisa si a las 3 h sigue sin salir.</p>`
+    : `<p>Acción: abrir el pedido en WP admin → metabox PAQ.AR → generar etiqueta manual.</p>`;
+  const body = `<p>La auto-creación de la etiqueta PAQ.AR falló para la orden <a href="https://api.sistemacontinuo.com.ar/wp-admin/post.php?post=${orderId}&action=edit"><strong>#${orderId}</strong></a>.</p><p><strong>Causa:</strong> ${causa}</p><p><strong>Detalle:</strong> ${detail}</p>${accion}`;
   // Fire and forget — el alert es nice-to-have, no bloquea el webhook
   fetch(`${WP_URL}/wp-json/sistema-continuo/v1/admin-alert`, {
     method: "POST",
@@ -359,6 +383,23 @@ async function reportPaqarFailure(orderId: string, detail: string): Promise<void
     },
     body: JSON.stringify({ subject, body }),
   }).catch(() => {});
+}
+
+/** Deja la orden en la cola del cron de reintento. */
+async function markPaqarAutocreateFailed(orderId: string, detail: string): Promise<void> {
+  await fetch(`${WP_URL}/wp-json/wc/v3/orders/${orderId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Basic ${WC_API_AUTH}`,
+    },
+    body: JSON.stringify({
+      meta_data: [
+        { key: "_sc_paqar_autocreate_failed_at", value: new Date().toISOString() },
+        { key: "_sc_paqar_autocreate_error", value: detail.slice(0, 300) },
+      ],
+    }),
+  });
 }
 
 export async function POST(request: NextRequest) {

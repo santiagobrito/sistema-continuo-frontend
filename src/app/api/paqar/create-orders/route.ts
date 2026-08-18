@@ -121,6 +121,9 @@ async function saveTrackingsToWc(
       meta_data: [
         { key: "_sc_paqar_trackings", value: JSON.stringify(trackings) },
         { key: "_sc_paqar_created_at", value: new Date().toISOString() },
+        // Sale de la cola del cron de reintento (`paqar-retry-pendientes`).
+        { key: "_sc_paqar_autocreate_failed_at", value: "" },
+        { key: "_sc_paqar_autocreate_error", value: "" },
       ],
     }),
   });
