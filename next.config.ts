@@ -98,8 +98,11 @@ const nextConfig: NextConfig = {
           // sus beacons de conversión y de listas de remarketing quedan bloqueados:
           // Google lo reporta como "Calidad de Etiqueta / Urgente" y las audiencias
           // de remarketing no se pueblan. Detectado 2026-08-05.
-          "connect-src 'self' https://api.sistemacontinuo.com.ar https://sistema-continuo-wp.a7lflv.easypanel.host https://*.mercadopago.com https://api.mercadopago.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://*.googletagmanager.com https://stats.g.doubleclick.net https://googleads.g.doubleclick.net https://*.doubleclick.net https://www.google.com https://www.google.com.ar https://www.googleadservices.com https://pagead2.googlesyndication.com https://www.facebook.com https://connect.facebook.net https://accounts.google.com https://oauth2.googleapis.com https://*.clarity.ms",
-          "frame-src 'self' https://www.youtube.com https://*.mercadopago.com https://accounts.google.com",
+          "connect-src 'self' https://api.sistemacontinuo.com.ar https://sistema-continuo-wp.a7lflv.easypanel.host https://*.mercadopago.com https://api.mercadopago.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://*.googletagmanager.com https://stats.g.doubleclick.net https://googleads.g.doubleclick.net https://*.doubleclick.net https://www.google.com https://www.google.com.ar https://www.googleadservices.com https://pagead2.googlesyndication.com https://www.facebook.com https://connect.facebook.net https://accounts.google.com https://oauth2.googleapis.com https://*.clarity.ms",
+          // frame-src: gtag.js abre un iframe a google.com para el cookie matching de
+          // Ads. Sin esto la conversion se registra igual, pero el matching no.
+          // Detectado 2026-08-18.
+          "frame-src 'self' https://www.youtube.com https://*.mercadopago.com https://accounts.google.com https://www.google.com",
           "frame-ancestors 'self'",
           "form-action 'self' https://*.mercadopago.com",
           "base-uri 'self'",
