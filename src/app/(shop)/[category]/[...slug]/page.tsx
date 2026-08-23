@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { getProduct, getCategory, getProductUrl, getSettings } from "@/lib/wordpress/api";
 import type { Metadata } from "next";
 import type { Product, Category } from "@/lib/wordpress/types";
@@ -8,6 +8,7 @@ import dynamic from "next/dynamic";
 import { ProductActions } from "@/components/product/ProductActions";
 import ProductCard from "@/components/product/ProductCard";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { queryString, shouldRedirect } from "@/lib/seo/canonical-redirect";
 import { generateProductSchema, generateBreadcrumbSchema } from "@/lib/seo/structured-data";
 import { getProductReviews } from "@/lib/wordpress/api";
 import { ProductDetail } from "@/components/product/ProductDetail";
@@ -21,6 +22,7 @@ export const revalidate = 3600;
 
 interface Props {
   params: Promise<{ category: string; slug: string[] }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 async function resolveRoute(
@@ -94,10 +96,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function CatchAllPage({ params }: Props) {
+export default async function CatchAllPage({ params, searchParams }: Props) {
   const { category, slug } = await params;
   const resolved = await resolveRoute(category, slug);
   if (!resolved) notFound();
+
+  // `resolveRoute` mira solo el último segmento, así que cualquier prefijo llega
+  // hasta acá con un 200. Si la ruta pedida no es la canónica, se redirige.
+  const requested = `/${[category, ...slug].join("/")}`;
+  const isProduct = resolved.type === "product";
+  const canonical = isProduct
+    ? getProductUrl(resolved.data as Product)
+    : `/${(resolved.data as Category).path}`;
+  if (shouldRedirect(requested, canonical, isProduct ? 2 : 1)) {
+    permanentRedirect(`${canonical}${queryString(await searchParams)}`);
+  }
 
   if (resolved.type === "category") {
     return <SubcategoryView category={resolved.data as Category} parentSlug={category} />;

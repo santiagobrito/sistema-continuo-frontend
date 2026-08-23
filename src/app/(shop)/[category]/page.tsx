@@ -1,9 +1,10 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { getCategory, getCategories, getCategoryUrl } from "@/lib/wordpress/api";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FilterSidebar } from "@/components/shop/FilterSidebar";
 import ProductCard from "@/components/product/ProductCard";
+import { queryString } from "@/lib/seo/canonical-redirect";
 
 export const revalidate = 3600;
 
@@ -21,7 +22,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: (category.seo_title && category.seo_title.includes("Sistema Continuo")) ? { absolute: category.seo_title } : (category.seo_title || `${category.name} — Comprar Online`),
       description: desc,
-      alternates: { canonical: `${siteUrl}/${slug}` },
+      // La canónica es la ruta COMPLETA, no el slug suelto: una subcategoría es
+      // alcanzable en los dos sitios (/matte y /papel/matte) y con `slug` cada una
+      // se declaraba canónica de sí misma, o sea duplicado sin resolver.
+      alternates: { canonical: `${siteUrl}/${category.path}` },
       openGraph: {
         title: `${category.name} — Sistema Continuo`,
         description: desc,
@@ -45,7 +49,8 @@ export async function generateStaticParams() {
 
 export default async function CategoryPage({ params, searchParams }: Props) {
   const { category: slug } = await params;
-  const { page = "1", orderby = "popularity", order = "DESC", brand, in_stock, on_sale } = await searchParams;
+  const sp = await searchParams;
+  const { page = "1", orderby = "popularity", order = "DESC", brand, in_stock, on_sale } = sp;
 
   let category;
   try {
@@ -57,6 +62,12 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     });
   } catch {
     notFound();
+  }
+
+  // Una subcategoría servida desde la raíz (/matte en vez de /papel/matte) es la
+  // misma página en otra URL. Se manda a la canónica en vez de responder 200.
+  if (category.path && category.path !== slug) {
+    permanentRedirect(`/${category.path}${queryString(sp)}`);
   }
 
   const allProducts = category.products?.data ?? [];

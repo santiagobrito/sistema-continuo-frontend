@@ -24,8 +24,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const data = await getSitemapData();
 
+    // Las rutas vienen resueltas por el backend (SC_Product_Helper), que es el mismo
+    // que emite el <link rel="canonical">. No reconstruirlas acá: hacerlo dejó 427 de
+    // las 721 URLs del sitemap apuntando a páginas que declaraban otra canónica, y las
+    // 427 buenas fuera del sitemap (auditoría 2026-08-23).
     for (const cat of data.categories) {
-      const path = cat.parent ? `${cat.parent}/${cat.slug}` : cat.slug;
+      // Fallback plugin < 1.9.20: `parent` solo cubre un nivel de anidamiento.
+      const path = cat.path || (cat.parent ? `${cat.parent}/${cat.slug}` : cat.slug);
       entries.push({
         url: `${SITE_URL}/${path}`,
         changeFrequency: "weekly",
@@ -34,11 +39,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
 
     for (const product of data.products) {
-      const catPath = product.categories.length > 0
-        ? product.categories.join("/")
-        : "productos";
+      // Fallback plugin < 1.9.20: `categories` llega sin jerarquía ni orden estable.
+      const path = product.url
+        || `/${product.categories.length > 0 ? product.categories.join("/") : "productos"}/${product.slug}`;
       entries.push({
-        url: `${SITE_URL}/${catPath}/${product.slug}`,
+        url: `${SITE_URL}${path}`,
         lastModified: new Date(product.modified),
         changeFrequency: "weekly",
         priority: 0.6,

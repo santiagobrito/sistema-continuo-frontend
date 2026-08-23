@@ -203,8 +203,11 @@ export interface CategoriesResponse {
 }
 
 export interface SitemapData {
-  products: { slug: string; modified: string; categories: string[] }[];
-  categories: { slug: string; parent: string | null; count: number }[];
+  // `url` y `path` son la ruta canónica ya resuelta por el backend
+  // (SC_Product_Helper). Opcionales solo por compatibilidad con plugin < 1.9.20:
+  // cuando faltan, el sitemap cae a una reconstrucción aproximada.
+  products: { slug: string; modified: string; categories: string[]; url?: string }[];
+  categories: { slug: string; parent: string | null; count: number; path?: string }[];
   blog: { slug: string; modified: string }[];
 }
 
