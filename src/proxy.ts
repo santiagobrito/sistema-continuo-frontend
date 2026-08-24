@@ -20,12 +20,21 @@ const CATEGORY_REDIRECTS: Record<string, string> = {
 };
 
 // Old WP URL patterns
+//
+// OJO con lo que NO está aquí: `/product/{slug}` y `/producto-cat/{slug}`
+// tenían una regla `-> /$1` escrita cuando el frontend servía los productos en
+// `/{slug}`. Al pasar las fichas a `/{categoria}/{slug}` esa regla quedó
+// apuntando a rutas que ya no existen, o sea 301 hacia un 404: era el origen de
+// buena parte de las URLs "No se ha encontrado" de Search Console, incluidas las
+// del subdominio `api.` (que redirige al frontend conservando el path).
+// Se quitó a propósito: sin regla, esas rutas caen en el catch-all del catálogo
+// (`(shop)/[category]/[...slug]`), que resuelve por el último segmento y manda
+// 308 a la canónica de verdad. El middleware no conoce la categoría; el router sí.
 const OLD_URL_PATTERNS = [
-  { match: /^\/(?:producto|product)\/([^/]+)\/?$/, redirect: "/$1" },
-  { match: /^\/producto-cat\/([^/]+)\/?$/, redirect: "/$1" },
   { match: /^\/cart\/?$/, redirect: "/carrito" },
   { match: /^\/contactanos\/?$/, redirect: "/contacto" },
-  { match: /^\/preguntas-frecuentes\/?$/, redirect: "/faq" },
+  // `/faq` nunca existió en este frontend: la regla vieja mandaba a un 404.
+  { match: /^\/preguntas-frecuentes\/?$/, redirect: "/como-comprar" },
 ];
 
 export function proxy(request: NextRequest) {

@@ -1,16 +1,37 @@
 import { notFound, permanentRedirect } from "next/navigation";
-import { getCategory, getCategories, getCategoryUrl } from "@/lib/wordpress/api";
+import { getCategory, getCategories, getCategoryUrl, getProduct, getProductUrl } from "@/lib/wordpress/api";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FilterSidebar } from "@/components/shop/FilterSidebar";
 import ProductCard from "@/components/product/ProductCard";
-import { queryString } from "@/lib/seo/canonical-redirect";
+import { queryString, shouldRedirect } from "@/lib/seo/canonical-redirect";
 
 export const revalidate = 3600;
 
 interface Props {
   params: Promise<{ category: string }>;
   searchParams: Promise<{ page?: string; orderby?: string; order?: string; brand?: string; in_stock?: string; on_sale?: string }>;
+}
+
+/**
+ * Un slug suelto (`/tinta-epson-544`) no es una categoría, pero sí era la URL de
+ * un producto en la web anterior a que las fichas colgaran de su categoría.
+ * Google las sigue pidiendo y respondían 404, tirando la señal de esos enlaces.
+ *
+ * Devuelve la canónica del producto si el slug corresponde a uno, o null.
+ * El redirect se dispara fuera: `permanentRedirect` lanza y un try lo tragaría.
+ */
+async function legacyProductPath(slug: string): Promise<string | null> {
+  try {
+    const product = await getProduct(slug);
+    if (!product) return null;
+    const canonical = getProductUrl(product);
+    // Un producto sin categorías canoniza a `/{slug}`, que es esta misma ruta:
+    // redirigir ahí sería un bucle. La guardia de 2 segmentos lo corta.
+    return shouldRedirect(`/${slug}`, canonical, 2) ? canonical : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -32,7 +53,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     };
   } catch {
-    return { title: "Categoria no encontrada" };
+    // Puede ser el slug de un producto de la web vieja: el render de abajo lo
+    // manda 301 a su canónica, así que aquí no hay metadata que emitir.
+    return { title: "Categoria no encontrada", robots: { index: false } };
   }
 }
 
@@ -61,6 +84,8 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       order,
     });
   } catch {
+    const productPath = await legacyProductPath(slug);
+    if (productPath) permanentRedirect(`${productPath}${queryString(sp)}`);
     notFound();
   }
 
