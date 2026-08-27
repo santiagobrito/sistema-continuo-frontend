@@ -35,6 +35,7 @@ async function fetchWcOrderStatus(orderId: string): Promise<string | null> {
 
 interface WcOrderSlim {
   status: string;
+  order_key?: string;
   total: string;
   shipping_total?: string;
   line_items: { product_id: number; variation_id?: number; quantity: number; total: string; name: string }[];
@@ -159,9 +160,27 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
             </div>
 
             <div className="bg-amber-50 border-l-4 border-amber-400 rounded-lg p-4 text-left mb-6">
+              {orderFull?.order_key && (
+                <>
+                  <p className="text-sm text-amber-900 mb-3">
+                    <strong>Pagá ahora y subí el comprobante.</strong> Tu pedido ya tiene el stock y el
+                    precio tomados, y sin el comprobante no podemos confirmarlo. En la página de tu
+                    pedido tenés el CBU para copiar, la subida del comprobante y el estado al día.
+                  </p>
+                  <a
+                    href={`/pedido/${orderFull.order_key}`}
+                    className="inline-flex items-center justify-center gap-2 bg-[#013d5a] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#012c42] transition-colors mb-4"
+                  >
+                    Ir a mi pedido y subir el comprobante
+                  </a>
+                  <p className="text-xs text-amber-800 mb-3">
+                    Guardá este enlace: te lo mandamos también por email.
+                  </p>
+                </>
+              )}
               <p className="text-sm text-amber-900 mb-3">
-                <strong>Importante:</strong> Una vez hecha la transferencia, envianos el comprobante por WhatsApp al
-                {" "}<strong>+54 9 11 3346-6497</strong> con el número de pedido <strong>#{order}</strong>. Sin el comprobante no podemos confirmar tu pedido.
+                ¿Preferís mandarlo por WhatsApp? Escribinos al
+                {" "}<strong>+54 9 11 3346-6497</strong> con el número de pedido <strong>#{order}</strong>.
               </p>
               <a
                 href={`https://wa.me/5491133466497?text=${encodeURIComponent(

@@ -10,6 +10,8 @@ interface WcOrder {
   id: number;
   number: string;
   status: string;
+  order_key?: string;
+  payment_method?: string;
   date_created: string;
   total: string;
   line_items: Array<{ id: number; name: string; quantity: number; total: string }>;
@@ -141,6 +143,22 @@ export default function PedidoDetallePage({
               {order.status}
             </span>
           </div>
+
+          {order.status === "on-hold" && order.payment_method === "transferencia" && order.order_key && (
+            <div className="rounded-xl border-2 border-[#013d5a] bg-[#f8fafc] p-4 mb-4">
+              <p className="font-bold text-gray-900">Este pedido está esperando tu pago</p>
+              <p className="text-sm text-gray-600 mt-1 mb-3">
+                Tiene el stock y el precio tomados. Pagá y subí el comprobante para que lo
+                confirmemos, o cambiá a MercadoPago y se acredita al instante.
+              </p>
+              <Link
+                href={`/pedido/${order.order_key}`}
+                className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-semibold bg-[#013d5a] text-white hover:bg-[#012c42] transition-colors"
+              >
+                Pagar o subir comprobante
+              </Link>
+            </div>
+          )}
 
           <div className="divide-y divide-gray-50 border-t border-b border-gray-100">
             {order.line_items.map((li) => (
