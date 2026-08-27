@@ -43,8 +43,8 @@ interface Profile {
 }
 
 const PROVINCIAS = [
-  { code: "C", name: "CABA" },
-  { code: "B", name: "Buenos Aires" },
+  { code: "C", name: "Buenos Aires (CABA / Capital Federal)" },
+  { code: "B", name: "Buenos Aires (Provincia / GBA)" },
   { code: "K", name: "Catamarca" }, { code: "H", name: "Chaco" },
   { code: "U", name: "Chubut" }, { code: "X", name: "Córdoba" },
   { code: "W", name: "Corrientes" }, { code: "E", name: "Entre Ríos" },

@@ -12,6 +12,7 @@ import { getGclid } from "@/components/analytics/GclidCapture";
 import { getAttribution } from "@/components/analytics/AttributionCapture";
 import { fbPixelTrack } from "@/lib/fbpixel/client";
 import { trackBeginCheckout } from "@/lib/analytics/gtm";
+import { cpJurisdiction } from "@/lib/paqar/zone-resolver";
 
 // All shipping options with zone restrictions and descriptions.
 // Orden: opciones a domicilio/sucursal primero (mayor uso), retiro y transporte al final.
@@ -82,9 +83,14 @@ const ALL_SHIPPING_OPTIONS = [
   },
 ];
 
+// El <select> nativo salta a la opción que EMPIEZA con lo que se tipea, así que
+// las dos jurisdicciones porteñas arrancan con "Buenos Aires": quedan juntas al
+// tope de la lista y aparecen las dos al escribir "Buenos". Antes la de Capital
+// se llamaba solo "CABA" y quien buscaba "Buenos Aires" o "Capital" no la veía.
+// El `value` sigue siendo el código ISO, así que esto no cambia nada aguas abajo.
 const PROVINCIAS = [
-  { code: "C", name: "CABA", zone: "caba" },
-  { code: "B", name: "Buenos Aires", zone: "gba" },
+  { code: "C", name: "Buenos Aires (CABA / Capital Federal)", zone: "caba" },
+  { code: "B", name: "Buenos Aires (Provincia / GBA)", zone: "gba" },
   { code: "K", name: "Catamarca", zone: "interior" }, { code: "H", name: "Chaco", zone: "interior" },
   { code: "U", name: "Chubut", zone: "interior" }, { code: "X", name: "Córdoba", zone: "interior" },
   { code: "W", name: "Corrientes", zone: "interior" }, { code: "E", name: "Entre Ríos", zone: "interior" },
@@ -393,15 +399,32 @@ function CheckoutInner() {
     const province = formData.state;
     if (!province) return [];
 
+    // Red de seguridad: el código postal manda sobre la provincia elegida. Un
+    // porteño que pone "Buenos Aires" se quedaba sin la moto CABA y le aparecían
+    // las de GBA, más caras y que no le corresponden. Esto SUMA opciones, nunca
+    // las quita: lo que hoy aparece sigue apareciendo.
+    const byCp = cpJurisdiction(formData.postcode);
+
     return ALL_SHIPPING_OPTIONS.filter((opt) => {
       const isCorreo = opt.id === "correo_domicilio" || opt.id === "correo_sucursal";
       if (isCorreo && hasZeroWeightItem) return false;
       if (opt.zones.includes("all")) return true;
       if (opt.zones.includes(province)) return true;
+      if (byCp && opt.zones.includes(byCp)) return true;
       if (opt.zones.includes("interior") && province !== "C") return true;
       return false;
     });
-  }, [formData.state, hasZeroWeightItem, paymentMethod]);
+  }, [formData.state, formData.postcode, hasZeroWeightItem, paymentMethod]);
+
+  // ¿La provincia elegida no coincide con lo que dice el código postal?
+  const cpMismatch = useMemo(() => {
+    const byCp = cpJurisdiction(formData.postcode);
+    if (!byCp || !formData.state) return null;
+    if (byCp === formData.state) return null;
+    if (byCp !== "C" && byCp !== "B") return null;
+    if (formData.state !== "C" && formData.state !== "B") return null;
+    return byCp === "C" ? "caba" : "gba";
+  }, [formData.postcode, formData.state]);
 
   // Auto-select first available shipping when province or payment method changes.
   // Si el usuario tenía elegido correo y cambia a efectivo, forzamos local_pickup.
@@ -751,7 +774,15 @@ function CheckoutInner() {
                   </div>
                 )}
 
-                {/* Shipping methods — filtered by province */}
+                {cpMismatch && (
+                  <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+                    {cpMismatch === "caba"
+                      ? <>Tu código postal es de <strong>Capital Federal</strong>. Te dejamos también las opciones de envío de CABA, que suelen ser más baratas. Si vivís en Capital, elegí <strong>Buenos Aires (CABA / Capital Federal)</strong> arriba.</>
+                      : <>Tu código postal es del <strong>Gran Buenos Aires</strong>, no de Capital. Te dejamos también las opciones de GBA. Si vivís en provincia, elegí <strong>Buenos Aires (Provincia / GBA)</strong> arriba.</>}
+                  </div>
+                )}
+
+                {/* Shipping methods — filtered by province + código postal */}
                 {formData.state ? (
                   <>
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">

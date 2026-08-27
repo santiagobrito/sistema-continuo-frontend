@@ -33,6 +33,27 @@ function isAmba(cp: string): boolean {
   return AMBA_EXTRA_CPS.has(normalized);
 }
 
+/**
+ * Jurisdicción real según el código postal, para no depender de que el cliente
+ * elija bien la provincia en el desplegable.
+ *
+ * CABA son los CP 1000-1499. El resto de AMBA es provincia de Buenos Aires.
+ * Para el interior devuelve null: ahí la provincia elegida es el único dato y
+ * no hay nada que corregir.
+ *
+ * Lo usa el checkout para mostrar las opciones de envío que corresponden al CP
+ * aunque la provincia elegida diga otra cosa. Reportado por Gabriel (equipo SC)
+ * el 25-ago-2026: gente de Capital elegía "Buenos Aires" y se quedaba sin la
+ * opción de moto CABA.
+ */
+export function cpJurisdiction(cp: string): "C" | "B" | null {
+  const n = numericCp(cp);
+  if (isNaN(n)) return null;
+  if (n >= 1000 && n <= 1499) return "C";
+  if (isAmba(cp)) return "B";
+  return null;
+}
+
 function sameCp(originCp: string, destCp: string): boolean {
   const a = originCp.replace(/\D/g, "").slice(0, 4);
   const b = destCp.replace(/\D/g, "").slice(0, 4);
