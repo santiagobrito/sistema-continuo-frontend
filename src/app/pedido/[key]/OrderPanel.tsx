@@ -63,19 +63,6 @@ function CopyRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-/** Cuánto falta para que el pedido se cancele solo. */
-function remaining(expiresAt: string): string {
-  const ms = new Date(expiresAt).getTime() - Date.now();
-  if (ms <= 0) return "";
-  const h = Math.floor(ms / 3_600_000);
-  if (h >= 24) {
-    const d = Math.floor(h / 24);
-    return d === 1 ? "1 día" : `${d} días`;
-  }
-  if (h >= 1) return h === 1 ? "1 hora" : `${h} horas`;
-  return `${Math.max(1, Math.floor(ms / 60_000))} minutos`;
-}
-
 export function OrderPanel({ orderKey }: { orderKey: string }) {
   const [data, setData] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -157,6 +144,8 @@ export function OrderPanel({ orderKey }: { orderKey: string }) {
   const paid = !data.awaiting_payment;
   const proofPending = data.proof.uploaded && data.proof.status !== "rejected";
   const isTransfer = data.payment_method === "transferencia";
+  // Un pedido de MercadoPago sin pagar también puede transferirse: quien abandonó
+  // el pago con tarjeta se quedaba sin ninguna salida y el pedido moría solo.
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-10">
@@ -186,10 +175,8 @@ export function OrderPanel({ orderKey }: { orderKey: string }) {
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 mb-6">
           <div className="font-bold text-amber-900 text-lg">Esperando tu pago</div>
           <p className="text-sm text-amber-900 mt-1">
-            Tu pedido ya tiene el stock y el precio tomados.
-            {data.deadline && !data.deadline.expired && remaining(data.deadline.expires_at) && (
-              <> Los guardamos <strong>{remaining(data.deadline.expires_at)}</strong> más; pasado ese plazo el pedido se cancela solo.</>
-            )}
+            El stock y el precio te quedan tomados <strong>mientras esperamos el pago</strong>, no
+            más. Pagalo ahora y lo despachamos en 24-48 hs.
           </p>
         </div>
       )}
@@ -208,11 +195,19 @@ export function OrderPanel({ orderKey }: { orderKey: string }) {
         </div>
       </div>
 
-      {!paid && isTransfer && (
+      {!paid && (
         <>
           {/* Datos bancarios */}
           <div className="rounded-2xl border border-gray-200 p-5 mb-6">
-            <h2 className="font-bold text-gray-900 mb-2">Transferí a esta cuenta</h2>
+            <h2 className="font-bold text-gray-900 mb-2">
+              {isTransfer ? "Transferí a esta cuenta" : "Pagalo por transferencia"}
+            </h2>
+            {!isTransfer && (
+              <p className="text-sm text-gray-600 mb-3">
+                Elegiste MercadoPago y todavía no está pago. Si preferís, transferí a esta cuenta y
+                subí el comprobante: es la forma más rápida de que salga tu pedido.
+              </p>
+            )}
             <CopyRow label="CBU" value={data.bank.cbu} />
             <CopyRow label="Alias" value={data.bank.alias} />
             <CopyRow label="CUIT" value={data.bank.cuit} />
@@ -286,20 +281,12 @@ export function OrderPanel({ orderKey }: { orderKey: string }) {
               el movimiento bancario.
             </p>
 
-            <a
-              href={`https://wa.me/${data.bank.whatsapp}?text=${encodeURIComponent(
-                `Hola! Te paso el comprobante de mi transferencia.\nPedido #${data.number}`,
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block text-sm text-green-700 font-semibold mt-4"
-            >
-              ¿Preferís mandarlo por WhatsApp?
-            </a>
+            {/* Sin CTA de WhatsApp para el comprobante: por ahí alguien tiene que
+                cruzarlo a mano contra el pedido. El WhatsApp queda para consultas. */}
           </div>
 
           {/* Cambio de medio de pago */}
-          {!proofPending && (
+          {!proofPending && isTransfer && (
             <div className="rounded-2xl border border-gray-200 p-5 mb-6">
               <h2 className="font-bold text-gray-900">¿Preferís pagar con tarjeta?</h2>
               <p className="text-sm text-gray-600 mt-1 mb-4">

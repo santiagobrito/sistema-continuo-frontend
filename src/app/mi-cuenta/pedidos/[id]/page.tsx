@@ -32,6 +32,20 @@ interface TrackingBundle {
   event: TrackingEvent[];
 }
 
+// El cliente no tiene por qué leer "on-hold" ni "processing" en su pedido.
+const STATUS_LABELS: Record<string, string> = {
+  pending: "Esperando pago",
+  "on-hold": "Esperando pago",
+  processing: "En preparación",
+  preparing: "En preparación",
+  shipped: "Enviado",
+  "at-branch": "En sucursal",
+  completed: "Entregado",
+  cancelled: "Cancelado",
+  refunded: "Reintegrado",
+  failed: "Pago fallido",
+};
+
 function getMeta(order: WcOrder | null, key: string): string | undefined {
   return order?.meta_data?.find((m) => m.key === key)?.value;
 }
@@ -124,6 +138,12 @@ export default function PedidoDetallePage({
 
   const paqarAgency = getMeta(order, "_sc_paqar_agency_id");
 
+  // La meta viaja en la orden (la API no filtra campos). Un comprobante rechazado
+  // vuelve a contar como "falta pagar".
+  const proofUploaded =
+    !!getMeta(order, "_sc_payment_proof_at") &&
+    getMeta(order, "_sc_payment_proof_status") !== "rejected";
+
   return (
     <main className="bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -140,24 +160,38 @@ export default function PedidoDetallePage({
               </p>
             </div>
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
-              {order.status}
+              {STATUS_LABELS[order.status] ?? order.status}
             </span>
           </div>
 
-          {order.status === "on-hold" && order.payment_method === "transferencia" && order.order_key && (
-            <div className="rounded-xl border-2 border-[#013d5a] bg-[#f8fafc] p-4 mb-4">
-              <p className="font-bold text-gray-900">Este pedido está esperando tu pago</p>
-              <p className="text-sm text-gray-600 mt-1 mb-3">
-                Tiene el stock y el precio tomados. Pagá y subí el comprobante para que lo
-                confirmemos, o cambiá a MercadoPago y se acredita al instante.
-              </p>
-              <Link
-                href={`/pedido/${order.order_key}`}
-                className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-semibold bg-[#013d5a] text-white hover:bg-[#012c42] transition-colors"
-              >
-                Pagar o subir comprobante
-              </Link>
-            </div>
+          {(order.status === "on-hold" || order.status === "pending") && order.order_key && (
+            proofUploaded ? (
+              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-4">
+                <p className="font-bold text-blue-900">Recibimos tu comprobante</p>
+                <p className="text-sm text-blue-800 mt-1 mb-3">
+                  Lo estamos verificando contra el movimiento bancario. Es a mano, así que puede
+                  tardar unas horas hábiles. No hace falta que hagas nada más, y tu pedido no se
+                  cancela mientras lo revisamos.
+                </p>
+                <Link href={`/pedido/${order.order_key}`} className="text-sm font-semibold text-[#013d5a]">
+                  Ver el estado de mi pedido
+                </Link>
+              </div>
+            ) : (
+              <div className="rounded-xl border-2 border-[#013d5a] bg-[#f8fafc] p-4 mb-4">
+                <p className="font-bold text-gray-900">Este pedido está esperando tu pago</p>
+                <p className="text-sm text-gray-600 mt-1 mb-3">
+                  El stock y el precio te quedan tomados mientras esperamos el pago. Pagá y subí el
+                  comprobante para que lo confirmemos.
+                </p>
+                <Link
+                  href={`/pedido/${order.order_key}`}
+                  className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl font-semibold bg-[#013d5a] text-white hover:bg-[#012c42] transition-colors"
+                >
+                  Pagar o subir comprobante
+                </Link>
+              </div>
+            )
           )}
 
           <div className="divide-y divide-gray-50 border-t border-b border-gray-100">
