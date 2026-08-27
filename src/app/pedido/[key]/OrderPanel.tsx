@@ -22,6 +22,7 @@ interface OrderData {
   items: Array<{ name: string; quantity: number; total: number }>;
   awaiting_payment: boolean;
   proof: { uploaded: boolean; uploaded_at: string | null; count: number; status: string };
+  // (los archivos no se exponen acá a propósito: el comprobante solo lo ve administración)
   deadline: { hours: number; expires_at: string; expired: boolean } | null;
   bank: {
     bank: string; holder: string; cuit: string; cbu: string;
@@ -225,11 +226,35 @@ export function OrderPanel({ orderKey }: { orderKey: string }) {
             <h2 className="font-bold text-gray-900 text-lg">
               {data.proof.uploaded ? "Tu comprobante" : "Pagá y subí el comprobante"}
             </h2>
-            <p className="text-sm text-gray-600 mt-1 mb-4">
-              {data.proof.uploaded
-                ? `Recibimos ${data.proof.count} ${data.proof.count === 1 ? "archivo" : "archivos"}. Podés sumar otro si te falta alguno.`
-                : "Sacale una foto o subí el PDF. Es lo que nos permite confirmar tu pedido."}
-            </p>
+
+            {/* Confirmación junto al botón, no arriba de la página. El primer
+                comprobante real llegó dos veces con 10 segundos de diferencia:
+                el cliente no vio que hubiera pasado nada y volvió a apretar. */}
+            {data.proof.uploaded ? (
+              <div className="mt-3 mb-4 rounded-xl bg-green-50 border border-green-200 p-4">
+                <div className="flex items-start gap-2">
+                  <svg className="w-5 h-5 text-green-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  <div>
+                    <p className="font-bold text-green-900">
+                      Listo, recibimos tu comprobante
+                    </p>
+                    <p className="text-sm text-green-800 mt-0.5">
+                      {data.proof.count === 1
+                        ? "Nos llegó 1 archivo"
+                        : `Nos llegaron ${data.proof.count} archivos`}
+                      {data.proof.uploaded_at && ` a las ${new Date(data.proof.uploaded_at).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}`}
+                      . No hace falta que lo mandes de nuevo.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-600 mt-1 mb-4">
+                Sacale una foto o subí el PDF. Es lo que nos permite confirmar tu pedido.
+              </p>
+            )}
 
             <input
               ref={fileInput}
@@ -244,10 +269,14 @@ export function OrderPanel({ orderKey }: { orderKey: string }) {
             <label
               htmlFor="proof-input"
               className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold cursor-pointer transition-colors ${
-                uploading ? "bg-gray-200 text-gray-500" : "bg-[#013d5a] text-white hover:bg-[#012c42]"
+                uploading
+                  ? "bg-gray-200 text-gray-500"
+                  : data.proof.uploaded
+                    ? "border-2 border-gray-300 text-gray-700 hover:bg-gray-50"
+                    : "bg-[#013d5a] text-white hover:bg-[#012c42]"
               }`}
             >
-              {uploading ? "Subiendo…" : data.proof.uploaded ? "Subir otro archivo" : "Subir comprobante"}
+              {uploading ? "Subiendo…" : data.proof.uploaded ? "Agregar otro archivo" : "Subir comprobante"}
             </label>
 
             {uploadError && <p className="text-sm text-red-600 mt-3">{uploadError}</p>}
