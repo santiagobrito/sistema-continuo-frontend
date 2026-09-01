@@ -197,7 +197,19 @@ export const RATES_GRID: Record<PaqarRatesService, Record<PaqarRatesMode, ZoneRa
 };
 
 /**
- * Busca el precio sin IVA para un peso dado.
+ * Recargo temporal del 5% anunciado por Correo Argentino, aplicado el
+ * 2026-09-01 a pedido de Gustavo mientras CA no publique el tarifario de
+ * septiembre. Se aplica sobre la tarifa ya buscada en la grilla, ANTES del
+ * IVA, así la grilla sigue siendo la copia fiel del tarifario 2026-06-01.
+ * Al llegar la lista real de septiembre: actualizar la grilla (bump
+ * RATES_GRID_VERSION) y volver esta constante a 1.
+ * Espejo en el plugin WP: `SC_Feeds::TEMP_RATE_SURCHARGE` (class-feeds.php) —
+ * los dos se cambian juntos o Google anuncia un envío distinto al que se cobra.
+ */
+export const TEMP_RATE_SURCHARGE = 1.05;
+
+/**
+ * Busca el precio sin IVA para un peso dado (con TEMP_RATE_SURCHARGE aplicado).
  * Si el peso excede el bracket máximo (50kg), devuelve null.
  */
 export function lookupPrice(
@@ -209,7 +221,7 @@ export function lookupPrice(
   const kg = weightGrams / 1000;
   const brackets = RATES_GRID[service][mode][zone];
   for (const b of brackets) {
-    if (kg <= b.maxKg) return b.price;
+    if (kg <= b.maxKg) return b.price * TEMP_RATE_SURCHARGE;
   }
   return null;
 }
