@@ -22,8 +22,12 @@ export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
   const redirect = request.nextUrl.searchParams.get("redirect") || "/mi-cuenta";
 
-  // Safety: solo redirigir a paths relativos del propio sitio
-  const safeRedirect = redirect.startsWith("/") ? redirect : "/mi-cuenta";
+  // Safety: solo paths relativos del propio sitio. Ojo con "//evil.com": empieza
+  // con "/" pero new URL() lo resuelve como protocol-relative y sale del dominio.
+  const safeRedirect =
+    redirect.startsWith("/") && !redirect.startsWith("//") && !redirect.startsWith("/\\")
+      ? redirect
+      : "/mi-cuenta";
 
   if (!token || !/^[a-f0-9]{64}$/.test(token)) {
     return NextResponse.redirect(new URL("/iniciar-sesion?error=invalid_link", SITE_URL));

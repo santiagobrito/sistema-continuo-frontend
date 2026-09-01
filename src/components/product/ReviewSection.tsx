@@ -54,7 +54,7 @@ interface Props {
 }
 
 export function ReviewSection({ reviews, totalReviews, averageRating, productSlug }: Props) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({ rating: 5, content: "" });
   const [submitting, setSubmitting] = useState(false);
@@ -73,6 +73,10 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const loginCtaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Intención de reseñar que llega en la URL (?review=1). Se guarda en refs porque
+  // hay que consumirla DESPUÉS de saber si hay sesión, y el query param se limpia antes.
+  const reviewIntentRef = useRef<boolean | null>(null);
+  const reviewHandledRef = useRef(false);
 
   // Liberar los object URLs de las previews al desmontar.
   useEffect(() => {
@@ -174,9 +178,26 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
   }, []);
 
   // Desde email post-compra (?review=1): scroll + abrir form + focus + highlight.
+  //
+  // `user` se resuelve con un fetch a /api/auth/me, así que en el primer render
+  // siempre es null. Hay que esperar a `authLoading === false` antes de decidir si
+  // se muestra el formulario o el CTA de login: si no, al que viene del magic-link
+  // (que YA tiene sesión) se le resalta "iniciá sesión" y el formulario no se abre.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("review") !== "1") return;
+    // La intención se lee y se consume una sola vez, antes de limpiar la URL.
+    if (reviewIntentRef.current === null) {
+      const params = new URLSearchParams(window.location.search);
+      reviewIntentRef.current = params.get("review") === "1";
+      if (reviewIntentRef.current) {
+        // Limpiar el query param para que un refresco no re-dispare el efecto.
+        const url = new URL(window.location.href);
+        url.searchParams.delete("review");
+        window.history.replaceState({}, "", url.toString());
+      }
+    }
+
+    if (!reviewIntentRef.current || reviewHandledRef.current || authLoading) return;
+    reviewHandledRef.current = true;
 
     if (user) {
       setShowForm(true);
@@ -192,13 +213,8 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
       setTimeout(() => setHighlight(false), 2400);
     }, 120);
 
-    // Limpiar query param para que refrescos no re-disparen el efecto.
-    const url = new URL(window.location.href);
-    url.searchParams.delete("review");
-    window.history.replaceState({}, "", url.toString());
-
     return () => clearTimeout(t);
-  }, [user]);
+  }, [user, authLoading]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
