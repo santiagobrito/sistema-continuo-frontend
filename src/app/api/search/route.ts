@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchProducts } from "@/lib/search/products";
 import { stripAccents, normalizeDimensions } from "@/lib/search/synonyms";
+import { isCatalogProduct } from "@/lib/wordpress/types";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const API_BASE = `${WP_URL}/wp-json/sistema-continuo/v1`;
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
         image: p.images?.[0]?.url || null,
         marca: p.marca || "",
         categories: cats.map((c) => ({ name: c.name, slug: c.slug, path: c.path })),
-        is_catalog: !p.price && !p.purchasable,
+        is_catalog: isCatalogProduct(p),
         url: deepest ? `/${deepest.path}/${p.slug}` : `/${p.slug}`,
         unidad_venta: p.unidad_venta || "",
         envio_gratis: !!p.envio_gratis,

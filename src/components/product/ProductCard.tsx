@@ -13,7 +13,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatPrice } from "@/lib/utils/format";
 import { getActiveCampaign, getProductUrl } from "@/lib/wordpress/api";
-import type { Product } from "@/lib/wordpress/types";
+import { isCatalogProduct, type Product } from "@/lib/wordpress/types";
 
 interface ProductCardProps {
   product: Product;
@@ -21,10 +21,6 @@ interface ProductCardProps {
   hideBrand?: boolean;
   /** Si es true, oculta el badge "Sin stock" (útil en listados que ya filtran/ordenan por stock). */
   hideOutOfStockBadge?: boolean;
-}
-
-function isCatalogOnly(p: Product): boolean {
-  return Boolean((p as Product & { is_catalog_only?: boolean }).is_catalog_only);
 }
 
 export default async function ProductCard({ product, hideBrand, hideOutOfStockBadge }: ProductCardProps) {
@@ -37,7 +33,7 @@ export default async function ProductCard({ product, hideBrand, hideOutOfStockBa
     ? Math.round((1 - Number(product.price) / Number(product.regular_price)) * 100)
     : 0;
 
-  const showCatalog = isCatalogOnly(product);
+  const showCatalog = isCatalogProduct(product);
 
   const campaign = product.in_active_campaign ? await getActiveCampaign({ withProducts: false }) : null;
   const showCampaignBadge = Boolean(campaign && product.in_active_campaign);

@@ -141,6 +141,26 @@ export function trackPurchase(
 
 // --- Custom events ---
 
+/**
+ * Clic en un CTA de cotización de gran formato (producto is_catalog_only).
+ * Un evento por canal (whatsapp / email); params planos para que GTM los lea
+ * con variables de dataLayer sin tocar `ecommerce`.
+ */
+export function trackQuoteRequest(params: {
+  channel: "whatsapp" | "email";
+  item_id: string;
+  item_name: string;
+  item_category?: string;
+}) {
+  push({
+    event: "quote_request",
+    quote_channel: params.channel,
+    item_id: params.item_id,
+    item_name: params.item_name,
+    item_category: params.item_category || "",
+  });
+}
+
 export function trackWhatsAppClick(productName?: string) {
   push({ event: "whatsapp_click", product_name: productName });
 }
