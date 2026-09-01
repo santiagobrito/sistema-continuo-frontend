@@ -282,6 +282,8 @@ async function updateOrderStatus(orderId: string, status: string, payment?: MPPa
 
 interface WcOrderMeta {
   id: number;
+  /** Total de la orden según WC — el número contra el que se concilia el pago. */
+  total?: string;
   meta_data?: Array<{ key: string; value: string }>;
 }
 
@@ -385,6 +387,51 @@ async function reportPaqarFailure(orderId: string, detail: string): Promise<void
   }).catch(() => {});
 }
 
+/**
+ * Tolerancia de conciliación entre transaction_amount de MP y el total de la
+ * orden WC. ±1 peso: ARS opera sin decimales en catálogo, pero el armado de la
+ * preferencia redondea por unidad y puede mover centavos; una manipulación
+ * real del importe es de pesos enteros y grandes, nunca de 1 peso. (2026-09-01)
+ */
+const MP_AMOUNT_TOLERANCE_ARS = 1;
+
+/**
+ * Pago aprobado cuyo monto NO coincide con el total de la orden: la orden se
+ * retuvo en on-hold sin disparar despacho. Deja nota interna + email admin.
+ * Reusa el endpoint admin-alert del plugin (SC_Admin_Alert), igual que
+ * reportPaqarFailure de arriba.
+ */
+async function reportAmountMismatch(
+  orderId: string,
+  paid: number | undefined,
+  orderTotal: number | undefined,
+  paymentId: string
+): Promise<void> {
+  const paidTxt = paid !== undefined ? formatArs(paid) : "(desconocido)";
+  const totalTxt = orderTotal !== undefined ? formatArs(orderTotal) : "(no se pudo leer la orden)";
+  await addOrderNote(
+    orderId,
+    `🛑 [Conciliación MP] Pago #${paymentId} aprobado por ${paidTxt}, pero el total de la orden es ${totalTxt}.\n` +
+      `La orden quedó en "En espera" y NO se disparó el despacho.\n` +
+      `Verificar en el panel de MercadoPago cuánto entró de verdad antes de procesarla; si el monto cobrado es menor al total, NO despachar sin resolver la diferencia.`
+  );
+  const subject = `🛑 Pago MP retenido — orden #${orderId}: cobrado ${paidTxt}, orden ${totalTxt}`;
+  const body =
+    `<p>MercadoPago aprobó el pago <strong>#${paymentId}</strong> por <strong>${paidTxt}</strong>, ` +
+    `pero el total de la orden <a href="https://api.sistemacontinuo.com.ar/wp-admin/post.php?post=${orderId}&action=edit"><strong>#${orderId}</strong></a> es <strong>${totalTxt}</strong>.</p>` +
+    `<p>La orden quedó en <strong>En espera (on-hold)</strong> y no se generó etiqueta de envío.</p>` +
+    `<p>Acción: verificar en el panel de MercadoPago el monto realmente acreditado. Si coincide con el total de la orden, pasarla a Procesando a mano. Si es menor, es un intento de pagar de menos (o un bug de precios): no despachar sin resolverlo.</p>`;
+  // Fire and forget — el alert es nice-to-have, no bloquea el webhook.
+  fetch(`${WP_URL}/wp-json/sistema-continuo/v1/admin-alert`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Basic ${WC_API_AUTH}`,
+    },
+    body: JSON.stringify({ subject, body }),
+  }).catch(() => {});
+}
+
 /** Deja la orden en la cola del cron de reintento. */
 async function markPaqarAutocreateFailed(orderId: string, detail: string): Promise<void> {
   await fetch(`${WP_URL}/wp-json/wc/v3/orders/${orderId}`, {
@@ -461,7 +508,36 @@ export async function POST(request: NextRequest) {
       }
 
       switch (payment.status) {
-        case "approved":
+        case "approved": {
+          // Conciliación (2026-09-01, defensa en profundidad): el monto que MP
+          // aprobó tiene que coincidir con el total de la orden ANTES de
+          // marcarla pagada y despachar. Sin esto, una preferencia manipulada
+          // (o cualquier bug de pricing nuestro) pagaba lo que quería y la
+          // orden salía a despacho igual. Funciona aunque el armado de la
+          // preferencia esté roto: acá se compara contra la orden real.
+          // Si no se puede leer el total → también se retiene (fail closed).
+          const orderTotal = parseFloat(String(currentMeta?.total ?? ""));
+          const paid = payment.transaction_amount;
+          const reconciled =
+            Number.isFinite(orderTotal) &&
+            typeof paid === "number" &&
+            Math.abs(paid - orderTotal) <= MP_AMOUNT_TOLERANCE_ARS;
+          if (!reconciled) {
+            console.error(
+              `[MP webhook] Conciliación FALLÓ orden ${orderId}: MP cobró ${paid ?? "?"}, la orden vale ${Number.isFinite(orderTotal) ? orderTotal : "(ilegible)"} — se retiene en on-hold sin despacho`
+            );
+            // updateOrderStatus registra igual el payment_id/status en meta:
+            // así la idempotencia de arriba corta los reintentos de MP y no se
+            // duplican notas ni alertas por el mismo pago.
+            await updateOrderStatus(orderId, "on-hold", payment);
+            await reportAmountMismatch(
+              orderId,
+              paid,
+              Number.isFinite(orderTotal) ? orderTotal : undefined,
+              String(payment.id)
+            );
+            break;
+          }
           await updateOrderStatus(orderId, "processing", payment);
           {
             const shippingMethod = readMeta(currentMeta, "_sc_shipping_method_id");
@@ -476,6 +552,7 @@ export async function POST(request: NextRequest) {
             }
           }
           break;
+        }
         case "rejected":
           await updateOrderStatus(orderId, "failed", payment);
           break;

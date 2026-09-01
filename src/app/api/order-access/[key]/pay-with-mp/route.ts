@@ -16,6 +16,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createPreference } from "@/lib/mercadopago/sdk";
+import { buildMpItemsFromOrder, type WcOrderForPreference } from "@/lib/mercadopago/order-items";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
 const WC_API_AUTH = process.env.WC_API_AUTH || "";
@@ -24,11 +25,8 @@ const MP_WEBHOOK_URL = SITE_URL ? `${SITE_URL}/api/mercadopago/webhook` : "";
 
 const KEY_RE = /^wc_order_[A-Za-z0-9]+$/;
 
-interface WcOrder {
-  id: number;
+interface WcOrder extends WcOrderForPreference {
   status: string;
-  line_items: Array<{ name: string; quantity: number; price: string | number }>;
-  shipping_lines?: Array<{ total: string | number }>;
   billing: { first_name?: string; last_name?: string; email?: string; phone?: string };
 }
 
@@ -68,17 +66,14 @@ export async function POST(
     }
     const order: WcOrder = await r.json();
 
-    const items = order.line_items.map((li) => ({
-      title: String(li.name).slice(0, 255),
-      quantity: Number(li.quantity),
-      unit_price: Math.round(Number(li.price)),
-      currency_id: "ARS",
-    }));
-    for (const sl of order.shipping_lines || []) {
-      const shipTotal = Number(sl.total) || 0;
-      if (shipTotal > 0) {
-        items.push({ title: "Envio", quantity: 1, unit_price: Math.round(shipTotal), currency_id: "ARS" });
-      }
+    // Items con suma EXACTA al total de la orden: el webhook concilia
+    // transaction_amount contra ese total desde 2026-09-01 y el redondeo por
+    // unidad que había acá podía desviarse varios pesos.
+    const { items, itemsTotal, orderTotal, matches } = buildMpItemsFromOrder(order);
+    if (!matches) {
+      console.warn(
+        `[pay-with-mp] preferencia (${itemsTotal}) != total de la orden ${order.id} (${orderTotal}) — el webhook va a retener este pago`
+      );
     }
 
     const billing = order.billing || {};

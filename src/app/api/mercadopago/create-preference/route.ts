@@ -15,7 +15,8 @@ import {
   attributionToOrderMeta,
   type OrderAttributionInput,
 } from "@/lib/wordpress/order-attribution";
-import { resolveCoupon, applyDiscountToItems } from "@/lib/woocommerce/coupons";
+import { resolveCoupon, applyDiscountToItems, type ValidatedCoupon } from "@/lib/woocommerce/coupons";
+import { buildMpItemsFromOrder, type WcOrderForPreference } from "@/lib/mercadopago/order-items";
 import { computeShippingCost, splitItemsFromOrder } from "@/lib/paqar/quote-service";
 
 /**
@@ -379,6 +380,49 @@ async function createWCOrder(
   return { id: order.id, number: order.number || String(order.id) };
 }
 
+/**
+ * Reemplaza item.price (que viene del NAVEGADOR) por el precio real del
+ * producto/variación en WC. Solo hace falta en el camino con cupón: sin cupón
+ * la orden se crea con product_id+quantity y WC pone los precios él solo, pero
+ * con cupón mandamos subtotal/total explícitos y esos números no pueden salir
+ * del body (2026-09-01: una petición manipulada pagaba el importe que declaraba).
+ *
+ * `GET /wc/v3/products/{id}` funciona también con IDs de variación (devuelve
+ * type=variation con su price), así que alcanza un solo endpoint.
+ *
+ * Nota: el precio de catálogo no incluye los descuentos por cantidad; esos los
+ * aplica el plugin al crear la orden (apply_qty_discounts_to_rest_order) y
+ * pisan la línea, igual que antes de este cambio.
+ *
+ * Si algún precio no se puede leer → throw (fail closed): nunca seguir con los
+ * precios del navegador en silencio.
+ */
+async function withServerPrices(items: CheckoutItem[]): Promise<CheckoutItem[]> {
+  return Promise.all(
+    items.map(async (item) => {
+      const id = item.variation_id || item.product_id;
+      const r = await fetch(`${WP_URL}/wp-json/wc/v3/products/${id}`, {
+        headers: { Authorization: `Basic ${WC_API_AUTH}` },
+        cache: "no-store",
+      });
+      if (!r.ok) {
+        throw new Error(`No se pudo verificar el precio del producto ${id} (HTTP ${r.status})`);
+      }
+      const p = await r.json();
+      const price = parseFloat(String(p.price));
+      if (!Number.isFinite(price) || price < 0) {
+        throw new Error(`Precio ilegible para el producto ${id}`);
+      }
+      if (price !== item.price) {
+        console.warn(
+          `[create-preference] precio del navegador (${item.price}) != precio WC (${price}) para producto ${id} — se usa el de WC`
+        );
+      }
+      return { ...item, price };
+    })
+  );
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: CheckoutBody = await request.json();
@@ -445,6 +489,31 @@ export async function POST(request: NextRequest) {
       body.shipping_cost = cost;
     }
 
+    // 0. Resolver cupón (si llegó) con PRECIOS DEL SERVIDOR y prorratear el
+    //    descuento. WC REST no recalcula totales por coupon_lines: mandamos los
+    //    items con subtotal/total explícitos, y desde el 2026-09-01 esos números
+    //    salen de withServerPrices(), nunca del body (el navegador podía
+    //    declarar cualquier precio). Se resuelve ANTES del hash para que
+    //    free_shipping deje body.shipping_cost en 0 y el anti-duplicado compare
+    //    contra lo mismo que queda escrito en la orden.
+    let resolved: ValidatedCoupon | null = null;
+    let discountTotal = 0;
+    let itemsAfterDiscount: ReturnType<typeof applyDiscountToItems> | undefined;
+    if (body.coupon_code) {
+      const serverPricedItems = await withServerPrices(body.items);
+      const subtotalForCoupon = serverPricedItems.reduce((acc, it) => acc + it.price * it.quantity, 0);
+      resolved = await resolveCoupon(body.coupon_code, subtotalForCoupon, body.billing.email);
+      discountTotal = resolved?.discount_amount || 0;
+      itemsAfterDiscount = discountTotal > 0
+        ? applyDiscountToItems(serverPricedItems, discountTotal)
+        : undefined;
+      // free_shipping: hasta el 2026-09-01 el envío gratis del cupón solo se
+      // aplicaba al cobro de MP y la orden WC quedaba con el envío cobrado
+      // (total inflado). Ahora la orden también se crea con envío en 0, así el
+      // total de la orden ES lo que se cobra y la conciliación del webhook cierra.
+      if (resolved?.free_shipping) body.shipping_cost = 0;
+    }
+
     // o mandan dos requests simultáneas. La key es sha256(email + cart_hash) — única por
     // intento de checkout. El lock dura 30s, suficiente para que la primera request termine.
     const cartHash = computeCartHash(body);
@@ -482,19 +551,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 0. Resolver cupón (si llegó) y prorratear descuento sobre line_items.
-    //    WC REST no recalcula totales por coupon_lines: tenemos que mandar los
-    //    items con subtotal/total explícitos y descontar también a MP, sino
-    //    el cliente paga el precio sin descuento aunque el frontend lo muestre.
-    const subtotalForCoupon = body.items.reduce((acc, it) => acc + it.price * it.quantity, 0);
-    const resolved = body.coupon_code
-      ? await resolveCoupon(body.coupon_code, subtotalForCoupon, body.billing.email)
-      : null;
-    const discountTotal = resolved?.discount_amount || 0;
-    const itemsAfterDiscount = discountTotal > 0
-      ? applyDiscountToItems(body.items, discountTotal)
-      : undefined;
-
     // 1. Reutilizar pending reciente con mismo carrito (anti-duplicado en reintentos MP).
     //    Si no existe, crear orden nueva.
     let order: { id: number; number: string };
@@ -526,33 +582,49 @@ export async function POST(request: NextRequest) {
     markCartRecovered(body.billing.email).catch(() => {});
     subscribeNewsletter(body.billing.email, `${body.billing.first_name} ${body.billing.last_name}`).catch(() => {});
 
-    // 2. Create MP preference — usar precios DESCONTADOS si hay cupón resuelto.
-    //    MP cobra exactamente lo que mandamos en unit_price * quantity, así que
-    //    si pasamos el precio original con cupón aplicado en WC, el cliente
-    //    paga el precio sin descuento. Bug histórico desde la migración headless.
-    const mpItems = (itemsAfterDiscount
-      ? itemsAfterDiscount.map((item) => ({
-          title: item.name,
-          quantity: item.quantity,
-          unit_price: Math.round(item.unit_price_after),
-          picture_url: item.image,
-        }))
-      : body.items.map((item) => ({
-          title: item.name,
-          quantity: item.quantity,
-          unit_price: Math.round(item.price),
-          picture_url: item.image,
-        })));
-
-    // Add shipping as item if exists. Si el cupón es free_shipping, mandar 0.
-    const shippingForMp = resolved?.free_shipping ? 0 : (body.shipping_cost || 0);
-    if (shippingForMp > 0) {
-      mpItems.push({
-        title: "Envio",
-        quantity: 1,
-        unit_price: Math.round(shippingForMp),
-        picture_url: undefined,
+    // 2. Armar la preferencia de MP RELEYENDO la orden de WC (2026-09-01).
+    //    El importe autoritativo es el que calculó WooCommerce: precios de
+    //    catálogo (o los subtotal/total explícitos del camino con cupón, ya
+    //    verificados contra WC), descuentos por cantidad del plugin y envío
+    //    recalculado server-side. Lo que mande el navegador en body.items no
+    //    toca nunca el cobro. Cubre también las órdenes reutilizadas.
+    //    Si la relectura falla → error (fail closed): jamás caer a precios del
+    //    navegador en silencio.
+    let authOrder: WcOrderForPreference | null = null;
+    try {
+      const rOrder = await fetch(`${WP_URL}/wp-json/wc/v3/orders/${order.id}`, {
+        headers: { Authorization: `Basic ${WC_API_AUTH}` },
+        cache: "no-store",
       });
+      if (rOrder.ok) authOrder = await rOrder.json();
+    } catch {
+      /* authOrder queda null → fail closed abajo */
+    }
+    if (!authOrder || !Array.isArray(authOrder.line_items) || authOrder.line_items.length === 0) {
+      console.error(
+        `[create-preference] no se pudo releer la orden ${order.id} para armar la preferencia — abortado (fail closed)`
+      );
+      return NextResponse.json(
+        { error: "No pudimos verificar el pedido. Esperá un momento y volvé a intentar." },
+        { status: 502 }
+      );
+    }
+
+    const { items: mpItems, itemsTotal, orderTotal, matches } = buildMpItemsFromOrder(authOrder);
+    if (orderTotal <= 0 || mpItems.length === 0) {
+      console.error(`[create-preference] orden ${order.id} con total ${orderTotal} — no se crea preferencia`);
+      return NextResponse.json(
+        { error: "El pedido quedó con un total inválido. Escribinos y lo resolvemos." },
+        { status: 502 }
+      );
+    }
+    // La suma de la preferencia tiene que dar EXACTO el total de la orden: es
+    // lo que el webhook concilia antes de dar el pago por bueno. Si no cuadra,
+    // avisar fuerte — ese pago va a quedar retenido en on-hold.
+    if (!matches) {
+      console.warn(
+        `[create-preference] preferencia (${itemsTotal}) != total de la orden ${order.id} (${orderTotal}) — el webhook va a retener este pago`
+      );
     }
 
     // Cuotas sin interés selectivas: el carrito hereda el MÍNIMO de los items.
