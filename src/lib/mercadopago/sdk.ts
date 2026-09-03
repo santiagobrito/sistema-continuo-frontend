@@ -107,6 +107,48 @@ export interface MPPayment {
     net_received_amount?: number;
     installment_amount?: number;
   };
+  /** Merchant order a la que pertenece el pago. Es lo que agrupa los pagos de
+   *  un mismo checkout cuando el cliente paga con dos medios (ver getMerchantOrder). */
+  order?: { id?: string | number; type?: string };
+}
+
+/**
+ * Una compra de Checkout Pro puede resolverse con MAS DE UN pago: MercadoPago
+ * deja combinar dinero en cuenta + tarjeta, y entonces ningun pago individual
+ * iguala el total. La merchant_order es la que agrupa esos pagos y trae el
+ * `paid_amount` acumulado, que es contra lo que hay que conciliar.
+ *
+ * Incidente que lo motivo (orden #18398, 24-8-2026): pago dividido en $46.000
+ * de dinero en cuenta + $21.264 de Mastercard = $67.264, el total exacto. La
+ * conciliacion miraba solo el segundo pago y la dio por impaga.
+ */
+export interface MPMerchantOrder {
+  id: number;
+  status?: string;
+  order_status?: string;
+  external_reference?: string;
+  total_amount?: number;
+  paid_amount?: number;
+  refunded_amount?: number;
+  payments?: Array<{
+    id?: number;
+    status?: string;
+    status_detail?: string;
+    transaction_amount?: number;
+  }>;
+}
+
+export async function getMerchantOrder(orderId: string): Promise<MPMerchantOrder | null> {
+  try {
+    const res = await fetch(`${MP_BASE_URL}/merchant_orders/${orderId}`, {
+      headers: { Authorization: `Bearer ${MP_ACCESS_TOKEN}` },
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as MPMerchantOrder;
+  } catch {
+    // El que llama decide que hacer sin este dato. Nunca tumbar el webhook por esto.
+    return null;
+  }
 }
 
 export async function getPayment(paymentId: string): Promise<MPPayment> {

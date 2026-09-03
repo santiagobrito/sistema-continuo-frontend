@@ -16,7 +16,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getPayment, type MPPayment } from "@/lib/mercadopago/sdk";
+import { getPayment, getMerchantOrder, type MPPayment } from "@/lib/mercadopago/sdk";
 import { record as debugRecord } from "@/lib/_debug-buffer";
 import crypto from "crypto";
 import { paqarClient } from "@/lib/paqar/client";
@@ -284,6 +284,9 @@ interface WcOrderMeta {
   id: number;
   /** Total de la orden según WC — el número contra el que se concilia el pago. */
   total?: string;
+  /** Status actual en WooCommerce: decide si la orden ya salió del circuito de
+   *  cobro y por lo tanto un webhook tardío no puede tocarla. */
+  status?: string;
   meta_data?: Array<{ key: string; value: string }>;
 }
 
@@ -396,6 +399,52 @@ async function reportPaqarFailure(orderId: string, detail: string): Promise<void
 const MP_AMOUNT_TOLERANCE_ARS = 1;
 
 /**
+ * Statuses en los que la orden YA salio del circuito de cobro: hay mercaderia
+ * en la calle o entregada. Un webhook tardio de MP no puede devolverlas a
+ * on-hold: el pago ya se valido cuando correspondia, y degradarlas rompe los
+ * reportes y le manda al cliente un email que contradice lo que recibio.
+ *
+ * Incidente (orden #18398, 3-9-2026): MP reenvio el webhook de un pago del
+ * 24/8 y la conciliacion paso a "En espera" una orden ENTREGADA el 28/8.
+ */
+const ESTADOS_YA_DESPACHADOS = ["shipped", "completed"];
+// A propósito NO incluye "cancelled" ni "refunded": ahí un pago aprobado que
+// llega tarde es una anomalía que hay que ver, no algo para tragarse en
+// silencio, y ese caso no se analizó en el incidente de #18398.
+
+/**
+ * Lo realmente pagado por la orden, sumando TODOS los pagos aprobados.
+ *
+ * No alcanza con `payment.transaction_amount`: Checkout Pro permite pagar con
+ * dos medios a la vez (dinero en cuenta + tarjeta) y entonces ningun pago
+ * individual llega al total. La merchant_order agrupa esos pagos.
+ *
+ * Devuelve `null` si no se pudo averiguar, y el que llama trata ese caso como
+ * "no conciliado" (fail closed): preferimos retener de mas que despachar sin
+ * cobrar.
+ */
+async function totalPagado(payment: MPPayment): Promise<number | null> {
+  const moId = payment.order?.id;
+  if (moId) {
+    const mo = await getMerchantOrder(String(moId));
+    if (mo) {
+      // paid_amount ya viene neto de la propia MO; si falta, se suman los pagos
+      // aprobados a mano. Los rechazados NO cuentan.
+      if (typeof mo.paid_amount === "number" && Number.isFinite(mo.paid_amount)) {
+        return mo.paid_amount - (mo.refunded_amount || 0);
+      }
+      if (Array.isArray(mo.payments)) {
+        return mo.payments
+          .filter((p) => p.status === "approved")
+          .reduce((acc, p) => acc + (p.transaction_amount || 0), 0);
+      }
+    }
+  }
+  // Sin merchant_order (pago suelto) el unico dato es el del propio pago.
+  return typeof payment.transaction_amount === "number" ? payment.transaction_amount : null;
+}
+
+/**
  * Pago aprobado cuyo monto NO coincide con el total de la orden: la orden se
  * retuvo en on-hold sin disparar despacho. Deja nota interna + email admin.
  * Reusa el endpoint admin-alert del plugin (SC_Admin_Alert), igual que
@@ -494,6 +543,17 @@ export async function POST(request: NextRequest) {
         );
         return NextResponse.json({ ok: true, skipped: "stale_event" });
       }
+      // Una orden ya despachada o entregada no vuelve atrás por un webhook
+      // tardío. MP reenvía notificaciones de pagos viejos y, sin esto, la
+      // conciliación de abajo degradaba pedidos que el cliente ya recibió.
+      const wcStatus = String(currentMeta?.status ?? "");
+      if (ESTADOS_YA_DESPACHADOS.includes(wcStatus)) {
+        console.warn(
+          `[MP webhook] Orden ${orderId} ya está en '${wcStatus}': se ignora el evento ${payment.status} del pago ${payment.id}`
+        );
+        return NextResponse.json({ ok: true, skipped: "already_shipped" });
+      }
+
       // Bloqueo regresión cuando ya estamos en flujo logístico
       const PROTECTED_FROM_REGRESSION: Record<string, string[]> = {
         // Si llegamos aquí, NO permitimos pasar a estos statuses MP regresivos
@@ -517,7 +577,10 @@ export async function POST(request: NextRequest) {
           // preferencia esté roto: acá se compara contra la orden real.
           // Si no se puede leer el total → también se retiene (fail closed).
           const orderTotal = parseFloat(String(currentMeta?.total ?? ""));
-          const paid = payment.transaction_amount;
+          // Se concilia contra la SUMA de los pagos aprobados de la compra, no
+          // contra este pago suelto: con pago mixto (dinero en cuenta + tarjeta)
+          // ninguno de los dos llega al total por separado.
+          const paid = await totalPagado(payment);
           const reconciled =
             Number.isFinite(orderTotal) &&
             typeof paid === "number" &&
@@ -532,7 +595,7 @@ export async function POST(request: NextRequest) {
             await updateOrderStatus(orderId, "on-hold", payment);
             await reportAmountMismatch(
               orderId,
-              paid,
+              paid ?? undefined,
               Number.isFinite(orderTotal) ? orderTotal : undefined,
               String(payment.id)
             );
