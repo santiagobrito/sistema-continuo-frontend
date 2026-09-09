@@ -326,6 +326,25 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
                   ))}
                 </div>
               )}
+              {review.replies?.map((reply) => (
+                <div
+                  key={reply.id}
+                  className="mt-3 ml-4 pl-4 border-l-2 border-[#013d5a]/20 bg-white rounded-r-lg py-2.5 pr-3"
+                >
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="text-xs font-semibold text-[#013d5a]">Respuesta de Sistema Continuo</span>
+                    {reply.date && (
+                      <time dateTime={reply.date} className="text-[11px] text-gray-400">
+                        {formatReviewDate(reply.date)}
+                      </time>
+                    )}
+                  </div>
+                  <div
+                    className="text-sm text-gray-600 [&_a]:text-[#013d5a] [&_a]:underline"
+                    dangerouslySetInnerHTML={{ __html: reply.content }}
+                  />
+                </div>
+              ))}
             </div>
           ))}
         </div>

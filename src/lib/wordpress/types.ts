@@ -172,6 +172,16 @@ export interface Review {
   // Fotos "así me quedó" adjuntadas por el comprador (0-3). Solo llegan las de
   // reseñas aprobadas (el backend filtra status='approve').
   images?: { full: string; thumb: string }[];
+  // Respuestas de la tienda. Se escriben desde wp-admin (Productos -> Reseñas ->
+  // Responder), que es el flujo nativo de WooCommerce; el backend solo devuelve
+  // las de usuarios con moderate_comments, así que todas son voz de la tienda.
+  replies?: ReviewReply[];
+}
+
+export interface ReviewReply {
+  id: number;
+  content: string;
+  date: string;
 }
 
 // === API Response Types ===
