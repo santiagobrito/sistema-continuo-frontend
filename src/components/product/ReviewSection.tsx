@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import type { Review } from "@/lib/wordpress/types";
 import { compressPhoto, MAX_PHOTOS, ALLOWED_PHOTO_TYPES } from "@/lib/image/compress";
+import { formatPrice } from "@/lib/utils/format";
 
 // review.date llega del backend como "YYYY-MM-DD HH:MM:SS" (comment_date WP).
 // Tomamos solo Y-M-D para evitar drift de timezone entre server y cliente —
@@ -340,9 +341,39 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
                     )}
                   </div>
                   <div
-                    className="text-sm text-gray-600 [&_a]:text-[#013d5a] [&_a]:underline"
+                    className="text-sm text-gray-600 [&_a]:text-[#013d5a] [&_a]:underline [&_p]:mb-2 [&_p:last-child]:mb-0"
                     dangerouslySetInnerHTML={{ __html: reply.content }}
                   />
+                  {reply.previews?.map((p) => (
+                    <a
+                      key={p.id}
+                      href={p.url}
+                      className="mt-2.5 flex items-center gap-3 rounded-lg border border-gray-200 p-2.5 hover:border-[#013d5a] transition-colors group"
+                    >
+                      {p.image && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={p.image}
+                          alt={p.name}
+                          width={48}
+                          height={48}
+                          loading="lazy"
+                          className="w-12 h-12 rounded object-cover bg-gray-50 flex-shrink-0"
+                        />
+                      )}
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm text-gray-900 leading-snug line-clamp-2 group-hover:text-[#013d5a]">
+                          {p.name}
+                        </span>
+                        {p.price && (
+                          <span className="block text-sm font-bold text-gray-900 mt-0.5">
+                            {formatPrice(p.price)}
+                          </span>
+                        )}
+                      </span>
+                      <span className="text-[#013d5a] text-lg flex-shrink-0" aria-hidden>&rsaquo;</span>
+                    </a>
+                  ))}
                 </div>
               ))}
             </div>

@@ -182,6 +182,18 @@ export interface ReviewReply {
   id: number;
   content: string;
   date: string;
+  // Productos que la respuesta enlazó pegando su URL. El backend la extrae del
+  // texto y resuelve el precio en cada lectura, así que la tarjeta nunca queda
+  // con un precio viejo.
+  previews?: ReviewReplyPreview[];
+}
+
+export interface ReviewReplyPreview {
+  id: number;
+  name: string;
+  price: string;
+  image: string;
+  url: string;
 }
 
 // === API Response Types ===
