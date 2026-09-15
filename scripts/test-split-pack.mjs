@@ -91,7 +91,10 @@ check("5 gorras con pack → caja medida 20×14×25", dims(cinco[0]), [20, 14, 2
 check("5 gorras con pack → peso real intacto", cinco[0].weightGrams, 300);
 const precioCinco = homePrice(cinco);
 console.log(`      cotiza $${precioCinco.toLocaleString("es-AR")}`);
-check("5 gorras con pack cotizan igual que la caja real", precioCinco, 8829);
+// Contra la caja medida cotizada como bulto suelto, no contra un precio fijo:
+// la grilla de CA se actualiza y el número se vence (pasó de $8.829 a $9.270).
+const precioCaja = homePrice([{ ...cinco[0], height: 20, width: 14, depth: 25 }]);
+check("5 gorras con pack cotizan igual que la caja real", precioCinco, precioCaja);
 
 const una = splitIntoBundles([{ ...GORRA_PACK, quantity: 1 }]);
 check("1 gorra → medida unitaria sin tocar", dims(una[0]), [20, 11, 18]);
@@ -138,6 +141,27 @@ check("carrito mixto → 1 bulto consolidado", mixto.length, 1);
 const volMixto = mixto[0].height * mixto[0].width * mixto[0].depth;
 check("carrito mixto → no usa la caja exacta del pack", volMixto > 7000, true);
 console.log(`      mixto: ${dims(mixto[0]).join("×")} = ${volMixto} cm³`);
+
+console.log("\n── Colores mezclados: variaciones que heredan la misma caja ──");
+
+const colores = (porColor) =>
+  ["381", "382", "383", "384", "385"].map((id) => ({ ...GORRA_PACK, id, quantity: porColor }));
+
+const cincoColores = splitIntoBundles(colores(1));
+check("5 gorras de 5 colores → caja medida", dims(cincoColores[0]), [20, 14, 25]);
+check("5 gorras de 5 colores cotizan igual que 5 de un color", homePrice(cincoColores), precioCinco);
+
+const diezColores = splitIntoBundles(colores(2));
+check("10 gorras en 5 colores cotizan igual que 10 de un color", homePrice(diezColores), homePrice(diez));
+
+const tresMasDos = splitIntoBundles([
+  { ...GORRA_PACK, id: "381", quantity: 3 },
+  { ...GORRA_PACK, id: "382", quantity: 2 },
+]);
+check("3 azules + 2 rojas → caja medida", dims(tresMasDos[0]), [20, 14, 25]);
+
+const forzadoColores = forceSingleBundle(colores(1));
+check("forceSingleBundle con 5 colores → caja medida", dims(forzadoColores[0]), [20, 14, 25]);
 
 console.log("\n── forceSingleBundle (override del admin) ──");
 

@@ -158,6 +158,18 @@ function packBox(
  * pack nuevo (10 gorras = 2 cajas de 5). Extrapolar el incremento al infinito
  * declararía una caja que no existe, y Correo factura lo que declaramos.
  */
+/**
+ * Clave con la que se cuentan las unidades de un apilado. No es el id: los
+ * colores de una gorra son variaciones distintas pero heredan la misma caja del
+ * padre y se encastran igual. Contar por id declaraba 5 gorras de 5 colores
+ * como 5 gorras sueltas (19.800 cm³ contra 7.000 de la caja real).
+ */
+function packGroupKey(item: SplitItem): string {
+  const pack = packBox(item);
+  if (!pack) return `id:${item.id}`;
+  return `pack:${pack.qty}|${pack.height}x${pack.width}x${pack.depth}|${item.height}x${item.width}x${item.depth}`;
+}
+
 function unitVolumeAt(item: SplitItem, unitIndex: number): number {
   const unit = itemVolume(item);
   const pack = packBox(item);
@@ -274,14 +286,23 @@ function exactPackBox(
   bundle: Bundle,
   itemsById: Map<string, SplitItem>
 ): { height: number; width: number; depth: number } | null {
-  if (bundle.items.length !== 1) return null;
+  if (bundle.items.length === 0) return null;
 
-  const entry = bundle.items[0];
-  const item = itemsById.get(entry.id);
-  if (!item) return null;
+  // Vale también con varias variaciones del mismo apilado (5 gorras de colores
+  // distintos): todas tienen que compartir la caja y sumar la cantidad medida.
+  const first = itemsById.get(bundle.items[0].id);
+  if (!first) return null;
+  const pack = packBox(first);
+  if (!pack) return null;
 
-  const pack = packBox(item);
-  if (!pack || entry.quantity !== pack.qty) return null;
+  const key = packGroupKey(first);
+  let total = 0;
+  for (const entry of bundle.items) {
+    const item = itemsById.get(entry.id);
+    if (!item || packGroupKey(item) !== key) return null;
+    total += entry.quantity;
+  }
+  if (total !== pack.qty) return null;
 
   return { height: pack.height, width: pack.width, depth: pack.depth };
 }
@@ -310,14 +331,15 @@ export function splitIntoBundles(items: SplitItem[]): Bundle[] {
 
   let current = newEmptyBundle();
   let currentVolume = 0;
+  // Unidades de cada apilado ya cargadas en el bulto actual (ver packGroupKey).
+  // Se reinicia al cortar caja: la primera unidad de un bulto nuevo vuelve a
+  // ocupar entero, porque es una caja nueva.
+  let unitsByGroup = new Map<string, number>();
   for (const item of small) {
-    // Unidades de ESTE ítem ya cargadas en el bulto actual. Se reinicia al
-    // cortar caja: la primera unidad de un bulto nuevo vuelve a ocupar entero,
-    // porque es una caja nueva.
-    let unitsInBundle = 0;
+    const group = packGroupKey(item);
     for (let i = 0; i < item.quantity; i++) {
       const unitWeight = item.weight || SPLIT_RULES.FALLBACK_WEIGHT_G;
-      const unitVolume = unitVolumeAt(item, unitsInBundle);
+      const unitVolume = unitVolumeAt(item, unitsByGroup.get(group) || 0);
       const wouldExceedWeight =
         current.weightGrams + unitWeight > SPLIT_RULES.MAX_CONSOLIDATED_WEIGHT_G;
       const wouldExceedVolume =
@@ -328,11 +350,12 @@ export function splitIntoBundles(items: SplitItem[]): Bundle[] {
         bundles.push(current);
         current = newEmptyBundle();
         currentVolume = 0;
-        unitsInBundle = 0;
+        unitsByGroup = new Map();
       }
+      const n = unitsByGroup.get(group) || 0;
       addToConsolidated(current, item);
-      currentVolume += unitVolumeAt(item, unitsInBundle);
-      unitsInBundle++;
+      currentVolume += unitVolumeAt(item, n);
+      unitsByGroup.set(group, n + 1);
     }
   }
   if (current.items.length > 0) {
@@ -370,10 +393,14 @@ export function forceSingleBundle(items: SplitItem[]): Bundle[] {
   let dominantCategory: string | undefined;
   let cumulativeVolume = 0;
 
+  const unitsByGroup = new Map<string, number>();
   for (const item of items) {
+    const group = packGroupKey(item);
     for (let i = 0; i < item.quantity; i++) {
+      const n = unitsByGroup.get(group) || 0;
       addToConsolidated(bundle, item);
-      cumulativeVolume += unitVolumeAt(item, i);
+      cumulativeVolume += unitVolumeAt(item, n);
+      unitsByGroup.set(group, n + 1);
     }
     if (!dominantCategory && item.category) dominantCategory = item.category;
   }
