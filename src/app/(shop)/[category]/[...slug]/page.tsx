@@ -114,14 +114,34 @@ export default async function CatchAllPage({ params, searchParams }: Props) {
   }
 
   if (resolved.type === "category") {
-    return <SubcategoryView category={resolved.data as Category} parentSlug={category} />;
+    // resolveRoute trae solo la primera página (24). Sin esto, una subcategoría
+    // con más productos mostraba 24 y no había forma de llegar al resto
+    // (polímero: 60, reportado 2026-09-16).
+    const sp = await searchParams;
+    const rawPage = Array.isArray(sp.page) ? sp.page[0] : sp.page;
+    const page = Math.max(1, parseInt(rawPage || "1", 10) || 1);
+    let cat = resolved.data as Category;
+    if (page > 1) {
+      cat = await getCategory(slug[slug.length - 1], { page, per_page: 24 }).catch(() => cat);
+    }
+    return <SubcategoryView category={cat} parentSlug={category} currentPage={page} />;
   }
   return <ProductView product={resolved.data as Product} parentSlug={category} />;
 }
 
 // === Subcategory ===
 
-function SubcategoryView({ category, parentSlug }: { category: Category; parentSlug: string }) {
+function SubcategoryView({
+  category,
+  parentSlug,
+  currentPage,
+}: {
+  category: Category;
+  parentSlug: string;
+  currentPage: number;
+}) {
+  const totalPages = category.products?.pages ?? 1;
+  const pageHref = (n: number) => (n <= 1 ? `/${category.path}` : `/${category.path}?page=${n}`);
   const rawProducts = category.products?.data ?? [];
   const products = [...rawProducts].sort((a, b) => {
     if (a.stock_status === "outofstock" && b.stock_status !== "outofstock") return 1;
@@ -157,6 +177,24 @@ function SubcategoryView({ category, parentSlug }: { category: Category; parentS
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-10">
+            {currentPage > 1 && (
+              <Link href={pageHref(currentPage - 1)} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:border-[#013d5a] hover:text-[#013d5a] transition-colors">
+                Anterior
+              </Link>
+            )}
+            <span className="px-4 py-2 text-sm text-gray-500">
+              {currentPage} / {totalPages}
+            </span>
+            {currentPage < totalPages && (
+              <Link href={pageHref(currentPage + 1)} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:border-[#013d5a] hover:text-[#013d5a] transition-colors">
+                Siguiente
+              </Link>
+            )}
+          </div>
+        )}
       </div>
     </main>
   );
