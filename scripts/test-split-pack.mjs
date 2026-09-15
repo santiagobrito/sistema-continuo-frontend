@@ -108,7 +108,17 @@ console.log(`      2 gorras: ${dims(dos[0]).join("×")} = ${volDos} cm³`);
 // 10 unidades = 2 packs. El incremento NO se extrapola al infinito.
 const diez = splitIntoBundles([{ ...GORRA_PACK, quantity: 10 }]);
 const volDiez = diez.reduce((s, b) => s + b.height * b.width * b.depth, 0);
-check("10 gorras → volumen >= 2 cajas de 5", volDiez >= 2 * 7000, true);
+// Encastre de corrido: 1 gorra entera + 9 × 760 cm³ = 10.800 cm³ como mínimo,
+// y menos que 2 cajas de 5 sueltas (14.000), que era el cálculo viejo.
+check("10 gorras → al menos el encastre continuo", volDiez >= 3960 + 9 * 760, true);
+check("10 gorras → menos que 2 cajas de 5", volDiez < 2 * 7000, true);
+
+// Pedido #17841 (2026-08): 50 gorras, depósito las mandó en 65×27×27 = 47.385 cm³.
+const cincuenta = splitIntoBundles([{ ...GORRA_PACK, quantity: 50 }]);
+const volCincuenta = cincuenta.reduce((s, b) => s + b.height * b.width * b.depth, 0);
+check("50 gorras → 1 bulto", cincuenta.length, 1);
+check("50 gorras → no declara más que la caja real", volCincuenta <= 47385, true);
+console.log(`      50 gorras: ${volCincuenta} cm³ declarados (caja real 47.385)`);
 console.log(`      10 gorras: ${diez.length} bulto(s), ${volDiez} cm³ declarados`);
 
 console.log("\n── Datos mal cargados: se ignora el pack ──");

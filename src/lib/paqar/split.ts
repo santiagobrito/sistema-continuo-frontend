@@ -154,9 +154,12 @@ function packBox(
  * Ejemplo real (gorras): 1 unidad 18×11×20 = 3.960 cm³, caja de 5 = 25×14×20 =
  * 7.000 cm³ → cada unidad extra suma 760 cm³, no 3.960.
  *
- * El módulo por `packQty` es deliberado: pasada la cantidad medida arranca un
- * pack nuevo (10 gorras = 2 cajas de 5). Extrapolar el incremento al infinito
- * declararía una caja que no existe, y Correo factura lo que declaramos.
+ * El encastre sigue de corrido: pasada la cantidad medida NO arranca un pack
+ * nuevo. Hasta el 2026-09-16 sí lo hacía (10 gorras = 2 cajas de 5) y
+ * sobre-declaraba mucho los pedidos grandes: 104 gorras cotizaban $79.356
+ * contra $32.986 de la caja real que armó depósito (pedido #18340). Correo
+ * factura lo declarado con /4000 (verificado con la factura de agosto), así que
+ * declarar de más solo le encarece el envío al cliente.
  */
 /**
  * Clave con la que se cuentan las unidades de un apilado. No es el id: los
@@ -174,7 +177,7 @@ function unitVolumeAt(item: SplitItem, unitIndex: number): number {
   const unit = itemVolume(item);
   const pack = packBox(item);
   if (!pack) return unit;
-  if (unitIndex % pack.qty === 0) return unit;
+  if (unitIndex === 0) return unit;
 
   return (pack.volume - unit) / (pack.qty - 1);
 }
