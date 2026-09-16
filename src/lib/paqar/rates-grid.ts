@@ -1,8 +1,15 @@
 /**
  * Grilla de tarifas PAQ.AR — acuerdo 20105 (Responsable Inscripto).
  *
- * Fuente: clientes/sistema-continuo/data/correo-argentino/tarifario-paqar-2026-06-01.pdf
- * Vigencia declarada: 01-junio-2026 (sujeta a cambio sin aviso por parte de CA).
+ * Fuente: clientes/sistema-continuo/data/correo-argentino/lista-precios-micorreo-2026-09-01.pdf
+ * Vigencia declarada: 01-septiembre-2026 (sujeta a cambio sin aviso por parte de CA).
+ *
+ * Contra la lista de junio SOLO cambian las tablas A SUCURSAL (+2,4% a +6,0% en
+ * clasico, +1,4% a +6,0% en expreso). Domicilio quedo IGUAL. Verificado de tres
+ * formas el 2026-09-16: transcripcion visual contra pdftotext (0 discrepancias en
+ * 208 celdas), diff programatico de las 10 tablas de cada PDF, y contra la factura
+ * real de agosto (2980-00026532), cuyas 141 guias coinciden 141/141 con la lista de
+ * junio y 0 con la de septiembre.
  * **Precios finales SIN IVA** — hay que sumar 21% al mostrar al cliente.
  *
  * ⚠ CA ajusta tarifas cada 2-3 meses y avisa por email (no-reply@finanzascorreoarg)
@@ -31,7 +38,7 @@ export interface WeightBracket {
 
 type ZoneRates = Record<PaqarRatesZone, WeightBracket[]>;
 
-export const RATES_GRID_VERSION = "2026-06-01";
+export const RATES_GRID_VERSION = "2026-09-01";
 
 // ── CLASICO ───────────────────────────────────────────────────────────────
 const CLASICO_HOME: ZoneRates = {
@@ -75,40 +82,40 @@ const CLASICO_HOME: ZoneRates = {
 
 const CLASICO_AGENCY: ZoneRates = {
   1: [
-    { maxKg: 0.5, price: 4168.60 }, { maxKg: 1, price: 4232.23 },
-    { maxKg: 2, price: 4534.71 }, { maxKg: 3, price: 4671.90 },
-    { maxKg: 5, price: 6175.21 }, { maxKg: 10, price: 8959.50 },
-    { maxKg: 15, price: 13480.17 }, { maxKg: 20, price: 15297.52 },
-    { maxKg: 25, price: 17116.53 }, { maxKg: 30, price: 18935.54 },
-    { maxKg: 35, price: 21921.49 }, { maxKg: 40, price: 23547.11 },
-    { maxKg: 50, price: 26800.00 },
+    { maxKg: 0.5, price: 4419.01 }, { maxKg: 1, price: 4485.95 },
+    { maxKg: 2, price: 4806.61 }, { maxKg: 3, price: 4952.07 },
+    { maxKg: 5, price: 6545.45 }, { maxKg: 10, price: 9496.69 },
+    { maxKg: 15, price: 14289.26 }, { maxKg: 20, price: 16215.70 },
+    { maxKg: 25, price: 18143.80 }, { maxKg: 30, price: 20071.90 },
+    { maxKg: 35, price: 23237.19 }, { maxKg: 40, price: 24960.33 },
+    { maxKg: 50, price: 28408.26 },
   ],
   2: [
-    { maxKg: 0.5, price: 5052.07 }, { maxKg: 1, price: 5254.55 },
-    { maxKg: 2, price: 6180.99 }, { maxKg: 3, price: 6836.36 },
-    { maxKg: 5, price: 10954.55 }, { maxKg: 10, price: 16756.20 },
-    { maxKg: 15, price: 25962.81 }, { maxKg: 20, price: 31230.58 },
-    { maxKg: 25, price: 36732.23 }, { maxKg: 30, price: 42331.40 },
-    { maxKg: 35, price: 51383.47 }, { maxKg: 40, price: 56453.72 },
-    { maxKg: 50, price: 66602.48 },
+    { maxKg: 0.5, price: 5355.37 }, { maxKg: 1, price: 5569.42 },
+    { maxKg: 2, price: 6552.07 }, { maxKg: 3, price: 7246.28 },
+    { maxKg: 5, price: 11611.57 }, { maxKg: 10, price: 17638.02 },
+    { maxKg: 15, price: 27329.75 }, { maxKg: 20, price: 32874.38 },
+    { maxKg: 25, price: 38423.14 }, { maxKg: 30, price: 43971.07 },
+    { maxKg: 35, price: 54088.43 }, { maxKg: 40, price: 59424.79 },
+    { maxKg: 50, price: 70108.26 },
   ],
   3: [
-    { maxKg: 0.5, price: 5549.59 }, { maxKg: 1, price: 5780.99 },
-    { maxKg: 2, price: 6734.71 }, { maxKg: 3, price: 7754.55 },
-    { maxKg: 5, price: 13197.52 }, { maxKg: 10, price: 19960.33 },
-    { maxKg: 15, price: 31462.81 }, { maxKg: 20, price: 38852.89 },
-    { maxKg: 25, price: 46382.64 }, { maxKg: 30, price: 53914.05 },
-    { maxKg: 35, price: 64218.18 }, { maxKg: 40, price: 71122.31 },
-    { maxKg: 50, price: 84939.67 },
+    { maxKg: 0.5, price: 5882.64 }, { maxKg: 1, price: 6128.10 },
+    { maxKg: 2, price: 7138.84 }, { maxKg: 3, price: 8219.83 },
+    { maxKg: 5, price: 13989.26 }, { maxKg: 10, price: 21010.74 },
+    { maxKg: 15, price: 33118.18 }, { maxKg: 20, price: 40595.04 },
+    { maxKg: 25, price: 48073.55 }, { maxKg: 30, price: 55549.59 },
+    { maxKg: 35, price: 67598.35 }, { maxKg: 40, price: 74866.12 },
+    { maxKg: 50, price: 89410.74 },
   ],
   4: [
-    { maxKg: 0.5, price: 5736.36 }, { maxKg: 1, price: 6038.84 },
-    { maxKg: 2, price: 7261.16 }, { maxKg: 3, price: 8790.08 },
-    { maxKg: 5, price: 15485.95 }, { maxKg: 10, price: 24000.00 },
-    { maxKg: 15, price: 38086.78 }, { maxKg: 20, price: 47870.25 },
-    { maxKg: 25, price: 57653.72 }, { maxKg: 30, price: 67439.67 },
-    { maxKg: 35, price: 79204.13 }, { maxKg: 40, price: 88255.37 },
-    { maxKg: 50, price: 107085.12 },
+    { maxKg: 0.5, price: 6080.17 }, { maxKg: 1, price: 6400.83 },
+    { maxKg: 2, price: 7696.69 }, { maxKg: 3, price: 9317.36 },
+    { maxKg: 5, price: 16300.83 }, { maxKg: 10, price: 25262.81 },
+    { maxKg: 15, price: 39878.51 }, { maxKg: 20, price: 49614.05 },
+    { maxKg: 25, price: 59342.15 }, { maxKg: 30, price: 69076.86 },
+    { maxKg: 35, price: 83372.73 }, { maxKg: 40, price: 92900.83 },
+    { maxKg: 50, price: 111947.93 },
   ],
 };
 
@@ -154,40 +161,40 @@ const EXPRESO_HOME: ZoneRates = {
 
 const EXPRESO_AGENCY: ZoneRates = {
   1: [
-    { maxKg: 0.5, price: 4585.95 }, { maxKg: 1, price: 4653.72 },
-    { maxKg: 2, price: 4990.08 }, { maxKg: 3, price: 5138.84 },
-    { maxKg: 5, price: 6789.26 }, { maxKg: 10, price: 9856.20 },
-    { maxKg: 15, price: 15070.25 }, { maxKg: 20, price: 16824.79 },
-    { maxKg: 25, price: 18826.45 }, { maxKg: 30, price: 20861.16 },
-    { maxKg: 35, price: 24114.88 }, { maxKg: 40, price: 25901.65 },
-    { maxKg: 50, price: 29479.34 },
+    { maxKg: 0.5, price: 4861.16 }, { maxKg: 1, price: 4933.06 },
+    { maxKg: 2, price: 5289.26 }, { maxKg: 3, price: 5447.11 },
+    { maxKg: 5, price: 7196.69 }, { maxKg: 10, price: 10447.93 },
+    { maxKg: 15, price: 15974.38 }, { maxKg: 20, price: 17833.88 },
+    { maxKg: 25, price: 19956.20 }, { maxKg: 30, price: 22113.22 },
+    { maxKg: 35, price: 25561.98 }, { maxKg: 40, price: 27455.37 },
+    { maxKg: 50, price: 31247.93 },
   ],
   2: [
-    { maxKg: 0.5, price: 6950.41 }, { maxKg: 1, price: 7228.10 },
-    { maxKg: 2, price: 8498.35 }, { maxKg: 3, price: 9400.00 },
-    { maxKg: 5, price: 15068.60 }, { maxKg: 10, price: 24576.86 },
-    { maxKg: 15, price: 36543.80 }, { maxKg: 20, price: 45059.50 },
-    { maxKg: 25, price: 54031.40 }, { maxKg: 30, price: 65195.04 },
-    { maxKg: 35, price: 75180.17 }, { maxKg: 40, price: 84284.30 },
-    { maxKg: 50, price: 101025.62 },
+    { maxKg: 0.5, price: 7367.77 }, { maxKg: 1, price: 7661.98 },
+    { maxKg: 2, price: 9008.26 }, { maxKg: 3, price: 9963.64 },
+    { maxKg: 5, price: 15972.73 }, { maxKg: 10, price: 25870.25 },
+    { maxKg: 15, price: 38467.77 }, { maxKg: 20, price: 47431.40 },
+    { maxKg: 25, price: 56453.72 }, { maxKg: 30, price: 68626.45 },
+    { maxKg: 35, price: 79137.19 }, { maxKg: 40, price: 88720.66 },
+    { maxKg: 50, price: 106342.15 },
   ],
   3: [
-    { maxKg: 0.5, price: 10173.55 }, { maxKg: 1, price: 10595.87 },
-    { maxKg: 2, price: 12343.80 }, { maxKg: 3, price: 16601.65 },
-    { maxKg: 5, price: 29659.50 }, { maxKg: 10, price: 54183.47 },
-    { maxKg: 15, price: 86647.93 }, { maxKg: 20, price: 112643.80 },
-    { maxKg: 25, price: 138642.98 }, { maxKg: 30, price: 164642.15 },
-    { maxKg: 35, price: 236621.49 }, { maxKg: 40, price: 269612.40 },
-    { maxKg: 50, price: 334035.54 },
+    { maxKg: 0.5, price: 10784.30 }, { maxKg: 1, price: 11231.40 },
+    { maxKg: 2, price: 13084.30 }, { maxKg: 3, price: 17597.52 },
+    { maxKg: 5, price: 31220.66 }, { maxKg: 10, price: 57034.71 },
+    { maxKg: 15, price: 89182.64 }, { maxKg: 20, price: 115128.93 },
+    { maxKg: 25, price: 141071.07 }, { maxKg: 30, price: 167018.18 },
+    { maxKg: 35, price: 242613.22 }, { maxKg: 40, price: 275553.72 },
+    { maxKg: 50, price: 339884.30 },
   ],
   4: [
-    { maxKg: 0.5, price: 13142.15 }, { maxKg: 1, price: 13838.84 },
-    { maxKg: 2, price: 16642.98 }, { maxKg: 3, price: 19456.20 },
-    { maxKg: 5, price: 34112.40 }, { maxKg: 10, price: 81325.62 },
-    { maxKg: 15, price: 122370.25 }, { maxKg: 20, price: 155421.49 },
-    { maxKg: 25, price: 188480.17 }, { maxKg: 30, price: 225334.71 },
-    { maxKg: 35, price: 265784.30 }, { maxKg: 40, price: 302942.15 },
-    { maxKg: 50, price: 375702.48 },
+    { maxKg: 0.5, price: 13930.58 }, { maxKg: 1, price: 14669.42 },
+    { maxKg: 2, price: 17641.32 }, { maxKg: 3, price: 20623.97 },
+    { maxKg: 5, price: 36159.50 }, { maxKg: 10, price: 86204.96 },
+    { maxKg: 15, price: 129712.40 }, { maxKg: 20, price: 164747.11 },
+    { maxKg: 25, price: 199789.26 }, { maxKg: 30, price: 237195.04 },
+    { maxKg: 35, price: 271786.78 }, { maxKg: 40, price: 308886.78 },
+    { maxKg: 50, price: 381553.72 },
   ],
 };
 
@@ -197,16 +204,23 @@ export const RATES_GRID: Record<PaqarRatesService, Record<PaqarRatesMode, ZoneRa
 };
 
 /**
- * Recargo temporal del 5% anunciado por Correo Argentino, aplicado el
- * 2026-09-01 a pedido de Gustavo mientras CA no publique el tarifario de
- * septiembre. Se aplica sobre la tarifa ya buscada en la grilla, ANTES del
- * IVA, así la grilla sigue siendo la copia fiel del tarifario 2026-06-01.
- * Al llegar la lista real de septiembre: actualizar la grilla (bump
- * RATES_GRID_VERSION) y volver esta constante a 1.
- * Espejo en el plugin WP: `SC_Feeds::TEMP_RATE_SURCHARGE` (class-feeds.php) —
- * los dos se cambian juntos o Google anuncia un envío distinto al que se cobra.
+ * Multiplicador sobre la tarifa de lista. En 1 = se cobra exactamente lo que
+ * factura Correo Argentino, que es la política del cliente: el envío cubre
+ * costo, no lleva margen.
+ *
+ * Historia: entre el 2026-09-01 y el 2026-09-16 valió 1,05, un recargo puesto a
+ * pedido de Gustavo para anticipar un aumento de CA que todavía no se conocía.
+ * Al publicarse la lista de septiembre resultó que CA **no** aumentó domicilio
+ * (solo sucursal), así que ese 5% había dejado de ser una estimación para pasar
+ * a ser markup: sobre las 141 guías reales de agosto eran $49.473/mes por encima
+ * de lo que CA factura. Santi ordenó quitarlo el 2026-09-16.
+ *
+ * Si vuelve a hacer falta un recargo puente, va acá y NO tocando la grilla, que
+ * es copia fiel del tarifario. Espejo obligatorio en el plugin WP:
+ * `SC_Feeds::TEMP_RATE_SURCHARGE` (class-feeds.php) — los dos se cambian juntos
+ * o Google anuncia un envío distinto al que se cobra.
  */
-export const TEMP_RATE_SURCHARGE = 1.05;
+export const TEMP_RATE_SURCHARGE = 1;
 
 /**
  * Busca el precio sin IVA para un peso dado (con TEMP_RATE_SURCHARGE aplicado).
