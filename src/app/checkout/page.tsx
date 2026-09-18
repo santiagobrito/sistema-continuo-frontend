@@ -520,7 +520,17 @@ function CheckoutInner() {
       const res = await fetch("/api/coupons/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, subtotal, email: formData.email }),
+        body: JSON.stringify({
+          code,
+          email: formData.email,
+          // El server valida exclusiones de producto/categoría y re-precia
+          // contra WC; el precio no viaja porque no se usa.
+          items: (cart?.items || []).map((item) => ({
+            product_id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+          })),
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -538,6 +548,14 @@ function CheckoutInner() {
       setCouponError("Error al validar");
     }
     setCouponLoading(false);
+  }
+
+  // El server rechazó el cupón al crear el pedido (p. ej. con el email ya
+  // completo resultó personal de otro, o el límite por usuario): se quita para
+  // que el total en pantalla vuelva a ser el que se va a cobrar.
+  function dropInvalidCoupon(message: string) {
+    setAppliedCoupon(null);
+    setCouponError(message);
   }
 
   function removeCoupon() {
@@ -615,7 +633,10 @@ function CheckoutInner() {
           body: JSON.stringify(orderPayload),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Error al procesar el pedido");
+        if (!res.ok) {
+          if (data.field === "coupon") dropInvalidCoupon(data.error);
+          throw new Error(data.error || "Error al procesar el pedido");
+        }
 
         // Persistir initPoint para reuso en retries (bug duplicados 2026-04-28).
         sessionStorage.setItem("sc_mp_pending", JSON.stringify({
@@ -640,7 +661,10 @@ function CheckoutInner() {
           body: JSON.stringify({ ...orderPayload, payment_method: paymentMethod }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Error al crear el pedido");
+        if (!res.ok) {
+          if (data.field === "coupon") dropInvalidCoupon(data.error);
+          throw new Error(data.error || "Error al crear el pedido");
+        }
         window.location.href = `/pedido-confirmado?order=${data.orderId}&payment=${paymentMethod}&email=${encodeURIComponent(formData.email)}&shipping=${encodeURIComponent(shippingMethod)}`;
       }
     } catch (err) {

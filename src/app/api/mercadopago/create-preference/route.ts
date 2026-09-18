@@ -15,7 +15,7 @@ import {
   attributionToOrderMeta,
   type OrderAttributionInput,
 } from "@/lib/wordpress/order-attribution";
-import { resolveCoupon, applyDiscountToItems, type ValidatedCoupon } from "@/lib/woocommerce/coupons";
+import { resolveCoupon, applyDiscountToItems, withServerPrices, type ValidatedCoupon } from "@/lib/woocommerce/coupons";
 import { buildMpItemsFromOrder, type WcOrderForPreference } from "@/lib/mercadopago/order-items";
 import { computeShippingCost, splitItemsFromOrder } from "@/lib/paqar/quote-service";
 
@@ -380,49 +380,6 @@ async function createWCOrder(
   return { id: order.id, number: order.number || String(order.id) };
 }
 
-/**
- * Reemplaza item.price (que viene del NAVEGADOR) por el precio real del
- * producto/variación en WC. Solo hace falta en el camino con cupón: sin cupón
- * la orden se crea con product_id+quantity y WC pone los precios él solo, pero
- * con cupón mandamos subtotal/total explícitos y esos números no pueden salir
- * del body (2026-09-01: una petición manipulada pagaba el importe que declaraba).
- *
- * `GET /wc/v3/products/{id}` funciona también con IDs de variación (devuelve
- * type=variation con su price), así que alcanza un solo endpoint.
- *
- * Nota: el precio de catálogo no incluye los descuentos por cantidad; esos los
- * aplica el plugin al crear la orden (apply_qty_discounts_to_rest_order) y
- * pisan la línea, igual que antes de este cambio.
- *
- * Si algún precio no se puede leer → throw (fail closed): nunca seguir con los
- * precios del navegador en silencio.
- */
-async function withServerPrices(items: CheckoutItem[]): Promise<CheckoutItem[]> {
-  return Promise.all(
-    items.map(async (item) => {
-      const id = item.variation_id || item.product_id;
-      const r = await fetch(`${WP_URL}/wp-json/wc/v3/products/${id}`, {
-        headers: { Authorization: `Basic ${WC_API_AUTH}` },
-        cache: "no-store",
-      });
-      if (!r.ok) {
-        throw new Error(`No se pudo verificar el precio del producto ${id} (HTTP ${r.status})`);
-      }
-      const p = await r.json();
-      const price = parseFloat(String(p.price));
-      if (!Number.isFinite(price) || price < 0) {
-        throw new Error(`Precio ilegible para el producto ${id}`);
-      }
-      if (price !== item.price) {
-        console.warn(
-          `[create-preference] precio del navegador (${item.price}) != precio WC (${price}) para producto ${id} — se usa el de WC`
-        );
-      }
-      return { ...item, price };
-    })
-  );
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body: CheckoutBody = await request.json();
@@ -500,12 +457,22 @@ export async function POST(request: NextRequest) {
     let discountTotal = 0;
     let itemsAfterDiscount: ReturnType<typeof applyDiscountToItems> | undefined;
     if (body.coupon_code) {
+      // Cupón inválido para ESTE carrito (excluidos, vencido, usado...) → 400
+      // con el motivo. Antes se seguía sin descuento y en silencio: el cliente
+      // veía el descuento en pantalla y MP le cobraba el precio lleno.
+      const couponSession = await getSession().catch(() => null);
+      const result = await resolveCoupon(body.coupon_code, body.items, {
+        email: body.billing.email,
+        customerId: couponSession?.id,
+      });
+      if (!result.ok) {
+        return NextResponse.json({ error: result.error, field: "coupon" }, { status: result.status });
+      }
+      resolved = result.coupon;
+      discountTotal = resolved.discount_amount;
       const serverPricedItems = await withServerPrices(body.items);
-      const subtotalForCoupon = serverPricedItems.reduce((acc, it) => acc + it.price * it.quantity, 0);
-      resolved = await resolveCoupon(body.coupon_code, subtotalForCoupon, body.billing.email);
-      discountTotal = resolved?.discount_amount || 0;
       itemsAfterDiscount = discountTotal > 0
-        ? applyDiscountToItems(serverPricedItems, discountTotal)
+        ? applyDiscountToItems(serverPricedItems, resolved.line_discounts)
         : undefined;
       // free_shipping: hasta el 2026-09-01 el envío gratis del cupón solo se
       // aplicaba al cobro de MP y la orden WC quedaba con el envío cobrado

@@ -1,124 +1,57 @@
 /**
  * POST /api/coupons/validate
  *
- * Validates a WooCommerce coupon code and returns discount info.
- * Does NOT apply the coupon — just checks if it's valid and what discount it gives.
+ * Valida un cupón contra el carrito y devuelve el descuento. No aplica nada:
+ * la orden lo vuelve a resolver en el server con la misma función
+ * (resolveCoupon), así lo que ve el cliente y lo que se cobra no pueden
+ * divergir. Body: { code, email?, items: [{ product_id, variation_id?, name, quantity }] }.
  */
 
 import { NextRequest, NextResponse } from "next/server";
-
-const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
-const WC_AUTH = process.env.WC_API_AUTH || "";
+import { getSession } from "@/lib/auth/session";
+import { resolveCoupon, type CheckoutItem } from "@/lib/woocommerce/coupons";
 
 export async function POST(request: NextRequest) {
   try {
-    const { code, subtotal, email } = await request.json();
+    const { code, email, items } = await request.json();
 
     if (!code || typeof code !== "string") {
-      return NextResponse.json({ error: "Ingresa un codigo" }, { status: 400 });
+      return NextResponse.json({ error: "Ingresá un código" }, { status: 400 });
+    }
+    if (!Array.isArray(items) || items.length === 0) {
+      return NextResponse.json({ error: "No hay productos en el carrito" }, { status: 400 });
     }
 
-    // Fetch coupon from WC
-    const res = await fetch(
-      `${WP_URL}/wp-json/wc/v3/coupons?code=${encodeURIComponent(code.trim())}`,
-      {
-        headers: {
-          Authorization: `Basic ${WC_AUTH}`,
-          "Content-Type": "application/json",
-        },
-      },
-    );
+    const cartItems: CheckoutItem[] = items.map((it: Partial<CheckoutItem>) => ({
+      product_id: Number(it.product_id),
+      variation_id: it.variation_id ? Number(it.variation_id) : undefined,
+      name: String(it.name || ""),
+      quantity: Math.max(1, Math.floor(Number(it.quantity) || 1)),
+      price: 0, // se ignora: resolveCoupon usa el precio de WC
+    }));
 
-    if (!res.ok) {
-      return NextResponse.json({ error: "Error al verificar cupon" }, { status: 500 });
+    const session = await getSession().catch(() => null);
+    const result = await resolveCoupon(code, cartItems, {
+      email: typeof email === "string" ? email : undefined,
+      customerId: session?.id,
+    });
+
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
     }
 
-    const coupons = await res.json();
-    if (coupons.length === 0) {
-      return NextResponse.json({ error: "Cupon no valido" }, { status: 404 });
-    }
-
-    const coupon = coupons[0];
-
-    // Check if expired
-    if (coupon.date_expires) {
-      const expires = new Date(coupon.date_expires);
-      if (expires < new Date()) {
-        return NextResponse.json({ error: "Este cupon ya expiro" }, { status: 410 });
-      }
-    }
-
-    // Check usage limit
-    if (coupon.usage_limit && coupon.usage_count >= coupon.usage_limit) {
-      return NextResponse.json({ error: "Este cupon ya fue usado el maximo de veces" }, { status: 410 });
-    }
-
-    // Check minimum amount
-    if (coupon.minimum_amount && parseFloat(coupon.minimum_amount) > 0) {
-      if (subtotal < parseFloat(coupon.minimum_amount)) {
-        return NextResponse.json({
-          error: `Compra minima de $${Math.round(parseFloat(coupon.minimum_amount)).toLocaleString("es-AR")} para este cupon`,
-        }, { status: 400 });
-      }
-    }
-
-    // Check email restrictions — los cupones SC-AB-* son personales (restringidos al
-    // email que recibió el link de recuperación). Si el email no coincide, rechazar
-    // acá para que el cliente vea el mensaje en vez de descubrirlo al confirmar pago.
-    if (Array.isArray(coupon.email_restrictions) && coupon.email_restrictions.length > 0) {
-      const allowed = coupon.email_restrictions.map((e: string) => String(e).toLowerCase().trim());
-      const provided = String(email || "").toLowerCase().trim();
-      if (!provided) {
-        return NextResponse.json({
-          error: "Este cupon es personal — completa tu email primero",
-        }, { status: 400 });
-      }
-      if (!allowed.includes(provided)) {
-        return NextResponse.json({
-          error: "Este cupon esta asociado a otra direccion de email",
-        }, { status: 400 });
-      }
-    }
-
-    // Calculate discount
-    let discountAmount = 0;
-    let discountLabel = "";
-
-    if (coupon.discount_type === "percent") {
-      discountAmount = Math.round(subtotal * parseFloat(coupon.amount) / 100);
-      discountLabel = `${coupon.amount}% de descuento`;
-
-      // Cap at maximum discount if set
-      if (coupon.maximum_amount && parseFloat(coupon.maximum_amount) > 0) {
-        const max = parseFloat(coupon.maximum_amount);
-        if (discountAmount > max) {
-          discountAmount = Math.round(max);
-        }
-      }
-    } else if (coupon.discount_type === "fixed_cart") {
-      discountAmount = Math.round(parseFloat(coupon.amount));
-      discountLabel = `$${discountAmount.toLocaleString("es-AR")} de descuento`;
-    } else if (coupon.discount_type === "fixed_product") {
-      discountAmount = Math.round(parseFloat(coupon.amount));
-      discountLabel = `$${discountAmount.toLocaleString("es-AR")} por producto`;
-    }
-
-    // Don't let discount exceed subtotal
-    if (discountAmount > subtotal) {
-      discountAmount = subtotal;
-    }
-
+    const c = result.coupon;
     return NextResponse.json({
       valid: true,
-      code: coupon.code,
-      discount_type: coupon.discount_type,
-      amount: coupon.amount,
-      discount_amount: discountAmount,
-      label: discountLabel,
-      description: coupon.description || "",
-      free_shipping: coupon.free_shipping || false,
+      code: c.code,
+      discount_type: c.discount_type,
+      amount: c.amount,
+      discount_amount: c.discount_amount,
+      label: c.label,
+      description: c.description,
+      free_shipping: c.free_shipping,
     });
   } catch {
-    return NextResponse.json({ error: "Error al validar cupon" }, { status: 500 });
+    return NextResponse.json({ error: "Error al validar el cupón" }, { status: 500 });
   }
 }

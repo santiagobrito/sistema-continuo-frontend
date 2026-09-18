@@ -14,7 +14,7 @@ import {
   attributionToOrderMeta,
   type OrderAttributionInput,
 } from "@/lib/wordpress/order-attribution";
-import { resolveCoupon, applyDiscountToItems } from "@/lib/woocommerce/coupons";
+import { resolveCoupon, applyDiscountToItems, withServerPrices, type ValidatedCoupon } from "@/lib/woocommerce/coupons";
 import { computeShippingCost, splitItemsFromOrder } from "@/lib/paqar/quote-service";
 
 const WP_URL = process.env.WP_URL || process.env.NEXT_PUBLIC_WP_URL || "";
@@ -146,12 +146,25 @@ export async function POST(request: NextRequest) {
     // Resolver cupón y prorratear descuento. WC REST no aplica coupon_lines a
     // los totals automáticamente — hay que mandar line_items con subtotal/total
     // explícitos y discount_total a mano para que el descuento se persista.
-    const subtotalForCoupon = body.items.reduce((acc, it) => acc + it.price * it.quantity, 0);
-    const resolved = body.coupon_code
-      ? await resolveCoupon(body.coupon_code, subtotalForCoupon, body.billing.email)
-      : null;
+    // Los totales de línea salen de precios de WC (withServerPrices), nunca del
+    // body: hasta el 2026-09-18 este camino (transferencia/efectivo) usaba el
+    // precio que mandaba el navegador, el mismo agujero que se cerró en
+    // create-preference el 2026-09-01.
+    let resolved: ValidatedCoupon | null = null;
+    if (body.coupon_code) {
+      const result = await resolveCoupon(body.coupon_code, body.items, {
+        email: body.billing.email,
+        customerId,
+      });
+      if (!result.ok) {
+        return NextResponse.json({ error: result.error, field: "coupon" }, { status: result.status });
+      }
+      resolved = result.coupon;
+    }
     const discountTotal = resolved?.discount_amount || 0;
-    const itemsAfter = discountTotal > 0 ? applyDiscountToItems(body.items, discountTotal) : null;
+    const itemsAfter = resolved && discountTotal > 0
+      ? applyDiscountToItems(await withServerPrices(body.items), resolved.line_discounts)
+      : null;
 
     // Envío gratis por producto/variación: el descuento se calcula acá, contra
     // WP, nunca con lo que diga el browser. body.shipping_cost llega sin
