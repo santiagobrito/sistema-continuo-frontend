@@ -60,6 +60,8 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
   const [formData, setFormData] = useState({ rating: 5, content: "" });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  // Enlace a Google: solo viene la primera vez que este cliente reseña algo.
+  const [googleReviewUrl, setGoogleReviewUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [highlight, setHighlight] = useState(false);
   const [loginRedirect, setLoginRedirect] = useState("/iniciar-sesion");
@@ -247,6 +249,7 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
         setHandoff(null);
         setHandoffPhotos([]);
         setShowQr(false);
+        if (typeof data.google_review_url === "string") setGoogleReviewUrl(data.google_review_url);
         setSubmitted(true);
       }
     } catch {
@@ -387,6 +390,21 @@ export function ReviewSection({ reviews, totalReviews, averageRating, productSlu
       {submitted ? (
         <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-center">
           <p className="text-green-700 font-medium">Gracias por tu opinión. Será publicada luego de ser revisada.</p>
+          {googleReviewUrl && (
+            <div className="mt-4 pt-4 border-t border-green-100">
+              <p className="text-gray-700 text-sm mb-3">
+                ¿Nos dejás también una reseña en Google? Es un minuto y ayuda a quien nos busca por primera vez.
+              </p>
+              <a
+                href={googleReviewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center bg-[#013d5a] text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#01567a] transition-colors"
+              >
+                Dejar reseña en Google
+              </a>
+            </div>
+          )}
         </div>
       ) : !user ? (
         <div
