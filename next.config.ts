@@ -61,9 +61,10 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       // URLs de plotters heredadas del WP viejo: hoy dan 404 y se llevan la
-      // autoridad de los enlaces que apuntaban ahí. Van a la categoría real.
-      { source: "/16-plotter", destination: "/plotter/plotters-de-corte", permanent: true },
-      { source: "/plotter", destination: "/plotter/plotters-de-corte", permanent: true },
+      // autoridad de los enlaces que apuntaban ahí. Van directo a la categoría real
+      // (antes a /plotter/plotters-de-corte, que hacía un segundo salto).
+      { source: "/16-plotter", destination: "/silhouette/plotters-de-corte", permanent: true },
+      { source: "/plotter", destination: "/silhouette/plotters-de-corte", permanent: true },
     ];
   },
   // Páginas con UI que depende de cookies/auth NO deben cachearse en CDN.
