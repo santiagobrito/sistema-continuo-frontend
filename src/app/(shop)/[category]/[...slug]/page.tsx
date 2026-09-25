@@ -228,12 +228,16 @@ async function ProductView({ product, parentSlug }: { product: Product; parentSl
           {product.sku && <div className="flex justify-between py-2.5 px-3 bg-gray-50 rounded-lg"><span className="text-sm text-gray-500">SKU</span><span className="text-sm font-medium text-gray-900">{product.sku}</span></div>}
           {product.barcode && <div className="flex justify-between py-2.5 px-3 bg-gray-50 rounded-lg"><span className="text-sm text-gray-500">EAN</span><span className="text-sm font-medium text-gray-900">{product.barcode}</span></div>}
           {product.marca && <div className="flex justify-between py-2.5 px-3 bg-gray-50 rounded-lg"><span className="text-sm text-gray-500">Marca</span><span className="text-sm font-medium text-gray-900">{product.marca}</span></div>}
+          {/* Peso y dimensiones de envío: solo si están cargados y no hay un atributo propio
+              ("Peso del equipo", "Dimensiones del equipo"), que es el dato que le sirve al comprador */}
           {(() => {
             const w = Number(product.weight || 0);
+            const hasAttr = product.attributes?.some(a => /^peso/i.test(a.name));
+            if (w <= 0 || hasAttr) return null;
             return (
               <div className="flex justify-between py-2.5 px-3 bg-gray-50 rounded-lg">
                 <span className="text-sm text-gray-500">Peso</span>
-                <span className="text-sm font-medium text-gray-900">{w > 0 ? `${product.weight} kg` : "Sin especificar"}</span>
+                <span className="text-sm font-medium text-gray-900">{product.weight} kg</span>
               </div>
             );
           })()}
@@ -241,11 +245,12 @@ async function ProductView({ product, parentSlug }: { product: Product; parentSl
             const l = Number(product.dimensions?.length || 0);
             const w = Number(product.dimensions?.width  || 0);
             const h = Number(product.dimensions?.height || 0);
-            const allSet = l > 0 && w > 0 && h > 0;
+            const hasAttr = product.attributes?.some(a => /^dimensi/i.test(a.name));
+            if (!(l > 0 && w > 0 && h > 0) || hasAttr) return null;
             return (
               <div className="flex justify-between py-2.5 px-3 bg-gray-50 rounded-lg">
                 <span className="text-sm text-gray-500">Dimensiones</span>
-                <span className="text-sm font-medium text-gray-900">{allSet ? `${l} x ${w} x ${h} cm` : "Sin especificar"}</span>
+                <span className="text-sm font-medium text-gray-900">{l} x {w} x {h} cm</span>
               </div>
             );
           })()}
