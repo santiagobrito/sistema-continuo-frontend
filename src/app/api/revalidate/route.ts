@@ -91,5 +91,6 @@ export async function POST(request: NextRequest) {
       ? await purgeCloudflare(url)
       : "skipped (no url)";
 
+  console.log(`[revalidate] type=${type} slug=${slug} purge=${purge}`);
   return NextResponse.json({ revalidated: true, immediate, tags, purge });
 }
