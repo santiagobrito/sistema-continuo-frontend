@@ -209,7 +209,7 @@ async function ProductView({ product, parentSlug }: { product: Product; parentSl
   // Fetch reviews + settings in parallel
   const [reviewsData, settings] = await Promise.all([
     getProductReviews(product.slug, { per_page: 10 }).catch(() => ({ data: [], total: 0, pages: 0, page: 1 })),
-    getSettings().catch(() => ({ whatsapp_ventas: "5491133466497", whatsapp_gran_formato: "5491130793862", telefono_fijo: "01146501592", email_ventas: "ventas@sistemacontinuo.com.ar" })),
+    getSettings().catch(() => ({ whatsapp_ventas: "5491133466497", whatsapp_gran_formato: "5491126873681", telefono_fijo: "01146501592", email_ventas: "ventas@sistemacontinuo.com.ar" })),
   ]);
 
   const tabs = [
@@ -330,7 +330,7 @@ async function ProductView({ product, parentSlug }: { product: Product; parentSl
               <div className="p-6 lg:p-8">
                 {product.marca && <p className="text-xs font-semibold text-[#013d5a]/50 uppercase tracking-widest mb-1">{product.marca}</p>}
                 <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight mb-3">{product.name}</h1>
-                <CatalogCTA productId={product.id} productName={product.name} productCategory={product.categories[0]?.name} productUrl={productUrl} whatsapp={settings.whatsapp_gran_formato} email={settings.email_ventas} />
+                <CatalogCTA productId={product.id} productName={product.name} productCategory={product.categories[0]?.name} productUrl={productUrl} whatsapp={settings.whatsapp_gran_formato} />
               </div>
             </div>
           ) : (

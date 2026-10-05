@@ -3,10 +3,10 @@
 /**
  * CatalogCTA — embudo de cotización para productos de gran formato (is_catalog_only).
  *
- * Dos canales: WhatsApp (wa.me, target=_blank) y email (mailto:). Cada clic empuja
+ * Un solo canal: WhatsApp (wa.me, target=_blank). El clic empuja
  * `quote_request` al dataLayer (ver trackQuoteRequest en lib/analytics/gtm.ts) antes
- * de que el navegador siga el enlace. Ninguno de los dos navega la página actual
- * (nueva pestaña / cliente de correo), así que el push simple no se pierde.
+ * de que el navegador siga el enlace. No navega la página actual (nueva pestaña),
+ * así que el push simple no se pierde.
  * NO usar preventDefault: el enlace tiene que funcionar aunque GTM no cargue.
  */
 
@@ -18,17 +18,16 @@ interface CatalogCTAProps {
   productCategory?: string;
   productUrl: string;
   whatsapp: string;
-  email: string;
 }
 
-export function CatalogCTA({ productId, productName, productCategory, productUrl, whatsapp, email }: CatalogCTAProps) {
+export function CatalogCTA({ productId, productName, productCategory, productUrl, whatsapp }: CatalogCTAProps) {
   const message = encodeURIComponent(
     `Hola, estoy interesado en ${productName}. Me gustaría recibir una cotización. ${productUrl}`
   );
 
-  const track = (channel: "whatsapp" | "email") => () =>
+  const track = () =>
     trackQuoteRequest({
-      channel,
+      channel: "whatsapp",
       item_id: String(productId),
       item_name: productName,
       item_category: productCategory,
@@ -54,24 +53,16 @@ export function CatalogCTA({ productId, productName, productCategory, productUrl
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
           <a
             href={`https://wa.me/${whatsapp}?text=${message}`}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={track("whatsapp")}
+            onClick={track}
             className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-3.5 rounded-xl font-semibold text-sm transition-colors cursor-pointer"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
             Hablar con un ejecutivo
-          </a>
-          <a
-            href={`mailto:${email}?subject=Cotización: ${encodeURIComponent(productName)}&body=${encodeURIComponent(`Hola, me interesa recibir cotización por: ${productName}\n\n${productUrl}`)}`}
-            onClick={track("email")}
-            className="flex items-center justify-center gap-2 bg-white border border-[#013d5a]/20 text-[#013d5a] py-3.5 rounded-xl font-semibold text-sm hover:bg-[#013d5a]/5 transition-colors cursor-pointer"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
-            Solicitar cotización por email
           </a>
         </div>
       </div>
